@@ -29,7 +29,7 @@ root:
 	mkdir -p $(SYSROOT)/boot/
 	mkdir -p $(SYSROOT)/usr/include/
 	mkdir -p sys/target/header/
-	rsync -av sys/include/arch/$(TARGET)/ sys/target/header/
+	rsync -av sys/include/arch/$(TARGET)/ sys/target/header/machine/
 
 .PHONY: sysroot
 image:
