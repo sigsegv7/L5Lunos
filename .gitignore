@@ -1,0 +1,7 @@
+/src/cc
+/src/shim/
+/src/tools/omar/bin/omar
+/src/root/
+*.o
+*.d
+*.iso

@@ -1,0 +1,61 @@
+#!/bin/bash
+set -e
+
+SYSTEM_NAME="$(uname -s)"
+MAKE="make"
+GIT="git"
+GCC="gcc"
+CLANG="clang"
+
+if [ "$SYSTEM_NAME" = "OpenBSD" ]
+then
+    MAKE="$(which gmake)"
+fi
+
+# arg0: Output path.
+# arg1: Command for downloading
+try_fetch() {
+    if [[ -d $2 ]]
+    then
+        echo "try_fetch: Skipping $2: already exists"
+    else
+        ${@:1}
+    fi
+}
+
+fetch() {
+    mkdir -p cc/
+    try_fetch "git clone https://github.com/limine-bootloader/limine.git --branch=v9.3.0-binary --depth=1" "shim/limine"
+    try_fetch "git clone https://github.com/EthosZero/toolchain --depth=1" "cc/toolchain"
+}
+
+build_limine() {
+    $MAKE -C shim/limine/
+}
+
+build_omar() {
+    $MAKE -C tools/omar
+}
+
+build() {
+    build_limine
+    build_omar
+}
+
+echo "----------------------------------"
+echo
+echo "      Fetching sources...        "
+echo
+echo "----------------------------------"
+echo -e "\n"
+
+fetch           # Fetch sources
+
+echo "----------------------------------"
+echo
+echo "      Building sources...        "
+echo
+echo "----------------------------------"
+echo -e "\n"
+
+build           # Build sources
