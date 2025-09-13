@@ -21,7 +21,7 @@ fbtag_start:
     .long 32                        // Depth
 fbtag_end:
 
-.align 8
+    .align 8
 endtag:
     .word 0
     .word 0
@@ -31,4 +31,12 @@ endtag:
     .code32
     .globl _start
 _start:
+    cli
+    mov stack_bottom, %esp
+    push %ebx
+    push %eax
     jmp .
+
+    .section .bss
+stack_bottom:
+    .fill 4096 * 16, 0
