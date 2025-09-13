@@ -3,6 +3,7 @@
 /src/tools/omar/bin/omar
 /src/root/
 /src/sys/l5
+/src/sys/target
 *.o
 *.d
 *.iso
