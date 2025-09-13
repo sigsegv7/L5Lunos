@@ -12,6 +12,21 @@ hdr_start:
     .long CHECKSUM
 hdr_end:
 
+fbtag_start:
+    .word 5                         // Type
+    .word 1                         // Flags
+    .long fbtag_end - fbtag_start   // Length
+    .long 800                       // Width
+    .long 600                       // Height
+    .long 32                        // Depth
+fbtag_end:
+
+.align 8
+endtag:
+    .word 0
+    .word 0
+    .word 8
+
     .text
     .code32
     .globl _start
