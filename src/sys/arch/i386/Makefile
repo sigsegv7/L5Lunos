@@ -14,7 +14,7 @@ ASMOBJECTS = $(ASMFILES:.S=.S.o)
 DEPS = $(CFILES:.c=.d)
 ASMDEPS = $(ASMFILES:.S=.S.d)
 OBJECTS = $(CFILES:%.c=%.o)
-LD_FLAGS = -Tconf/sys.ld
+LD_FLAGS = -Tconf/sys.ld -L../../target -lkern
 
 .PHONY: all
 all: $(OBJECTS) $(ASMOBJECTS)

@@ -35,7 +35,7 @@ _start:
     mov stack_bottom, %esp
     push %ebx
     push %eax
-    jmp .
+    jmp main
 
     .section .bss
 stack_bottom:
