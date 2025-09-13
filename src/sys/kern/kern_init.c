@@ -1,3 +1,5 @@
+#include <sys/cdefs.h>
+
 /*
  * Kernel entrypoint
  */

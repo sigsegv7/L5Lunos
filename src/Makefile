@@ -46,7 +46,7 @@ image:
 
 .PHONY: qemu-amd64
 run:
-	qemu-system-$(TARGET) $(QEMU_FLAGS)
+	qemu-system-x86_64 $(QEMU_FLAGS)
 
 .PHONY: clean
 clean:

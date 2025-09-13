@@ -1,35 +1,46 @@
-ENTRY(_start)
+OUTPUT_FORMAT(elf64-x86-64)
+OUTPUT_ARCH(i386:x86-64)
+ENTRY(__bsp_entry)
 
-SECTIONS {
-    . = 1M;
-
-    .boot :
-    {
-        *(.multiboot_header)
-    }
-
-    . = ALIGN(4K);
-    .text :
-    {
-        *(.text .text.*)
-    }
-
-    . = ALIGN(4K);
-    .rodata :
-    {
-        *(.rodata .rodata.*)
-    }
-
-    . = ALIGN(4K);
-    .data :
-    {
-        *(.data .data.*)
-    }
-
-    . = ALIGN(4K);
-    .bss :
-    {
-        *(.bss .bss.*)
-    }
+PHDRS
+{
+    text          PT_LOAD    FLAGS((1 << 0) | (1 << 2)) ;
+    rodata        PT_LOAD    FLAGS((1 << 2)) ;
+    data          PT_LOAD    FLAGS((1 << 1) | (1 << 2)) ;
 }
 
+SECTIONS
+{
+    . = 0xFFFFFFFF80000000;
+
+    .text : {
+        *(.text .text.*)
+    } :text
+
+    . += CONSTANT(MAXPAGESIZE);
+
+    .rodata : {
+        *(.rodata .rodata.*)
+    } :rodata
+
+    . += CONSTANT(MAXPAGESIZE);
+
+    .data : {
+        *(.data)
+    } :data
+
+    .bss : {
+        *(COMMON)
+        *(.bss .bss.*)
+    } :data
+
+    . = ALIGN(64);
+    .data.cacheline_aligned : {
+        *(.data.cacheline_aligned)
+    }
+
+    /DISCARD/ : {
+        *(.eh_frame .eh_frame.*)
+        *(.note .note.*)
+    }
+}
