@@ -1,9 +1,8 @@
 include ../../conf/sys.mk
 
-.SILENT:
 override PROMPT := printf "%s\t\t%s\n"
 
-TARGET = ../../l5
+TARGET_BIN = ../../l5
 TARGET_INC = -I../../target/header/
 CFLAGS = -I../../include/ -I../../include/lib/ $(TARGET_INC) $(MI_CFLAGS) $(MD_CFLAGS)
 CFILES = $(shell find . -name "*.c")
@@ -18,7 +17,7 @@ LD_FLAGS = -Tconf/sys.ld -L../../target -lkern
 
 .PHONY: all
 all: $(OBJECTS) $(ASMOBJECTS)
-	$(LD) $(OBJECTS) $(ASMOBJECTS) -o $(TARGET) $(LD_FLAGS)
+	$(LD) $(OBJECTS) $(ASMOBJECTS) -o $(TARGET_BIN) $(LD_FLAGS)
 
 -include $(DEPS)
 %.o: %.c

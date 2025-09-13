@@ -1,4 +1,4 @@
-TARGET = x86_64
+TARGET = amd64
 KBIN = sys/l5
 SHIMDIR = shim
 SHIMBIN = BOOTX64.EFI
@@ -21,14 +21,15 @@ all: root sys image
 
 .PHONY: sys
 sys:
-	cd sys/; make CC=$(CC) AS=$(AS) LD=$(LD)
+	cd sys/; make CC=$(CC) AS=$(AS) LD=$(LD) TARGET=$(TARGET)
 	cp $(KBIN) root/boot/
 
 root:
 	mkdir -p $(SYSROOT)/
 	mkdir -p $(SYSROOT)/boot/
 	mkdir -p $(SYSROOT)/usr/include/
-	cp -vr sys/include/sys/* $(SYSROOT)/usr/include/
+	mkdir -p sys/target/header/
+	rsync -av sys/include/arch/$(TARGET)/ sys/target/header/
 
 .PHONY: sysroot
 image:
@@ -51,4 +52,4 @@ run:
 clean:
 	rm -rf lunos.iso root
 	rm -f $(KBIN)
-	cd sys/; make clean
+	cd sys/; make clean TARGET=$(TARGET)

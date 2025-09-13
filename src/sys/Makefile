@@ -6,15 +6,11 @@ LD =
 AS =
 
 .PHONY: all
-all: target md kern
-
-.PHONY: target
-target:
-	mkdir -p target/
+all: kern md
 
 .PHONY: kern
 kern:
-	cd kern; make CC=$(CC) LD=$(LD) AS=$(AS)
+	cd kern; make CC=$(CC) LD=$(LD) AS=$(AS) TARGETDIR=$(TARGETDIR)
 
 .PHONY: md
 md:
