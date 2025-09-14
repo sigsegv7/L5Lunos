@@ -50,6 +50,7 @@ struct pcore {
 #endif  /* _KERNEL */
 };
 
+#if defined(_KERNEL)
 /*
  * Configure a processor core on the system
  *
@@ -58,5 +59,5 @@ struct pcore {
  * @pcore: Core to configure
  */
 void cpu_conf(struct pcore *pcore);
-
+#endif  /* _KERNEL */
 #endif  /* !_SYS_CPUVAR_H_ */
