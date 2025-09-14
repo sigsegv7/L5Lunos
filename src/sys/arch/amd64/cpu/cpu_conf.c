@@ -27,36 +27,12 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _SYS_CPUVAR_H_
-#define _SYS_CPUVAR_H_ 1
+#include <sys/cpuvar.h>
+#include <machine/gdt.h>
 
-#include <sys/types.h>
-#if defined(_KERNEL)
-#include <machine/mdcpu.h>
-#endif  /* _KERNEL */
+void
+cpu_conf(struct pcore *pcore)
+{
+    gdt_load();
+}
 
-/*
- * Logically describes a processor core on the
- * system. This structure contains machine
- * independent.
- *
- * @id: Monotonic logical ID
- * @md: Machine dependent processor information
- */
-struct pcore {
-    uint32_t id;
-#if defined(_KERNEL)
-    struct mdcore md;
-#endif  /* _KERNEL */
-};
-
-/*
- * Configure a processor core on the system
- *
- * [MD]
- *
- * @pcore: Core to configure
- */
-void cpu_conf(struct pcore *pcore);
-
-#endif  /* !_SYS_CPUVAR_H_ */
