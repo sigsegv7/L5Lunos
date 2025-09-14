@@ -42,12 +42,14 @@
  *
  * @id: Monotonic logical ID
  * @md: Machine dependent processor information
+ * @self: Chain pointer to self
  */
 struct pcore {
     uint32_t id;
 #if defined(_KERNEL)
     struct mdcore md;
 #endif  /* _KERNEL */
+    struct pcore *self;
 };
 
 #if defined(_KERNEL)
@@ -59,5 +61,13 @@ struct pcore {
  * @pcore: Core to configure
  */
 void cpu_conf(struct pcore *pcore);
+
+/*
+ * Get the current processing element (core) as
+ * a 'pcore' descriptor.
+ *
+ * Returns NULL on failure.
+ */
+struct pcore *this_core(void);
 #endif  /* _KERNEL */
 #endif  /* !_SYS_CPUVAR_H_ */

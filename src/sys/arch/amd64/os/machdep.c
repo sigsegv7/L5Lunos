@@ -28,15 +28,27 @@
  */
 
 #include <sys/cpuvar.h>
-#include <machine/boot.h>
 #include <machine/msr.h>
 
-void
-cpu_conf(struct pcore *pcore)
+/*
+ * Get the current processing element
+ */
+struct pcore *
+this_core(void)
 {
-    pcore->self = pcore;
-    platform_boot();
+    struct pcore *cpu;
 
-    /* We use %GS to store the processor */
-    wrmsr(IA32_GS_BASE, (uintptr_t)pcore);
+    if (rdmsr(IA32_GS_BASE) == 0) {
+        return NULL;
+    }
+
+    /* Get GS offset by 'self' field */
+    __ASMV(
+        "mov %%gs:%1, %0"
+        : "=r" (cpu)
+        : "m" (*&((struct pcore *)0)->self)
+        : "memory"
+    );
+
+    return cpu;
 }
