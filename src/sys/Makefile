@@ -6,11 +6,11 @@ LD =
 AS =
 
 .PHONY: all
-all: kern md
+all: os md
 
-.PHONY: kern
-kern:
-	cd kern; make CC=$(CC) LD=$(LD) AS=$(AS) TARGETDIR=$(TARGETDIR)
+.PHONY: os
+os:
+	cd os; make CC=$(CC) LD=$(LD) AS=$(AS) TARGETDIR=$(TARGETDIR)
 
 .PHONY: md
 md:
@@ -19,4 +19,4 @@ md:
 .PHONY: clean
 clean:
 	cd $(TARGETDIR); make clean
-	cd kern; make clean
+	cd os; make clean
