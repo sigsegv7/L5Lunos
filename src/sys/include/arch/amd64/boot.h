@@ -27,11 +27,14 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <sys/cpuvar.h>
-#include <machine/boot.h>
+#ifndef _MACHINE_BOOT_H_
+#define _MACHINE_BOOT_H_ 1
 
-void
-cpu_conf(struct pcore *pcore)
-{
-    platform_boot();
-}
+/*
+ * Start up platform specific hardware mostly relating
+ * to the CPU and the chipset before the system can be
+ * up and running.
+ */
+void platform_boot(void);
+
+#endif  /* !_MACHINE_BOOT_H_ */

@@ -27,11 +27,14 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <sys/cpuvar.h>
+#include <sys/types.h>
+#include <machine/uart.h>
+#include <machine/gdt.h>
 #include <machine/boot.h>
 
 void
-cpu_conf(struct pcore *pcore)
+platform_boot(void)
 {
-    platform_boot();
+    gdt_load();
+    uart_init();
 }
