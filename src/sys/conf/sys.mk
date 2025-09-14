@@ -1,4 +1,4 @@
-TARGET = i386  # default
+TARGET = amd64  # default
 LDSCRIPT = ../md/$(TARGET)/conf/sys.ld   # default
 
 # TODO: Make less rigid
