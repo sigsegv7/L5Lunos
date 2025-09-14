@@ -53,3 +53,7 @@ clean:
 	rm -rf lunos.iso root
 	rm -f $(KBIN)
 	cd sys/; make clean TARGET=$(TARGET)
+
+.PHONY: distclean
+distclean:
+	make clean; rm -rf srv/root
