@@ -38,6 +38,10 @@
 #define VIRT_TO_PHYS(VIRT) ((uintptr_t)(VIRT) - VM_HIGHER_HALF)
 #define DEFAULT_PAGESIZE 4096
 
+/* Physical/virtual address */
+typedef uintptr_t vaddr_t;
+typedef uintptr_t paddr_t;
+
 void vm_init(void);
 
 #endif  /* !_VM_H_ */
