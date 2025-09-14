@@ -34,6 +34,8 @@
 #include <sys/cdefs.h>
 
 #define md_spinwait() __ASMV("pause")
+#define md_intoff()   __ASMV("cli")
+#define md_inton()    __ASMV("sti")
 
 /*
  * Represents the machine dependent information
