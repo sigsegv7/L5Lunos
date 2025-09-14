@@ -31,6 +31,9 @@
 #define _MACHINE_MDCPU_H_ 1
 
 #include <sys/types.h>
+#include <sys/cdefs.h>
+
+#define md_spinwait() __ASMV("pause")
 
 /*
  * Represents the machine dependent information
