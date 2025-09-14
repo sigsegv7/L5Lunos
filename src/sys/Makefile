@@ -6,11 +6,15 @@ LD =
 AS =
 
 .PHONY: all
-all: os md
+all: os lib md
 
 .PHONY: os
 os:
 	cd os; make CC=$(CC) LD=$(LD) AS=$(AS) TARGETDIR=$(TARGETDIR)
+
+.PHONY: lib
+lib:
+	cd lib; make CC=$(CC) LD=$(LD) AS=$(AS) TARGETDIR=$(TARGETDIR)
 
 .PHONY: md
 md:
