@@ -27,21 +27,21 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <sys/panic.h>
-#include <vm/vm.h>
-#include <vm/physseg.h>
-#include <machine/mmu.h>    /* standard */
+/*
+ * Description: Standard CPU MMU interface
+ * Author: Ian Marco Moffett
+ */
 
-static struct physmem_stat stat;
+#ifndef _MACHINE_MMU_H_
+#define _MACHINE_MMU_H_
 
-void
-vm_init(void)
-{
-    if (vm_seg_init(&stat) < 0) {
-        panic("vm_init: vm_seg_init() failed\n");
-    }
+/*
+ * Initialize arch-specific MMU state such as
+ * page tables, initial mappings and sanity checks.
+ *
+ * Returns zero on success, otherwise a less than zero
+ * value on failure.
+ */
+int mmu_init(void);
 
-    if (mmu_init() < 0) {
-        panic("vm_init: mmu_init() failed\n");
-    }
-}
+#endif  /* !_MACHINE_MMU_H_ */
