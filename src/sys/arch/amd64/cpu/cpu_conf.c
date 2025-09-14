@@ -35,4 +35,3 @@ cpu_conf(struct pcore *pcore)
 {
     gdt_load();
 }
-
