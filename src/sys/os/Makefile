@@ -6,6 +6,7 @@ override PROMPT := printf "%s\t\t%s\n"
 TARGET_LIB = ../target/libkern.a
 CFLAGS = -I../include/ -I../include/lib/ -I../target/header/ $(MI_CFLAGS) -O0
 CFILES = $(shell find . -name "*.c")
+CFILES += $(shell find ../lib -name "*.c")
 
 DEPS = $(CFILES:.c=.d)
 OBJECTS = $(CFILES:%.c=%.o)

@@ -12,10 +12,6 @@ all: os lib md
 os:
 	cd os; make CC=$(CC) LD=$(LD) AS=$(AS) TARGETDIR=$(TARGETDIR)
 
-.PHONY: lib
-lib:
-	cd lib; make CC=$(CC) LD=$(LD) AS=$(AS) TARGETDIR=$(TARGETDIR)
-
 .PHONY: md
 md:
 	cd $(TARGETDIR); make CC=$(CC) LD=$(LD) AS=$(AS)
