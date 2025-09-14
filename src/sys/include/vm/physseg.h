@@ -27,17 +27,47 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _VM_H_
-#define _VM_H_ 1
+#ifndef _VM_PHYSSEG_H_
+#define _VM_PHYSSEG_H_ 1
 
 #include <sys/types.h>
-#include <sys/bootvars.h>
 
-#define VM_HIGHER_HALF (get_kernel_base())
-#define PHYS_TO_VIRT(PHYS) (void *)((uintptr_t)(PHYS) + VM_HIGHER_HALF)
-#define VIRT_TO_PHYS(VIRT) ((uintptr_t)(VIRT) - VM_HIGHER_HALF)
-#define DEFAULT_PAGESIZE 4096
+/*
+ * Represents physical memory stats gathered
+ * during initialization or during refresh.
+ */
+struct physmem_stat {
+    size_t pages_free;
+    size_t pages_used;
+};
 
-void vm_init(void);
+/*
+ * Initialize physical memory and get initial physical
+ * memory stats.
+ *
+ * @stat: Stats are written here
+ *
+ * Returns zero on success, otherwise a less than zero
+ * value on failure.
+ */
+int vm_seg_init(struct physmem_stat *stat);
 
-#endif  /* !_VM_H_ */
+/*
+ * Allocate one or more physical frames and
+ * get the [physical] address.
+ *
+ * @count: Number of frames to allocate
+ *
+ * Returns zero on failure (e.g., out of memory)
+ */
+uintptr_t vm_alloc_frame(size_t count);
+
+/*
+ * Free one or more physical frames
+ *
+ * @base: Base address to start freeing at
+ * @count: Number of frames to free
+ */
+void vm_free_frame(uintptr_t base, size_t count);
+
+#endif  /* !_VM_PHYSSEG_H_ */

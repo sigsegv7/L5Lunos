@@ -27,17 +27,16 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _VM_H_
-#define _VM_H_ 1
+#include <sys/panic.h>
+#include <vm/vm.h>
+#include <vm/physseg.h>
 
-#include <sys/types.h>
-#include <sys/bootvars.h>
+static struct physmem_stat stat;
 
-#define VM_HIGHER_HALF (get_kernel_base())
-#define PHYS_TO_VIRT(PHYS) (void *)((uintptr_t)(PHYS) + VM_HIGHER_HALF)
-#define VIRT_TO_PHYS(VIRT) ((uintptr_t)(VIRT) - VM_HIGHER_HALF)
-#define DEFAULT_PAGESIZE 4096
-
-void vm_init(void);
-
-#endif  /* !_VM_H_ */
+void
+vm_init(void)
+{
+    if (vm_seg_init(&stat) < 0) {
+        panic("vm_init: vm_seg_init() failed\n");
+    }
+}
