@@ -36,6 +36,7 @@
 #define md_spinwait() __ASMV("pause")
 #define md_intoff()   __ASMV("cli")
 #define md_inton()    __ASMV("sti")
+#define md_halt()     __ASMV("hlt")
 
 /*
  * Represents the machine dependent information
