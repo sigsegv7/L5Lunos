@@ -63,7 +63,7 @@ static const char *memstr_tab[] = {
     [LIMINE_MEMMAP_ACPI_NVS] = "ACPI NVS",
     [LIMINE_MEMMAP_BAD_MEMORY] = "bad",
     [LIMINE_MEMMAP_BOOTLOADER_RECLAIMABLE] = "bootloader reclaimable",
-    [LIMINE_MEMMAP_KERNEL_AND_MODULES] = "ethos0",
+    [LIMINE_MEMMAP_KERNEL_AND_MODULES] = "lunos",
     [LIMINE_MEMMAP_FRAMEBUFFER] = "vram"
 };
 
