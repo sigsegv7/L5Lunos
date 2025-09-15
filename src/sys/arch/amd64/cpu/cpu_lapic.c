@@ -39,6 +39,8 @@
 #include <sys/param.h>
 #include <sys/types.h>
 #include <os/mmio.h>
+#include <acpi/acpi.h>
+#include <acpi/tables.h>
 #include <machine/mdcpu.h>
 #include <machine/lapicregs.h>
 #include <machine/lapic.h>
@@ -277,6 +279,8 @@ lapic_init(void)
     union tss_stack tmr_stack;
     struct pcore *core = this_core();
     struct mdcore *mdcore;
+    struct acpi_madt *madt;
+    bool is_relocated;
 
     if (__unlikely(core == NULL)) {
         panic("lapic_init: unable to get current core\n");
@@ -285,6 +289,23 @@ lapic_init(void)
     /* Try to allocate LAPIC timer interrupt stack */
     if (tss_alloc_stack(&tmr_stack, DEFAULT_PAGESIZE) != 0) {
         panic("failed to allocate LAPIC TMR stack!\n");
+    }
+
+    /* We need the MADT */
+    madt = acpi_query("APIC");
+    if (madt == NULL) {
+        panic("lapic_init: failed to fetch MADT\n");
+    }
+
+    /*
+     * Usually the Local APIC register interface starts
+     * at MMIO address 0xFEE00000. However, as we are
+     * making this assumption, we'll need to check in
+     * case some weird firmware moved it.
+     */
+    is_relocated = madt->lapic_addr != _LAPIC_MMIO_BASE;
+    if (__unlikely(is_relocated)) {
+        panic("lapic_init: MMIO base not at %p\n", _LAPIC_MMIO_BASE);
     }
 
     /* Set up the timer interrupt */
