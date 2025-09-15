@@ -31,8 +31,8 @@
 #include <sys/cpuvar.h>
 #include <os/kalloc.h>
 #include <vm/vm.h>
+#include <vm/mmu.h>
 #include <vm/physseg.h>
-#include <machine/mmu.h>    /* standard */
 
 
 /* os_kalloc.c */

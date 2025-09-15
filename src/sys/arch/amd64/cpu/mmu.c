@@ -32,7 +32,7 @@
 #include <sys/param.h>
 #include <sys/cdefs.h>
 #include <sys/panic.h>
-#include <machine/mmu.h>
+#include <vm/mmu.h>
 #include <vm/vm.h>
 #include <vm/physseg.h>
 #include <string.h>
