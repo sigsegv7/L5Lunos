@@ -32,6 +32,7 @@
 
 #include <sys/types.h>
 #include <sys/cdefs.h>
+#include <machine/tss.h>
 
 #define md_spinwait() __ASMV("pause")
 #define md_intoff()   __ASMV("cli")
@@ -46,12 +47,14 @@
  * @cr3: CR3 register value (PML<n> phys)
  * @lapic_base: LAPIC register interface base
  * @x2apic: Has the x2APIC? Is 1 if true
+ * @tss: Task state segment for this core
  */
 struct mdcore {
     uint32_t apic_id;
     uint64_t cr3;
     void *lapic_base;
     uint8_t x2apic : 1;
+    struct tss_entry tss;
 };
 
 #endif  /* !_MACHINE_MDCPU_H_ */

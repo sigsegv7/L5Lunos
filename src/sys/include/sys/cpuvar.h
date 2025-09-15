@@ -63,6 +63,16 @@ struct pcore {
 void cpu_conf(struct pcore *pcore);
 
 /*
+ * Initialize a processor core on the system, second
+ * stage initialization hook.
+ *
+ * [MD]
+ *
+ * @pcore: Processor core to init
+ */
+void cpu_init(struct pcore *pcore);
+
+/*
  * Get the current processing element (core) as
  * a 'pcore' descriptor.
  *

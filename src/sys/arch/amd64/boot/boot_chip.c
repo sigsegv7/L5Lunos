@@ -28,11 +28,15 @@
  */
 
 #include <sys/types.h>
+#include <sys/panic.h>
+#include <sys/cpuvar.h>
 #include <machine/uart.h>
 #include <machine/gdt.h>
 #include <machine/boot.h>
 #include <machine/i8259.h>
 #include <machine/ioapic.h>
+#include <machine/tss.h>
+#include <machine/gdt.h>
 #include <stdbool.h>
 
 static void
@@ -48,12 +52,33 @@ chipset_init(void)
     ioapic_init();
 }
 
+/*
+ * Initialize and load the task state segment
+ */
+static void
+init_tss(struct pcore *pcore)
+{
+    struct tss_desc *desc;
+
+    desc = (struct tss_desc *)&g_gdt_data[GDT_TSS_INDEX];
+    write_tss(pcore, desc);
+    tss_load();
+}
+
 void
 platform_boot(void)
 {
-    gdt_load();
-    i8259_disable();
+    struct pcore *core;
 
+    /* Try to get the current core */
+    if ((core = this_core()) == NULL) {
+        panic("platform_boot: could not get core\n");
+    }
+
+    gdt_load();
+    init_tss(core);
+
+    i8259_disable();
     chipset_init();
     uart_init();
 }

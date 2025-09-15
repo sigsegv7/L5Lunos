@@ -16,13 +16,14 @@ main(void)
 {
     printf("booting l5 lunos v0.0.1...\n");
     acpi_early_init();
-    cpu_conf(&g_bsp);
 
     cons_init();
     syslog_toggle(true);
 
+    cpu_conf(&g_bsp);
     vm_init();
 
+    cpu_init(&g_bsp);
     panic("end of kernel reached\n");
     for (;;);
 }

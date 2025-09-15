@@ -57,12 +57,17 @@ init_vectors(void)
 void
 cpu_conf(struct pcore *pcore)
 {
+    /* We use %GS to store the processor */
     pcore->self = pcore;
+    wrmsr(IA32_GS_BASE, (uintptr_t)pcore);
+
     init_vectors();
     idt_load();
-    platform_boot();
+}
 
-    /* We use %GS to store the processor */
-    wrmsr(IA32_GS_BASE, (uintptr_t)pcore);
+void
+cpu_init(struct pcore *pcore)
+{
     lapic_init();
+    platform_boot();
 }
