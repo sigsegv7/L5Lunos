@@ -49,6 +49,9 @@ chipset_init(void)
 
     once = true;
     ioapic_init();
+
+    uart_init();
+    i8259_disable();
 }
 
 /*
@@ -75,8 +78,5 @@ platform_boot(void)
     }
 
     init_tss(core);
-
-    i8259_disable();
     chipset_init();
-    uart_init();
 }
