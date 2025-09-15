@@ -208,7 +208,7 @@ ioapic_init(void)
     /* Read the IOAPIC version register */
     ioapicver = ioapic_readl(IOAPICVER);
     ver = ioapicver & 0xFF;
-    nredir = (ioapicver >> 16) & 0xFF;
+    nredir = ((ioapicver >> 16) & 0xFF) + 1;
 
     printf("ioapic: ioapic @ mainbus:ver=%x,nredir=%d\n"
            "ioapic: masking all %d pins...\n",
