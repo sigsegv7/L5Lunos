@@ -28,15 +28,19 @@
  */
 
 #include <sys/panic.h>
+#include <sys/cpuvar.h>
 #include <vm/vm.h>
 #include <vm/physseg.h>
 #include <machine/mmu.h>    /* standard */
 
 static struct physmem_stat stat;
+struct vm_vas g_kvas;
 
 void
 vm_init(void)
 {
+    struct pcore *pcore = this_core();
+
     if (vm_seg_init(&stat) < 0) {
         panic("vm_init: vm_seg_init() failed\n");
     }
