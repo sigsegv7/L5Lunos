@@ -72,6 +72,6 @@ void *acpi_query(const char *query);
  * Returns zero on success, otherwise a less than zero
  * value on failure.
  */
-int acpi_init(void);
+int acpi_early_init(void);
 
 #endif  /* !_MACHINE_ACPI_H_ */

@@ -14,13 +14,14 @@ struct pcore g_bsp;
 __dead void
 main(void)
 {
+    acpi_early_init();
     cpu_conf(&g_bsp);
+
     cons_init();
     syslog_toggle(true);
 
     printf("booting l5 lunos v0.0.1...\n");
     vm_init();
-    acpi_init();
 
     panic("end of kernel reached\n");
     for (;;);

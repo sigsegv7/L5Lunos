@@ -54,7 +54,7 @@ acpi_get_root_sdt(void)
  * ACPI initialization
  */
 int
-acpi_init(void)
+acpi_early_init(void)
 {
     struct bootvars bootvars;
     struct acpi_rsdp *rsdp;
