@@ -128,11 +128,18 @@ ioapic_write_redentry(const union ioapic_redentry *entry, uint8_t index)
  * Read a MADT entry
  *
  * @type: Type that we should scan for
+ * @cb: Callback (returns 0 if entry is found)
+ * @arg: Optional argument
+ *
+ * Returns the callback return value, on success,
+ * otherwise a less than zero value on failure.
  */
-static struct apic_header *
-ioapic_read_madt(uint32_t type)
+static int
+ioapic_read_madt(uint32_t type, int(*cb)(struct apic_header *, size_t arg),
+    size_t arg)
 {
     uint8_t *cur, *end;
+    int retval = -1;
     struct apic_header *apichdr;
 
     /* Try to read the MADT table */
@@ -146,29 +153,34 @@ ioapic_read_madt(uint32_t type)
     while (cur < end) {
         apichdr = (void *)cur;
         if (apichdr->type == type) {
-            return apichdr;
+            retval = cb(apichdr, arg);
+        }
+
+        /* If the entry was found, stop */
+        if (retval >= 0) {
+            return retval;
         }
 
         cur += apichdr->length;
     }
 
-    return NULL;
+    return -1;
 }
 
 /*
  * Set the I/O APIC MMIO base address
  */
-static void
-ioapic_set_base(void)
+static int
+__ioapic_callback(struct apic_header *hdr, size_t arg)
 {
-    struct apic_header *hdr;
-
-    hdr = ioapic_read_madt(APIC_TYPE_IO_APIC);
-    if (hdr == NULL) {
-        panic("ioapic_set_base: could not read APIC_TYPE_IO_APIC\n");
+    if (ioapic != NULL) {
+        return 0;
     }
 
     ioapic = (struct ioapic *)hdr;
+    return 0;
+}
+
 }
 
 /*
@@ -195,7 +207,11 @@ ioapic_init(void)
     uint8_t ver, nredir;
 
     if (ioapic == NULL) {
-        ioapic_set_base();
+        ioapic_read_madt(
+            APIC_TYPE_IO_APIC,
+            __ioapic_callback,
+            0
+        );
     }
 
     /* Read the IOAPIC version register */
