@@ -27,16 +27,27 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <sys/types.h>
-#include <machine/uart.h>
-#include <machine/gdt.h>
-#include <machine/boot.h>
-#include <machine/i8259.h>
+#ifndef _MACHINE_I8259_H_
+#define _MACHINE_I8259_H_ 1
 
-void
-platform_boot(void)
-{
-    gdt_load();
-    i8259_disable();
-    uart_init();
-}
+#include <sys/cdefs.h>
+#include <machine/pio.h>
+
+/* Master/slave I/O base addresses */
+#define PIC1_BASE   0x20
+#define PIC2_BASE   0xA0
+
+/* Master/slave I/O command bases */
+#define PIC1_CMD    PIC1_BASE
+#define PIC2_CMD    PIC2_BASE
+
+#define PIC1_DATA   (PIC1_BASE + 1)
+#define PIC2_DATA   (PIC2_BASE + 1)
+
+/*
+ * Disable the i8259 interrupt controller by masking
+ * each and every pin.
+ */
+void i8259_disable(void);
+
+#endif  /* !_MACHINE_H_ */

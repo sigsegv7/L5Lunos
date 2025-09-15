@@ -27,16 +27,14 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <sys/types.h>
-#include <machine/uart.h>
-#include <machine/gdt.h>
-#include <machine/boot.h>
 #include <machine/i8259.h>
 
+/*
+ * Disable the i8259
+ */
 void
-platform_boot(void)
+i8259_disable(void)
 {
-    gdt_load();
-    i8259_disable();
-    uart_init();
+    outb(PIC1_DATA, 0xFF);
+    outb(PIC2_DATA, 0xFF);
 }
