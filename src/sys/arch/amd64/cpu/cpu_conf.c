@@ -33,6 +33,7 @@
 #include <machine/idt.h>
 #include <machine/trap.h>
 #include <machine/lapic.h>
+#include <machine/gdt.h>
 
 /*
  * Initialize interrupt vectors
@@ -58,6 +59,7 @@ void
 cpu_conf(struct pcore *pcore)
 {
     /* We use %GS to store the processor */
+    gdt_load();
     pcore->self = pcore;
     wrmsr(IA32_GS_BASE, (uintptr_t)pcore);
 

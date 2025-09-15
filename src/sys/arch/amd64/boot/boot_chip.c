@@ -31,7 +31,6 @@
 #include <sys/panic.h>
 #include <sys/cpuvar.h>
 #include <machine/uart.h>
-#include <machine/gdt.h>
 #include <machine/boot.h>
 #include <machine/i8259.h>
 #include <machine/ioapic.h>
@@ -75,7 +74,6 @@ platform_boot(void)
         panic("platform_boot: could not get core\n");
     }
 
-    gdt_load();
     init_tss(core);
 
     i8259_disable();
