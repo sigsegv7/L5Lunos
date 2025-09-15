@@ -27,19 +27,30 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <sys/types.h>
-#include <machine/uart.h>
-#include <machine/gdt.h>
-#include <machine/boot.h>
-#include <machine/i8259.h>
-#include <machine/ioapic.h>
+#ifndef _IOAPICVAR_H_
+#define _IOAPIC_VAR_H_ 1
 
-void
-platform_boot(void)
-{
-    gdt_load();
-    i8259_disable();
+/* Register offsets */
+#define IOREGSEL    0x00
+#define IOWIN       0x10
+#define IOREDTBL    0x10
+#define IOAPICID    0x00
+#define IOAPICVER   0x01
 
-    ioapic_init();
-    uart_init();
-}
+union ioapic_redentry {
+    struct {
+        uint8_t vector;
+        uint8_t delmod          : 3;
+        uint8_t destmod         : 1;
+        uint8_t delivs          : 1;
+        uint8_t intpol          : 1;
+        uint8_t remote_irr      : 1;
+        uint8_t trigger_mode    : 1;
+        uint8_t interrupt_mask  : 1;
+        uint64_t reserved       : 39;
+        uint8_t dest_field;
+    };
+    uint64_t value;
+};
+
+#endif  /* !_IOAPIC_VAR_H_ */

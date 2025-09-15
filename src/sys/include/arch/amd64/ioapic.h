@@ -27,19 +27,25 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <sys/types.h>
-#include <machine/uart.h>
-#include <machine/gdt.h>
-#include <machine/boot.h>
-#include <machine/i8259.h>
-#include <machine/ioapic.h>
+#ifndef _MACHINE_IOAPIC_H_
+#define _MACHINE_IOAPIC_H_ 1
 
-void
-platform_boot(void)
-{
-    gdt_load();
-    i8259_disable();
+/* Mask arguments for ioapic_gsi_mask() */
+#define IOAPIC_PIN_MASK     1
+#define IOAPIC_PIN_UNMASK   0
 
-    ioapic_init();
-    uart_init();
-}
+/*
+ * Initialize the I/O APIC into a basic state,
+ * all interrupts will be masked.
+ */
+void ioapic_init(void);
+
+/*
+ * Mask or unmask a global system interrupt by index
+ *
+ * @gsi: Global system interrupt to mask
+ * @mask: 1->masked,0->unmasked
+ */
+void ioapic_gsi_mask(uint8_t gsi, uint8_t mask);
+
+#endif  /* !_MACHINE_IOAPIC_H_ */
