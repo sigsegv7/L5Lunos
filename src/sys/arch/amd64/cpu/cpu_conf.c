@@ -32,6 +32,7 @@
 #include <machine/msr.h>
 #include <machine/idt.h>
 #include <machine/trap.h>
+#include <machine/lapic.h>
 
 /*
  * Initialize interrupt vectors
@@ -63,4 +64,5 @@ cpu_conf(struct pcore *pcore)
 
     /* We use %GS to store the processor */
     wrmsr(IA32_GS_BASE, (uintptr_t)pcore);
+    lapic_init();
 }

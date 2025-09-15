@@ -1,3 +1,4 @@
+
 /*
  * Copyright (c) 2025 Ian Marco Moffett and L5 engineers
  * All rights reserved.
@@ -27,31 +28,13 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _MACHINE_MDCPU_H_
-#define _MACHINE_MDCPU_H_ 1
-
-#include <sys/types.h>
-#include <sys/cdefs.h>
-
-#define md_spinwait() __ASMV("pause")
-#define md_intoff()   __ASMV("cli")
-#define md_inton()    __ASMV("sti")
-#define md_halt()     __ASMV("hlt")
+#ifndef _MACHINE_LAPIC_H_
+#define _MACHINE_LAPIC_H_ 1
 
 /*
- * Represents the machine dependent information
- * of a processor core on the machine.
- *
- * @apic_id: Local APIC ID
- * @cr3: CR3 register value (PML<n> phys)
- * @lapic_base: LAPIC register interface base
- * @x2apic: Has the x2APIC? Is 1 if true
+ * Initialize the local APIC on the current
+ * processor.
  */
-struct mdcore {
-    uint32_t apic_id;
-    uint64_t cr3;
-    void *lapic_base;
-    uint8_t x2apic : 1;
-};
+void lapic_init(void);
 
-#endif  /* !_MACHINE_MDCPU_H_ */
+#endif  /* !_MACHINE_LAPIC_H_ */
