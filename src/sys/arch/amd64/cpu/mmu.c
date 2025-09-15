@@ -27,6 +27,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Descriptor: MD MMU translation core
+ * Author: Ian Marco Moffett
+ */
+
 #include <sys/types.h>
 #include <sys/errno.h>
 #include <sys/param.h>
