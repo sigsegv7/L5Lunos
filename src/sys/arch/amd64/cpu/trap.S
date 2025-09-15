@@ -101,3 +101,11 @@ TRAP_ENTRY_EC(ss_fault, $TRAP_SS)
     mov %rsp, %rdi
     call trap_handler
 TRAP_EXIT_EC(ss_fault)
+
+    .globl lapic_tmr_isr
+INTR_ENTRY(lapic_tmr_isr)
+    // TODO
+    mov %rsp, %rdi
+    cli
+    hlt
+INTR_EXIT(lapic_tmr_isr)

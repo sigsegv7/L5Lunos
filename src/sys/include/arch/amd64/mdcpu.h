@@ -48,6 +48,7 @@
  * @lapic_base: LAPIC register interface base
  * @x2apic: Has the x2APIC? Is 1 if true
  * @tss: Task state segment for this core
+ * @lapic_tmr_freq: Local APIC timer frequency
  */
 struct mdcore {
     uint32_t apic_id;
@@ -55,6 +56,7 @@ struct mdcore {
     void *lapic_base;
     uint8_t x2apic : 1;
     struct tss_entry tss;
+    size_t lapic_tmr_freq;
 };
 
 #endif  /* !_MACHINE_MDCPU_H_ */

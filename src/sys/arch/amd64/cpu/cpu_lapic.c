@@ -42,11 +42,15 @@
 #include <machine/mdcpu.h>
 #include <machine/lapicregs.h>
 #include <machine/lapic.h>
+#include <machine/idt.h>
 #include <machine/cpuid.h>
+#include <machine/i8254.h>
 #include <machine/msr.h>
 
 #define pr_trace(fmt, ...) printf("lapic: " fmt, ##__VA_ARGS__)
 #define bsp_trace(fmt, ...) if (lapic_is_bsp()) pr_trace(fmt, ##__VA_ARGS__)
+
+extern void lapic_tmr_isr(void);
 
 /*
  * Returns true if the current processor is the
@@ -154,15 +158,141 @@ lapic_enable(const struct mdcore *core)
     lapic_writel(core, LAPIC_SVR, tmp | LAPIC_SW_ENABLE);
 }
 
+/*
+ * Put the local APIC timer in a halted state
+ *
+ * @core: Current processor core
+ */
+static void
+lapic_timer_stop(const struct mdcore *core)
+{
+    lapic_writel(core, LAPIC_LVT_TMR, LAPIC_LVT_MASK);
+    lapic_writel(core, LAPIC_INIT_CNT, 0);
+}
+
+/*
+ * Start the timer with a specific mode, mask and count
+ *
+ * @core: Current processor with the target LAPIC
+ * @mask: If true, mask it so that no interrupts will fire
+ * @mode: Timer operation mode (see LVT_TMR_*)
+ * @cnt:  Counter value to start decrementing at
+ */
+static void
+lapic_timer_start(const struct mdcore *core, bool mask, uint8_t mode, uint32_t cnt)
+{
+    uint32_t tmp;
+
+    tmp = (mode << 17) | (mask << 16) | LAPIC_TIMER_VEC;
+    lapic_writel(core, LAPIC_LVT_TMR, tmp);
+    lapic_writel(core, LAPIC_DCR, 0x00);
+    lapic_writel(core, LAPIC_INIT_CNT, cnt);
+}
+
+/*
+ * Init the Local APIC timer and return
+ * the frequency.
+ *
+ * @ci: Current processor
+ */
+static size_t
+lapic_timer_init(struct mdcore *core)
+{
+    uint16_t ticks_start, ticks_end;
+    size_t ticks_total, freq;
+    const uint16_t MAX_SAMPLES = 0xFFFF;
+
+    lapic_timer_stop(core);
+    i8254_set_reload(MAX_SAMPLES);
+    ticks_start = i8254_get_count();
+
+    lapic_writel(core, LAPIC_INIT_CNT, MAX_SAMPLES);
+    while (lapic_readl(core, LAPIC_CUR_CNT) != 0);
+
+    ticks_end = i8254_get_count();
+    ticks_total = ticks_start - ticks_end;
+
+    freq = (MAX_SAMPLES / ticks_total) * I8254_DIVIDEND;
+    lapic_timer_stop(core);
+    return freq;
+}
+
+/*
+ * Start Local APIC timer oneshot with number
+ * of ticks to count down from.
+ *
+ * @mask: If `true', timer will be masked, `count' should be 0.
+ * @count: Number of ticks.
+ */
+static void
+lapic_timer_oneshot(bool mask, uint32_t count)
+{
+    struct pcore *core;
+
+    if ((core = this_core()) == NULL) {
+        return;
+    }
+
+    lapic_timer_start(&core->md, mask, LVT_TMR_ONESHOT, count);
+}
+
+/*
+ * Start Local APIC timer oneshot in usec
+ */
+void
+lapic_timer_oneshot_us(size_t usec)
+{
+    uint64_t ticks;
+    struct pcore *core;
+    struct mdcore *md;
+
+    if ((core = this_core()) == NULL) {
+        return;
+    }
+
+    md = &core->md;
+    ticks = usec * (md->lapic_tmr_freq / 1000000);
+    lapic_timer_oneshot(false, ticks);
+}
+
+/*
+ * Send an end-of-interrupt to the current
+ * core's Local APIC
+ */
+void
+lapic_eoi(void)
+{
+    struct pcore *core = this_core();
+
+    if (core == NULL) {
+        return;
+    }
+
+    lapic_writel(&core->md, LAPIC_EOI, 0);
+}
+
 void
 lapic_init(void)
 {
+    union tss_stack tmr_stack;
     struct pcore *core = this_core();
     struct mdcore *mdcore;
 
     if (__unlikely(core == NULL)) {
         panic("lapic_init: unable to get current core\n");
     }
+
+    /* Try to allocate LAPIC timer interrupt stack */
+    if (tss_alloc_stack(&tmr_stack, DEFAULT_PAGESIZE) != 0) {
+        panic("failed to allocate LAPIC TMR stack!\n");
+    }
+
+    /* Set up the timer interrupt */
+    tss_update_ist(core, tmr_stack, IST_SCHED);
+    idt_set_desc(
+        LAPIC_TIMER_VEC, IDT_INT_GATE,
+        ISR(lapic_tmr_isr), IST_SCHED
+    );
 
     mdcore = &core->md;
     bsp_trace("detected lapic0 @ core %d\n", core->id);
@@ -171,4 +301,7 @@ lapic_init(void)
     /* If we can, put the chip in x2APIC mode on startup */
     lapic_enable(mdcore);
     bsp_trace("lapic0 enabled in %sapic mode\n", mdcore->x2apic ? "x2" : "x");
+
+    /* Calibrate the timer */
+    mdcore->lapic_tmr_freq = lapic_timer_init(mdcore);
 }

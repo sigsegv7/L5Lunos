@@ -31,10 +31,25 @@
 #ifndef _MACHINE_LAPIC_H_
 #define _MACHINE_LAPIC_H_ 1
 
+#define LAPIC_TIMER_VEC 0x81
+
 /*
  * Initialize the local APIC on the current
  * processor.
  */
 void lapic_init(void);
+
+/*
+ * Send an end-of-interrupt message to the current
+ * processor's Local APIC
+ */
+void lapic_eoi(void);
+
+/*
+ * Start Local APIC timer oneshot in microseconds.
+ *
+ * @us: Microseconds.
+ */
+void lapic_timer_oneshot_us(size_t usec);
 
 #endif  /* !_MACHINE_LAPIC_H_ */
