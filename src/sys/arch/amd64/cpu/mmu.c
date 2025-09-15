@@ -146,16 +146,16 @@ __mmu_read_cr3(void)
 static inline pglvl_t
 mmu_pg_level(void)
 {
-    uint64_t cr0;
+    uint64_t cr4;
 
     __ASMV(
-        "mov %%cr0, %0"
-        : "=r" (cr0)
+        "mov %%cr4, %0"
+        : "=r" (cr4)
         :
         : "memory"
     );
 
-    if (ISSET(cr0, CR4_L5_PAGING)) {
+    if (ISSET(cr4, CR4_L5_PAGING)) {
         return MMU_L5;
     }
 
