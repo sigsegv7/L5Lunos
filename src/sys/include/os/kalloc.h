@@ -27,32 +27,32 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <sys/panic.h>
-#include <sys/cpuvar.h>
-#include <os/kalloc.h>
-#include <vm/vm.h>
-#include <vm/physseg.h>
-#include <machine/mmu.h>    /* standard */
+#ifndef _VM_DYNALLOC_H_
+#define _VM_DYNALLOC_H_
 
+#include <sys/types.h>
 
-/* os_kalloc.c */
-void __kalloc_init(void);
+/*
+ * Allocate a `sz` byte chunk of memory
+ * for system use.
+ *
+ * XXX: The returned buffer will have `sz` usable bytes
+ *      but may not be exact as it is common to store
+ *      ancillary data in a block header
+ *
+ * @sz: Number of bytes to allocate
+ *
+ * Returns the base pointer of the allocated memory
+ * on success, otherwise NULL on failure.
+ */
+void *kalloc(size_t sz);
 
-static struct physmem_stat stat;
-struct vm_vas g_kvas;
+/*
+ * Free a chunk of memory given to by
+ * `ptr'
+ *
+ * @ptr: Base of memory chunk to free
+ */
+void kfree(void *ptr);
 
-void
-vm_init(void)
-{
-    struct pcore *pcore = this_core();
-
-    if (vm_seg_init(&stat) < 0) {
-        panic("vm_init: vm_seg_init() failed\n");
-    }
-
-    if (mmu_init() < 0) {
-        panic("vm_init: mmu_init() failed\n");
-    }
-
-    __kalloc_init();
-}
+#endif  /* !_VM_DYNALLOC_H_ */

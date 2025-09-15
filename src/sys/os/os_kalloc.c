@@ -28,31 +28,67 @@
  */
 
 #include <sys/panic.h>
-#include <sys/cpuvar.h>
 #include <os/kalloc.h>
-#include <vm/vm.h>
+#include <os/spinlock.h>
+#include <vm/tlsf.h>
 #include <vm/physseg.h>
-#include <machine/mmu.h>    /* standard */
+#include <vm/vm.h>
+#include <stdbool.h>
 
+#define KALLOC_POOL_PAGES     (KALLOC_POOL_SZ / DEFAULT_PAGESIZE)
+#define KALLOC_POOL_SZ        0x400000  /* 4 MiB */
 
-/* os_kalloc.c */
 void __kalloc_init(void);
 
-static struct physmem_stat stat;
-struct vm_vas g_kvas;
+static struct spinlock lock;
+static tlsf_t tlsf_ctx;
+static paddr_t pool = 0;
+static void *pool_va = 0;
+static bool is_init = false;
+
+/*
+ * Memory allocation
+ */
+void *
+kalloc(size_t sz)
+{
+    void *tmp;
+
+    if (!is_init) {
+        return NULL;
+    }
+
+    spinlock_acquire(&lock);
+    tmp = tlsf_malloc(tlsf_ctx, sz);
+    spinlock_release(&lock);
+    return tmp;
+}
+
+/*
+ * Memory deallocation
+ */
+void
+kfree(void *ptr)
+{
+    spinlock_acquire(&lock);
+    tlsf_free(tlsf_ctx, ptr);
+    spinlock_release(&lock);
+}
 
 void
-vm_init(void)
+__kalloc_init(void)
 {
-    struct pcore *pcore = this_core();
-
-    if (vm_seg_init(&stat) < 0) {
-        panic("vm_init: vm_seg_init() failed\n");
+    /* Don't do it twice */
+    if (is_init) {
+        return;
     }
 
-    if (mmu_init() < 0) {
-        panic("vm_init: mmu_init() failed\n");
+    pool = vm_alloc_frame(KALLOC_POOL_PAGES);
+    if (pool == 0) {
+        panic("__kalloc_init: could not create pool\n");
     }
 
-    __kalloc_init();
+    pool_va = PHYS_TO_VIRT(pool);
+    tlsf_ctx = tlsf_create_with_pool(pool_va, KALLOC_POOL_SZ);
+    is_init = true;
 }
