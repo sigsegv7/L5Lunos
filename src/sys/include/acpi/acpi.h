@@ -74,4 +74,20 @@ void *acpi_query(const char *query);
  */
 int acpi_early_init(void);
 
+
+/*
+ * Read a MADT entry
+ *
+ * @type: Type that we should scan for
+ * @cb: Callback (returns 0 if entry is found)
+ * @arg: Optional argument
+ *
+ * Returns the callback return value, on success,
+ * otherwise a less than zero value on failure.
+ */
+int acpi_read_madt(
+    uint32_t type, int(*cb)(struct apic_header *, size_t arg),
+    size_t arg
+);
+
 #endif  /* !_MACHINE_ACPI_H_ */

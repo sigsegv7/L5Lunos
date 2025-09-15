@@ -37,7 +37,6 @@
 #include <machine/ioapicvar.h>
 
 static struct ioapic *ioapic = NULL;
-static struct acpi_madt *madt = NULL;
 static struct apic_header *override = NULL;
 
 /*
@@ -126,49 +125,6 @@ ioapic_write_redentry(const union ioapic_redentry *entry, uint8_t index)
 }
 
 /*
- * Read a MADT entry
- *
- * @type: Type that we should scan for
- * @cb: Callback (returns 0 if entry is found)
- * @arg: Optional argument
- *
- * Returns the callback return value, on success,
- * otherwise a less than zero value on failure.
- */
-static int
-ioapic_read_madt(uint32_t type, int(*cb)(struct apic_header *, size_t arg),
-    size_t arg)
-{
-    uint8_t *cur, *end;
-    int retval = -1;
-    struct apic_header *apichdr;
-
-    /* Try to read the MADT table */
-    madt = acpi_query("APIC");
-    if (madt == NULL) {
-        panic("ioapic_read_madt: failed to get MADT\n");
-    }
-
-    cur = (uint8_t *)(madt + 1);
-    end = (uint8_t *)madt + madt->hdr.length;
-    while (cur < end) {
-        apichdr = (void *)cur;
-        if (apichdr->type == type) {
-            retval = cb(apichdr, arg);
-        }
-
-        /* If the entry was found, stop */
-        if (retval >= 0) {
-            return retval;
-        }
-
-        cur += apichdr->length;
-    }
-
-    return -1;
-}
-
-/*
  * Set the I/O APIC MMIO base address
  */
 static int
@@ -220,7 +176,7 @@ ioapic_route_vec(uint8_t irq, uint8_t vector)
     union ioapic_redentry redent;
     int gsi;
 
-    gsi = ioapic_read_madt(
+    gsi = acpi_read_madt(
         APIC_TYPE_INTERRUPT_OVERRIDE,
         __irq_to_gsi,
         irq
@@ -242,7 +198,7 @@ ioapic_init(void)
     uint8_t ver, nredir;
 
     if (ioapic == NULL) {
-        ioapic_read_madt(
+        acpi_read_madt(
             APIC_TYPE_IO_APIC,
             __ioapic_callback,
             0

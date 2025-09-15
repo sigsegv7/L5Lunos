@@ -27,6 +27,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <sys/panic.h>
 #include <acpi/acpi.h>
 #include <vm/vm.h>
 #include <string.h>
@@ -63,4 +64,43 @@ acpi_query(const char *query)
     }
 
     return NULL;
+}
+
+/*
+ * Read a MADT entry
+ */
+int
+acpi_read_madt(uint32_t type, int(*cb)(struct apic_header *, size_t arg),
+    size_t arg)
+{
+    static struct acpi_madt *madt = NULL;
+    uint8_t *cur, *end;
+    int retval = -1;
+    struct apic_header *apichdr;
+
+    /* Try to read the MADT table */
+    if (madt == NULL) {
+        madt = acpi_query("APIC");
+    }
+    if (madt == NULL) {
+        panic("ioapic_read_madt: failed to get MADT\n");
+    }
+
+    cur = (uint8_t *)(madt + 1);
+    end = (uint8_t *)madt + madt->hdr.length;
+    while (cur < end) {
+        apichdr = (void *)cur;
+        if (apichdr->type == type) {
+            retval = cb(apichdr, arg);
+        }
+
+        /* If the entry was found, stop */
+        if (retval >= 0) {
+            return retval;
+        }
+
+        cur += apichdr->length;
+    }
+
+    return -1;
 }
