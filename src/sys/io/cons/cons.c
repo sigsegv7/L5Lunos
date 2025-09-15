@@ -30,6 +30,7 @@
 #include <sys/types.h>
 #include <sys/errno.h>
 #include <sys/syslog.h>
+#include <sys/ascii.h>
 #include <io/cons/cons.h>
 #include <io/cons/font.h>
 #include <io/cons/consvar.h>
@@ -42,6 +43,9 @@
 #define FONT_HEIGHT 20
 
 struct cons_scr g_root_scr;
+
+/* Forward declarations */
+static void fill_screen(struct cons_scr *scr, uint32_t bg);
 
 /*
  * Get the index into the framebuffer with an x and y
@@ -57,6 +61,26 @@ __always_inline static inline size_t
 fb_get_index(uint32_t pitch, uint32_t x, uint32_t y)
 {
     return x + y * (pitch / 4);
+}
+
+/*
+ * Write a newline onto the console and handle
+ * Y overflows
+ *
+ * @scr: Screen to write a newline onto
+ */
+static void
+cons_newline(struct cons_scr *scr)
+{
+    scr->text_x = 0;
+    scr->text_y += FONT_HEIGHT;
+
+    /* Handle console y overflow */
+    if (scr->text_y >= scr->max_row - FONT_HEIGHT) {
+        scr->text_x = 0;
+        scr->text_y = 0;
+        fill_screen(scr,  scr->scr_bg);
+    }
 }
 
 /*
@@ -78,6 +102,31 @@ fill_screen(struct cons_scr *scr, uint32_t bg)
     fbvars = &scr->fbvars;
     len = fbvars->width * fbvars->pitch;
     memset(fbvars->io, bg, len);
+}
+
+/*
+ * Handle special ASCII characters
+ *
+ * @scr: Screen we are writing on
+ * @c: Character to handle
+ *
+ * Returns the character on success, otherwis a less than
+ * zero value on [need retransmit] / error
+ */
+static int
+cons_handle_spec(struct cons_scr *scr, int c)
+{
+    if (scr == NULL) {
+        return -EINVAL;
+    }
+
+    switch (c) {
+    case ASCII_LF:
+        cons_newline(scr);
+        return c;
+    }
+
+    return -1;
 }
 
 /*
@@ -136,20 +185,16 @@ cons_putstr(struct cons_scr *scr, const char *str, size_t len)
     spinlock_acquire(&scr->lock);
     for (size_t i = 0; i < len; ++i) {
         ch.c = str[i];
+        if (cons_handle_spec(scr, ch.c) == ch.c) {
+            continue;
+        }
+
         cons_putch(scr, &ch);
         scr->text_x += FONT_WIDTH;
 
         /* Handle console x overflow */
         if (scr->text_x >= scr->max_col - FONT_WIDTH) {
-            scr->text_x = 0;
-            scr->text_y += FONT_HEIGHT;
-        }
-
-        /* Handle console y overflow */
-        if (scr->text_y >= scr->max_row - FONT_HEIGHT) {
-            scr->text_x = 0;
-            scr->text_y = 0;
-            fill_screen(scr,  scr->scr_bg);
+            cons_newline(scr);
         }
     }
 
