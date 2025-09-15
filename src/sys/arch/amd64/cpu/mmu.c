@@ -208,7 +208,7 @@ mmu_read_level(struct vm_vas *vas, vaddr_t va, pglvl_t lvl, vaddr_t **res, bool 
 {
     uintptr_t *cur, tmp_va, addr;
     size_t index;
-    pglvl_t cur_level = MMU_L4;
+    pglvl_t cur_level = mmu_pg_level();
 
     if (vas == NULL || lvl > MMU_L5) {
         return -EINVAL;
