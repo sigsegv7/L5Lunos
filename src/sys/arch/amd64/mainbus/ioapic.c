@@ -38,6 +38,7 @@
 
 static struct ioapic *ioapic = NULL;
 static struct acpi_madt *madt = NULL;
+static struct apic_header *override = NULL;
 
 /*
  * Write a single 32-bit value to a specific
@@ -181,6 +182,20 @@ __ioapic_callback(struct apic_header *hdr, size_t arg)
     return 0;
 }
 
+/*
+ * Convert an IRQ to a GSI
+ */
+static int
+__irq_to_gsi(struct apic_header *hdr, size_t irq)
+{
+    struct interrupt_override *override;
+
+    override = (struct interrupt_override *)hdr;
+    if (override->source == irq) {
+        return override->interrupt;
+    }
+
+    return -1;
 }
 
 /*
@@ -192,7 +207,27 @@ ioapic_gsi_mask(uint8_t gsi, uint8_t mask)
     union ioapic_redentry redent;
 
     ioapic_read_redentry(&redent, gsi);
-    redent.interrupt_mask = gsi & 1;
+    redent.interrupt_mask = mask & 1;
+    ioapic_write_redentry(&redent, gsi);
+}
+
+/*
+ * Map a GSI to a system interrupt vector
+ */
+void
+ioapic_route_vec(uint8_t irq, uint8_t vector)
+{
+    union ioapic_redentry redent;
+    int gsi;
+
+    gsi = ioapic_read_madt(
+        APIC_TYPE_INTERRUPT_OVERRIDE,
+        __irq_to_gsi,
+        irq
+    );
+
+    ioapic_read_redentry(&redent, gsi);
+    redent.vector = vector;
     ioapic_write_redentry(&redent, gsi);
 }
 

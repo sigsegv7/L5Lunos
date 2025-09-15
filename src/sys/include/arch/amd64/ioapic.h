@@ -48,4 +48,13 @@ void ioapic_init(void);
  */
 void ioapic_gsi_mask(uint8_t gsi, uint8_t mask);
 
+/*
+ * Route an IRQ number to a system interrupt vector
+ * via the internal redirection table
+ *
+ * @irq: Global system interrupt to route
+ * @vector: Vector this GSI should map to
+ */
+void ioapic_route_vec(uint8_t irq, uint8_t vector);
+
 #endif  /* !_MACHINE_IOAPIC_H_ */
