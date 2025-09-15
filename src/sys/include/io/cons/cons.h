@@ -40,6 +40,7 @@ struct cons_scr {
     size_t text_x;
     size_t text_y;
     size_t max_col;
+    size_t max_row;
     uint32_t scr_bg;
     uint32_t scr_fg;
 };

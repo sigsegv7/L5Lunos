@@ -30,9 +30,17 @@
 #include <sys/types.h>
 #include <machine/uart.h>   /* shared */
 #include <sys/syslog.h>
+#include <io/cons/cons.h>
 #include <os/spinlock.h>
 #include <string.h>
 #include <stdarg.h>
+
+/*
+ * If this value is true, data will be written to
+ * the video console, otherwise only serial logging
+ * will be used.
+ */
+static bool cons_enabled = false;
 
 static void
 syslog_write(const char *str, size_t len)
@@ -41,6 +49,8 @@ syslog_write(const char *str, size_t len)
 
     spinlock_acquire(&lock);
     for (int i = 0; i < len; ++i) {
+        if (cons_enabled)
+            cons_putstr(&g_root_scr, str, 1);
         uart_write(*str++);
     }
     spinlock_release(&lock);
@@ -63,4 +73,10 @@ printf(const char *fmt, ...)
     va_start(ap, fmt);
     vprintf(fmt, &ap);
     va_end(ap);
+}
+
+void
+syslog_toggle(bool enable)
+{
+    cons_enabled = enable;
 }

@@ -18,6 +18,7 @@ main(void)
 
     vm_init();
     cons_init();
+    syslog_toggle(true);
 
     panic("end of kernel reached\n");
     for (;;);

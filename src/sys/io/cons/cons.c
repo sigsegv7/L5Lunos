@@ -39,6 +39,7 @@
 #define DEFAULT_BG 0x000000
 #define DEFAULT_FG 0xB57614
 #define FONT_WIDTH 8
+#define FONT_HEIGHT 20
 
 struct cons_scr g_root_scr;
 
@@ -56,6 +57,27 @@ __always_inline static inline size_t
 fb_get_index(uint32_t pitch, uint32_t x, uint32_t y)
 {
     return x + y * (pitch / 4);
+}
+
+/*
+ * Fill a screen with a desired background
+ * color
+ *
+ * @bg: Background color to fill screen
+ */
+static void
+fill_screen(struct cons_scr *scr, uint32_t bg)
+{
+    struct bootvar_fb *fbvars;
+    size_t len;
+
+    if (scr == NULL) {
+        return;
+    }
+
+    fbvars = &scr->fbvars;
+    len = fbvars->width * fbvars->pitch;
+    memset(fbvars->io, bg, len);
 }
 
 /*
@@ -106,40 +128,33 @@ cons_putstr(struct cons_scr *scr, const char *str, size_t len)
         return -EINVAL;
     }
 
-    spinlock_acquire(&scr->lock);
     ch.bg = scr->scr_bg;
     ch.fg = scr->scr_fg;
     ch.y = scr->text_y;
     ch.x = scr->text_x;
 
+    spinlock_acquire(&scr->lock);
     for (size_t i = 0; i < len; ++i) {
         ch.c = str[i];
         cons_putch(scr, &ch);
-        ch.x += FONT_WIDTH;
+        scr->text_x += FONT_WIDTH;
+
+        /* Handle console x overflow */
+        if (scr->text_x >= scr->max_col - FONT_WIDTH) {
+            scr->text_x = 0;
+            scr->text_y += FONT_HEIGHT;
+        }
+
+        /* Handle console y overflow */
+        if (scr->text_y >= scr->max_row - FONT_HEIGHT) {
+            scr->text_x = 0;
+            scr->text_y = 0;
+            fill_screen(scr,  scr->scr_bg);
+        }
     }
 
+    spinlock_release(&scr->lock);
     return len;
-}
-
-/*
- * Fill a screen with a desired background
- * color
- *
- * @bg: Background color to fill screen
- */
-static void
-fill_screen(struct cons_scr *scr, uint32_t bg)
-{
-    struct bootvar_fb *fbvars;
-    size_t len;
-
-    if (scr == NULL) {
-        return;
-    }
-
-    fbvars = &scr->fbvars;
-    len = fbvars->width * fbvars->pitch;
-    memset(fbvars->io, bg, len);
 }
 
 /*
@@ -180,7 +195,8 @@ cons_init(void)
     /* Set up screen state */
     g_root_scr.scr_bg = DEFAULT_BG;
     g_root_scr.scr_fg = DEFAULT_FG;
-    g_root_scr.max_col = fbvars->width / 4;
+    g_root_scr.max_col = fbvars->width;
+    g_root_scr.max_row = fbvars->height;
     fill_screen(&g_root_scr,  g_root_scr.scr_bg);
     return 0;
 }

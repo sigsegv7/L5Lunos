@@ -31,10 +31,12 @@
 #define _SYS_SYSLOG_H_ 1
 
 #include <stdarg.h>
+#include <stdbool.h>
 
 #if defined(_KERNEL)
 void vprintf(const char *fmt, va_list *ap);
 void printf(const char *fmt, ...);
+void syslog_toggle(bool enable);
 #endif  /* _KERNEL */
 
 #endif  /* !_SYS_SYSLOG */
