@@ -11,3 +11,5 @@
 - 48-bit (4-level) paging
 - 16550 UART I/O
 - Printf-style kernel logging
+- Video console
+- I/O APIC
