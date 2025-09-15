@@ -32,7 +32,9 @@
 
 #include <stdarg.h>
 
+#if defined(_KERNEL)
 void vprintf(const char *fmt, va_list *ap);
 void printf(const char *fmt, ...);
+#endif  /* _KERNEL */
 
 #endif  /* !_SYS_SYSLOG */
