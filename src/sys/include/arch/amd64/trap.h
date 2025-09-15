@@ -27,40 +27,42 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <sys/cpuvar.h>
-#include <machine/boot.h>
-#include <machine/msr.h>
-#include <machine/idt.h>
-#include <machine/trap.h>
+#ifndef _MACHINE_TRAP_H_
+#define _MACHINE_TRAP_H_
 
-/*
- * Initialize interrupt vectors
- */
-static void
-init_vectors(void)
-{
-    idt_set_desc(0x0, IDT_TRAP_GATE, ISR(arith_err), 0);
-    idt_set_desc(0x2, IDT_TRAP_GATE, ISR(nmi), 0);
-    idt_set_desc(0x3, IDT_TRAP_GATE, ISR(breakpoint_handler), 0);
-    idt_set_desc(0x4, IDT_TRAP_GATE, ISR(overflow), 0);
-    idt_set_desc(0x5, IDT_TRAP_GATE, ISR(bound_range), 0);
-    idt_set_desc(0x6, IDT_TRAP_GATE, ISR(invl_op), 0);
-    idt_set_desc(0x8, IDT_TRAP_GATE, ISR(double_fault), 0);
-    idt_set_desc(0xA, IDT_TRAP_GATE, ISR(invl_tss), 0);
-    idt_set_desc(0xB, IDT_TRAP_GATE, ISR(segnp), 0);
-    idt_set_desc(0xC, IDT_TRAP_GATE, ISR(ss_fault), 0);
-    idt_set_desc(0xD, IDT_TRAP_GATE, ISR(general_prot), 0);
-    idt_set_desc(0xE, IDT_TRAP_GATE, ISR(page_fault), 0);
-}
+#if !defined(__ASSEMBLER__)
+#include <machine/frame.h>
+#endif
 
-void
-cpu_conf(struct pcore *pcore)
-{
-    pcore->self = pcore;
-    init_vectors();
-    idt_load();
-    platform_boot();
+#define TRAP_NONE           0       /* Used for general interrupts */
+#define TRAP_BREAKPOINT     1       /* Breakpoint */
+#define TRAP_ARITH_ERR      2       /* Arithmetic error (e.g division by 0) */
+#define TRAP_OVERFLOW       3       /* Overflow */
+#define TRAP_BOUND_RANGE    4       /* BOUND range exceeded */
+#define TRAP_INVLOP         5       /* Invalid opcode */
+#define TRAP_DOUBLE_FAULT   6       /* Double fault */
+#define TRAP_INVLTSS        7       /* Invalid TSS */
+#define TRAP_SEGNP          8       /* Segment not present */
+#define TRAP_PROTFLT        9       /* General protection */
+#define TRAP_PAGEFLT        10      /* Page fault */
+#define TRAP_NMI            11      /* Non-maskable interrupt */
+#define TRAP_SS             12      /* Stack-segment fault */
 
-    /* We use %GS to store the processor */
-    wrmsr(IA32_GS_BASE, (uintptr_t)pcore);
-}
+#if !defined(__ASSEMBLER__)
+
+void breakpoint_handler(void *sf);
+void arith_err(void *sf);
+void overflow(void *sf);
+void bound_range(void *sf);
+void invl_op(void *sf);
+void double_fault(void *sf);
+void invl_tss(void *sf);
+void segnp(void *sf);
+void general_prot(void *sf);
+void page_fault(void *sf);
+void nmi(void *sf);
+void ss_fault(void *sf);
+void trap_handler(struct trapframe *tf);
+
+#endif  /* !__ASSEMBLER__ */
+#endif  /* !_MACHINE_TRAP_H_ */

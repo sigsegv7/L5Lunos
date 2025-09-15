@@ -27,40 +27,77 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <sys/cpuvar.h>
-#include <machine/boot.h>
-#include <machine/msr.h>
-#include <machine/idt.h>
+#include <machine/frameasm.h>
 #include <machine/trap.h>
 
-/*
- * Initialize interrupt vectors
- */
-static void
-init_vectors(void)
-{
-    idt_set_desc(0x0, IDT_TRAP_GATE, ISR(arith_err), 0);
-    idt_set_desc(0x2, IDT_TRAP_GATE, ISR(nmi), 0);
-    idt_set_desc(0x3, IDT_TRAP_GATE, ISR(breakpoint_handler), 0);
-    idt_set_desc(0x4, IDT_TRAP_GATE, ISR(overflow), 0);
-    idt_set_desc(0x5, IDT_TRAP_GATE, ISR(bound_range), 0);
-    idt_set_desc(0x6, IDT_TRAP_GATE, ISR(invl_op), 0);
-    idt_set_desc(0x8, IDT_TRAP_GATE, ISR(double_fault), 0);
-    idt_set_desc(0xA, IDT_TRAP_GATE, ISR(invl_tss), 0);
-    idt_set_desc(0xB, IDT_TRAP_GATE, ISR(segnp), 0);
-    idt_set_desc(0xC, IDT_TRAP_GATE, ISR(ss_fault), 0);
-    idt_set_desc(0xD, IDT_TRAP_GATE, ISR(general_prot), 0);
-    idt_set_desc(0xE, IDT_TRAP_GATE, ISR(page_fault), 0);
-}
+    .globl breakpoint_handler
+TRAP_ENTRY(breakpoint_handler, $TRAP_BREAKPOINT)
+    mov %rsp, %rdi
+    call trap_handler
+TRAP_EXIT(breakpoint_handler)
 
-void
-cpu_conf(struct pcore *pcore)
-{
-    pcore->self = pcore;
-    init_vectors();
-    idt_load();
-    platform_boot();
+    .globl arith_err
+TRAP_ENTRY(arith_err, $TRAP_ARITH_ERR)
+    mov %rsp, %rdi
+    call trap_handler
+TRAP_EXIT(arith_err)
 
-    /* We use %GS to store the processor */
-    wrmsr(IA32_GS_BASE, (uintptr_t)pcore);
-}
+    .globl overflow
+TRAP_ENTRY(overflow, $TRAP_OVERFLOW)
+    mov %rsp, %rdi
+    call trap_handler
+TRAP_EXIT(overflow)
+
+    .globl bound_range
+TRAP_ENTRY(bound_range, $TRAP_BOUND_RANGE)
+    mov %rsp, %rdi
+    call trap_handler
+TRAP_EXIT(bound_range)
+
+    .globl invl_op
+TRAP_ENTRY(invl_op, $TRAP_INVLOP)
+    mov %rsp, %rdi
+    call trap_handler
+TRAP_EXIT(invl_op)
+
+    .globl double_fault
+TRAP_ENTRY_EC(double_fault, $TRAP_DOUBLE_FAULT)
+    mov %rsp, %rdi
+    call trap_handler
+TRAP_EXIT_EC(double_fault)
+
+    .globl invl_tss
+TRAP_ENTRY_EC(invl_tss, $TRAP_INVLTSS)
+    mov %rsp, %rdi
+    call trap_handler
+TRAP_EXIT_EC(invl_tss)
+
+    .globl segnp
+TRAP_ENTRY_EC(segnp, $TRAP_SEGNP)
+    mov %rsp, %rdi
+    call trap_handler
+TRAP_EXIT_EC(segnp)
+
+    .globl general_prot
+TRAP_ENTRY_EC(general_prot, $TRAP_PROTFLT)
+    mov %rsp, %rdi
+    call trap_handler
+TRAP_EXIT_EC(general_prot)
+
+    .globl page_fault
+TRAP_ENTRY_EC(page_fault, $TRAP_PAGEFLT)
+    mov %rsp, %rdi
+    call trap_handler
+TRAP_EXIT_EC(page_fault)
+
+    .globl nmi
+TRAP_ENTRY(nmi, $TRAP_NMI)
+    mov %rsp, %rdi
+    call trap_handler
+TRAP_EXIT(nmi)
+
+    .globl ss_fault
+TRAP_ENTRY_EC(ss_fault, $TRAP_SS)
+    mov %rsp, %rdi
+    call trap_handler
+TRAP_EXIT_EC(ss_fault)
