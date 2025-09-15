@@ -27,73 +27,18 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * Description: Standard CPU MMU interface
- * Author: Ian Marco Moffett
- */
+#ifndef _MACHINE_VAS_H_
+#define _MACHINE_VAS_H_ 1
 
-#ifndef _MACHINE_MMU_H_
-#define _MACHINE_MMU_H_
-
-#include <sys/cpuvar.h>
-#include <sys/mman.h>
-#include <sys/param.h>
-#include <machine/vas.h>    /* standard */
 #include <vm/vm.h>
 
 /*
- * Standard memory protection flags
- */
-#define MMU_PROT_NONE   0x0         /* Nothing */
-#define MMU_PROT_READ   PROT_READ   /* Readable */
-#define MMU_PROT_WRITE  PROT_WRITE  /* Writable */
-#define MMU_PROT_EXEC   PROT_EXEC   /* Executable */
-
-/*
- * This will represent a virtual to
- * physical address mapping.
+ * Represents the current virtual address
  *
- * @va: Virtual address
- * @pa: Physical address
+ * @cr3: The value of CR3 for this VAS
  */
-struct mmu_map {
-    vaddr_t va;
-    paddr_t pa;
+struct vm_vas {
+    paddr_t cr3;
 };
 
-/*
- * Global early kernel VAS structure used in the
- * creation of new virtual address spaces.
- */
-extern struct vm_vas g_kvas;
-
-/*
- * Initialize arch-specific MMU state such as
- * page tables, initial mappings and sanity checks.
- *
- * Returns zero on success, otherwise a less than zero
- * value on failure.
- */
-int mmu_init(void);
-
-/*
- * Map a single virtual page into physical address
- * space.
- *
- * @spec: Mapping specifier (virtual/physical address)
- * @prot: Protection flags for the mapping (see MMU_PROT_*)
- */
-int mmu_map_single(struct vm_vas *vas, struct mmu_map *spec, int prot);
-
-/*
- * Get a pointer to the current virtual address
- * space.
- *
- * @vasres_p: Resulting VAS is written here
- *
- * Returns zero on success, otherwise a less than zero
- * value on failure.
- */
-int mmu_this_vas(struct vm_vas *vasres_p);
-
-#endif  /* !_MACHINE_MMU_H_ */
+#endif  /* !_MACHINE_VAS_H_ */
