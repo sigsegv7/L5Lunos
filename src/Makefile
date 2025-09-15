@@ -56,4 +56,4 @@ clean:
 
 .PHONY: distclean
 distclean:
-	make clean; rm -rf srv/root
+	make clean; rm -rf sys/target srv/root
