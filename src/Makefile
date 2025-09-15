@@ -37,7 +37,7 @@ image:
 	cp $(SHIMDIR)/limine/limine-bios-cd.bin $(SYSROOT)/
 	cp $(SHIMDIR)/limine/limine-uefi-cd.bin $(SYSROOT)/
 	cp $(SHIMDIR)/limine/limine-bios.sys $(SYSROOT)/
-	cp data/boot/limine.conf $(SYSROOT)/boot/limine.conf
+	cp -rf data/boot/* $(SYSROOT)/boot/
 	xorriso -as mkisofs -b limine-bios-cd.bin -no-emul-boot -boot-load-size 4\
 		-boot-info-table --efi-boot limine-uefi-cd.bin -efi-boot-part \
 		--efi-boot-image --protective-msdos-label $(SYSROOT) -o $(ISO) 1>/dev/null
