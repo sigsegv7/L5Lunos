@@ -31,13 +31,95 @@
 #include <sys/errno.h>
 #include <sys/syslog.h>
 #include <io/cons/cons.h>
+#include <io/cons/font.h>
+#include <io/cons/consvar.h>
 #include <stdbool.h>
 #include <string.h>
 
 #define DEFAULT_BG 0x000000
 #define DEFAULT_FG 0xB57614
+#define FONT_WIDTH 8
 
 struct cons_scr g_root_scr;
+
+/*
+ * Get the index into the framebuffer with an x and y
+ * position.
+ *
+ * @pitch: Framebuffer pitch
+ * @x: X position to plot
+ * @y: Y position to plot
+ *
+ * Returns index
+ */
+__always_inline static inline size_t
+fb_get_index(uint32_t pitch, uint32_t x, uint32_t y)
+{
+    return x + y * (pitch / 4);
+}
+
+/*
+ * Plot a single character onto the screen
+ *
+ * @scr: Screen to plot onto
+ * @ch: Character to plot onto screen
+ */
+static void
+cons_putch(struct cons_scr *scr, struct cons_ch *ch)
+{
+    struct bootvar_fb *fbvars;
+    struct font_header *hdr;
+    uint32_t x, y, color;
+    uint32_t *fbio;
+    const uint8_t *glyph;
+    size_t idx;
+
+    hdr = (void *)g_CONS_FONT;
+    glyph = PTR_OFFSET(hdr, FONT_HDRLEN + ch->c * hdr->csize);
+    fbvars = &scr->fbvars;
+    fbio = fbvars->io;
+    x = ch->x;
+    y = ch->y;
+
+    /* Begin the plotting */
+    for (int cy = 0; cy < hdr->csize; ++cy) {
+        for (int cx = 0; cx < 8; ++cx) {
+            color = ISSET(glyph[cy], BIT(8 - cx)) ? ch->fg : ch->bg;
+
+            /* Plot the pixel */
+            idx = fb_get_index(fbvars->pitch, x+cx, y+cy);
+            fbio[idx] = color;
+        }
+    }
+}
+
+/*
+ * Draw a string onto the screen
+ */
+ssize_t
+cons_putstr(struct cons_scr *scr, const char *str, size_t len)
+{
+    struct cons_ch ch;
+    size_t slen;
+
+    if (scr == NULL || str == NULL) {
+        return -EINVAL;
+    }
+
+    spinlock_acquire(&scr->lock);
+    ch.bg = scr->scr_bg;
+    ch.fg = scr->scr_fg;
+    ch.y = scr->text_y;
+    ch.x = scr->text_x;
+
+    for (size_t i = 0; i < len; ++i) {
+        ch.c = str[i];
+        cons_putch(scr, &ch);
+        ch.x += FONT_WIDTH;
+    }
+
+    return len;
+}
 
 /*
  * Fill a screen with a desired background
@@ -68,6 +150,7 @@ cons_init(void)
 {
     static bool is_init = false;
     struct bootvars bv;
+    struct bootvar_fb *fbvars;
     int error;
 
     /* Only init once */
@@ -76,6 +159,8 @@ cons_init(void)
     } else {
         return -EPERM;
     }
+
+    memset(&g_root_scr, 0, sizeof(g_root_scr));
 
     /*
      * Attempt to acquire the bootvars so we
@@ -88,9 +173,14 @@ cons_init(void)
         return error;
     }
 
-    memcpy(&g_root_scr.fbvars, &bv.fbvars, sizeof(bv.fbvars));
+    /* Save framebuffer information */
+    fbvars = &g_root_scr.fbvars;
+    memcpy(fbvars, &bv.fbvars, sizeof(*fbvars));
+
+    /* Set up screen state */
     g_root_scr.scr_bg = DEFAULT_BG;
     g_root_scr.scr_fg = DEFAULT_FG;
+    g_root_scr.max_col = fbvars->width / 4;
     fill_screen(&g_root_scr,  g_root_scr.scr_bg);
     return 0;
 }

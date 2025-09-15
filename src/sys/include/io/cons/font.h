@@ -27,45 +27,21 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _CONS_CONS_H_
-#define _CONS_CONS_H_ 1
+#ifndef _CONS_FONT_H_
+#define _CONS_FONT_H_ 1
 
+#include <sys/cdefs.h>
 #include <sys/types.h>
-#include <sys/bootvars.h>
-#include <os/spinlock.h>
 
-struct cons_scr {
-    struct spinlock lock;
-    struct bootvar_fb fbvars;
-    size_t text_x;
-    size_t text_y;
-    size_t max_col;
-    uint32_t scr_bg;
-    uint32_t scr_fg;
+#define FONT_HDRLEN (sizeof(struct font_header))
+#define PSF1_MAGIC 0x0436
+
+struct __packed font_header {
+    uint16_t magic;
+    uint8_t mode;
+    uint8_t csize;
 };
 
-/*
- * Represents the root screen used during
- * early boot of the system.
- */
-extern struct cons_scr g_root_scr;
+extern uint8_t g_CONS_FONT[];
 
-/*
- * Initialize the console to a basic working
- * state.
- */
-int cons_init(void);
-
-/*
- * Write a string onto the screen
- *
- * @scr: Screen to write on
- * @str: String to write onto the screen
- * @len: Length of string to write
- *
- * Returns the number of bytes written on success,
- * otherwise a less than zero value to indicate failure.
- */
-ssize_t cons_putstr(struct cons_scr *scr, const char *str, size_t len);
-
-#endif  /* !_CONS_CONS_H_ */
+#endif  /* !_CONS_FONT_H_ */
