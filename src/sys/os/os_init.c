@@ -25,6 +25,8 @@ main(void)
     vm_init();
 
     cpu_init(&g_bsp);
+    bsp_ap_startup();
+
     sched_init();
     panic("end of kernel reached\n");
     for (;;);

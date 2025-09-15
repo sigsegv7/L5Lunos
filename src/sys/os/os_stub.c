@@ -27,67 +27,12 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _SYS_CPUVAR_H_
-#define _SYS_CPUVAR_H_ 1
-
-#include <sys/types.h>
 #include <sys/cdefs.h>
-#if defined(_KERNEL)
-#include <os/sched.h>
-#include <machine/mdcpu.h>
-#endif  /* _KERNEL */
+#include <sys/cpuvar.h>
+#include <sys/syslog.h>
 
-/*
- * Logically describes a processor core on the
- * system. This structure contains machine
- * independent.
- *
- * @id: Monotonic logical ID
- * @scq: Scheduler queue
- * @md: Machine dependent processor information
- * @self: Chain pointer to self
- */
-struct pcore {
-    uint32_t id;
-#if defined(_KERNEL)
-    struct sched_queue scq;
-    struct mdcore md;
-#endif  /* _KERNEL */
-    struct pcore *self;
-};
-
-#if defined(_KERNEL)
-/*
- * Configure a processor core on the system
- *
- * [MD]
- *
- * @pcore: Core to configure
- */
-void cpu_conf(struct pcore *pcore);
-
-/*
- * Initialize a processor core on the system, second
- * stage initialization hook.
- *
- * [MD]
- *
- * @pcore: Processor core to init
- */
-void cpu_init(struct pcore *pcore);
-
-/*
- * Get the current processing element (core) as
- * a 'pcore' descriptor.
- *
- * Returns NULL on failure.
- */
-struct pcore *this_core(void);
-
-/*
- * Start up the application processes from the
- * bootstrap processor.
- */
-void bsp_ap_startup(void);
-#endif  /* _KERNEL */
-#endif  /* !_SYS_CPUVAR_H_ */
+__weak void
+bsp_ap_startup(void)
+{
+    printf("bsp_ap_startup: unimplemented\n");
+}
