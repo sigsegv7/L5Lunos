@@ -33,6 +33,20 @@
 #include <machine/boot.h>
 #include <machine/i8259.h>
 #include <machine/ioapic.h>
+#include <stdbool.h>
+
+static void
+chipset_init(void)
+{
+    static bool once = false;
+
+    if (once) {
+        return;
+    }
+
+    once = true;
+    ioapic_init();
+}
 
 void
 platform_boot(void)
@@ -40,6 +54,6 @@ platform_boot(void)
     gdt_load();
     i8259_disable();
 
-    ioapic_init();
+    chipset_init();
     uart_init();
 }
