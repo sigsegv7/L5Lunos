@@ -33,5 +33,6 @@
 #define PATH_MAX 1024
 #define NAME_MAX 256
 #define CHAR_BIT 8
+#define CPU_MAX 256
 
 #endif  /* !_SYS_LIMITS_H_ */
