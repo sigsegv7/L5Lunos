@@ -14,11 +14,11 @@ __dead void
 main(void)
 {
     cpu_conf(&g_bsp);
-    printf("booting l5 lunos v0.0.1...\n");
-
-    vm_init();
     cons_init();
     syslog_toggle(true);
+
+    printf("booting l5 lunos v0.0.1...\n");
+    vm_init();
 
     panic("end of kernel reached\n");
     for (;;);
