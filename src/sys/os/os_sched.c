@@ -27,60 +27,70 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _SYS_CPUVAR_H_
-#define _SYS_CPUVAR_H_ 1
+/*
+ * Description: Lunos scheduler core
+ * Author: Ian Marco Moffett
+ */
 
 #include <sys/types.h>
-#if defined(_KERNEL)
+#include <sys/errno.h>
+#include <sys/syslog.h>
+#include <sys/panic.h>
+#include <sys/queue.h>
+#include <sys/cpuvar.h>
 #include <os/sched.h>
-#include <machine/mdcpu.h>
-#endif  /* _KERNEL */
 
 /*
- * Logically describes a processor core on the
- * system. This structure contains machine
- * independent.
- *
- * @id: Monotonic logical ID
- * @scq: Scheduler queue
- * @md: Machine dependent processor information
- * @self: Chain pointer to self
+ * Enqueue a process into a queue
  */
-struct pcore {
-    uint32_t id;
-#if defined(_KERNEL)
-    struct sched_queue scq;
-    struct mdcore md;
-#endif  /* _KERNEL */
-    struct pcore *self;
-};
+int
+sched_enq(struct sched_queue *q, struct proc *proc)
+{
+    if (q == NULL || proc == NULL) {
+        return -EINVAL;
+    }
 
-#if defined(_KERNEL)
-/*
- * Configure a processor core on the system
- *
- * [MD]
- *
- * @pcore: Core to configure
- */
-void cpu_conf(struct pcore *pcore);
+    spinlock_acquire(&q->lock);
+    TAILQ_INSERT_TAIL(&q->q, proc, link);
+    ++q->nproc;
+    spinlock_release(&q->lock);
+    return 0;
+}
 
 /*
- * Initialize a processor core on the system, second
- * stage initialization hook.
- *
- * [MD]
- *
- * @pcore: Processor core to init
+ * Dequeue a process from a queue
  */
-void cpu_init(struct pcore *pcore);
+int
+sched_deq(struct sched_queue *q, struct proc **procp)
+{
+    struct proc *proc;
 
-/*
- * Get the current processing element (core) as
- * a 'pcore' descriptor.
- *
- * Returns NULL on failure.
- */
-struct pcore *this_core(void);
-#endif  /* _KERNEL */
-#endif  /* !_SYS_CPUVAR_H_ */
+    if (q == NULL || procp == NULL) {
+        return -EINVAL;
+    }
+
+    /* Anything to dequeue? */
+    if (q->nproc == 0) {
+        return -EAGAIN;
+    }
+
+    spinlock_acquire(&q->lock);
+    proc = TAILQ_FIRST(&q->q);
+    TAILQ_REMOVE(&q->q, proc, link);
+    --q->nproc;
+    spinlock_release(&q->lock);
+    return 0;
+}
+
+void
+sched_init(void)
+{
+    struct pcore *core;
+
+    if ((core = this_core()) == NULL) {
+        panic("sched_init: could not get core\n");
+    }
+
+    TAILQ_INIT(&core->scq.q);
+    printf("sched: scheduler is [up]\n");
+}

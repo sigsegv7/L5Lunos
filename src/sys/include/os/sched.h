@@ -27,60 +27,54 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _SYS_CPUVAR_H_
-#define _SYS_CPUVAR_H_ 1
+#ifndef _OS_SCHED_H_
+#define _OS_SCHED_H_ 1
 
 #include <sys/types.h>
-#if defined(_KERNEL)
-#include <os/sched.h>
-#include <machine/mdcpu.h>
-#endif  /* _KERNEL */
+#include <sys/queue.h>
+#include <sys/proc.h>
+#include <os/spinlock.h>
+
+#define SCHED_NQUEUES 4
 
 /*
- * Logically describes a processor core on the
- * system. This structure contains machine
- * independent.
+ * Represents a queue of processes
  *
- * @id: Monotonic logical ID
- * @scq: Scheduler queue
- * @md: Machine dependent processor information
- * @self: Chain pointer to self
+ * @q; Actual queue
+ * @nproc: Number of processes in this queue
  */
-struct pcore {
-    uint32_t id;
-#if defined(_KERNEL)
-    struct sched_queue scq;
-    struct mdcore md;
-#endif  /* _KERNEL */
-    struct pcore *self;
+struct sched_queue {
+    TAILQ_HEAD(, proc) q;
+    struct spinlock lock;
+    size_t nproc;
 };
 
-#if defined(_KERNEL)
 /*
- * Configure a processor core on the system
+ * Enqueue a new process to a queue
  *
- * [MD]
+ * @q: Queue to target
+ * @proc: Process to place in the queue
  *
- * @pcore: Core to configure
+ * Returns zero on success, otherwise a less than
+ * zero value to indicate failure.
  */
-void cpu_conf(struct pcore *pcore);
+int sched_enq(struct sched_queue *q, struct proc *proc);
 
 /*
- * Initialize a processor core on the system, second
- * stage initialization hook.
+ * Dequeue a process from a queue
  *
- * [MD]
+ * @q: Queue to dequeue from
+ * @procp: Result of new popped process is written here
  *
- * @pcore: Processor core to init
+ * Returns zero on success, otherwise a less than zero
+ * value on failure.
  */
-void cpu_init(struct pcore *pcore);
+int sched_deq(struct sched_queue *q, struct proc **procp);
 
 /*
- * Get the current processing element (core) as
- * a 'pcore' descriptor.
- *
- * Returns NULL on failure.
+ * Initialize the scheduler into a basic
+ * known state.
  */
-struct pcore *this_core(void);
-#endif  /* _KERNEL */
-#endif  /* !_SYS_CPUVAR_H_ */
+void sched_init(void);
+
+#endif  /* !_OS_SCHED_H_ */

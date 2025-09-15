@@ -2,6 +2,7 @@
 #include <sys/panic.h>
 #include <sys/syslog.h>
 #include <sys/cpuvar.h>
+#include <os/sched.h>
 #include <acpi/acpi.h>
 #include <io/cons/cons.h>
 #include <vm/vm.h>
@@ -24,6 +25,7 @@ main(void)
     vm_init();
 
     cpu_init(&g_bsp);
+    sched_init();
     panic("end of kernel reached\n");
     for (;;);
 }
