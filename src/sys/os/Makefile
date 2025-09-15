@@ -8,6 +8,7 @@ CFLAGS = -I../include/ -I../include/lib/ -I../target/header/ $(MI_CFLAGS) -O0
 CFILES = $(shell find . -name "*.c")
 CFILES += $(shell find ../vm -name "*.c")
 CFILES += $(shell find ../lib -name "*.c")
+CFILES += $(shell find ../io -name "*.c")
 
 DEPS = $(CFILES:.c=.d)
 OBJECTS = $(CFILES:%.c=%.o)
