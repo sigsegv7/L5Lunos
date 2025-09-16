@@ -333,6 +333,38 @@ mmu_map_single(struct vm_vas *vas, struct mmu_map *spec, int prot)
 }
 
 /*
+ * Create a new virtual address space
+ */
+int
+mmu_new_vas(struct vm_vas *res)
+{
+    uint64_t *dest, *src;
+    paddr_t frame;
+
+    src = PHYS_TO_VIRT(g_kvas.cr3 & PTE_ADDR_MASK);
+    frame = vm_alloc_frame(1);
+    if (frame == 0) {
+        return -ENOMEM;
+    }
+
+    /*
+     * Copy only the higher half but zero the
+     * lower half.
+     */
+    dest = PHYS_TO_VIRT(frame);
+    for (int i = 0; i < 512; ++i) {
+        if (i < 256) {
+            dest[i] = 0;
+        } else {
+            dest[i] = src[i];
+        }
+    }
+
+    res->cr3 = VIRT_TO_PHYS(dest);
+    return 0;
+}
+
+/*
  * Verify that we are in a known state
  */
 int

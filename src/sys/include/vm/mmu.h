@@ -97,4 +97,13 @@ int mmu_map_single(struct vm_vas *vas, struct mmu_map *spec, int prot);
  */
 int mmu_this_vas(struct vm_vas *vasres_p);
 
+/*
+ * Create a new virtual address structure with a zeroed
+ * user porition.
+ *
+ * Returns zero on success, otherwise a less than zero
+ * value on failure.
+ */
+int mmu_new_vas(struct vm_vas *res);
+
 #endif  /* !_MACHINE_MMU_H_ */
