@@ -27,46 +27,29 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _SYS_PROC_H_
-#define _SYS_PROC_H_
-
-#include <sys/types.h>
-#include <sys/queue.h>
-#include <machine/pcb.h>    /* standard */
-
-/*
- * A process describes a running program image
- * on the system.
- *
- * @pid: Process ID
- */
-struct proc {
-    pid_t pid;
-    struct md_pcb pcb;
-    TAILQ_ENTRY(proc) link;
-};
+#include <sys/errno.h>
+#include <sys/proc.h>
+#include <sys/syslog.h>
+#include <vm/mmu.h>
+#include <machine/pcb.h>
 
 /*
- * Initialize a process into a basic minimal
- * state
- *
- * @procp: New process data is written here
- * @flags: Optional flags
- *
- * Returns zero on success, otherwise a less than
- * zero value to indicate failure.
+ * MD proc init code
  */
-int proc_init(struct proc *procp, int flags);
+int
+md_proc_init(struct proc *procp, int flags)
+{
+    struct md_pcb *pcbp;
+    int error;
 
-/*
- * Initialize machine dependent state of a process
- *
- * @procp: New process data is written here
- * @flags: Optional flags
- *
- * Returns zero on success, otherwise a less than
- * zero value to indicate failure.
- */
-int md_proc_init(struct proc *procp, int flags);
+    if (procp == NULL) {
+        return -EINVAL;
+    }
 
-#endif  /* !_SYS_PROC_H_ */
+    pcbp = &procp->pcb;
+    if ((error = mmu_new_vas(&pcbp->vas)) < 0) {
+        printf("md_proc_init: could not create new vas\n");
+        return error;
+    }
+    return 0;
+}

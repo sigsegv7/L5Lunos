@@ -27,46 +27,28 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _SYS_PROC_H_
-#define _SYS_PROC_H_
-
 #include <sys/types.h>
-#include <sys/queue.h>
-#include <machine/pcb.h>    /* standard */
+#include <sys/atomic.h>
+#include <sys/errno.h>
+#include <sys/proc.h>
+#include <string.h>
+
+static pid_t next_pid = 0;
 
 /*
- * A process describes a running program image
- * on the system.
- *
- * @pid: Process ID
+ * MI proc init code
  */
-struct proc {
-    pid_t pid;
-    struct md_pcb pcb;
-    TAILQ_ENTRY(proc) link;
-};
+int
+proc_init(struct proc *procp, int flags)
+{
+    int error;
 
-/*
- * Initialize a process into a basic minimal
- * state
- *
- * @procp: New process data is written here
- * @flags: Optional flags
- *
- * Returns zero on success, otherwise a less than
- * zero value to indicate failure.
- */
-int proc_init(struct proc *procp, int flags);
+    if (procp == NULL) {
+        return -EINVAL;
+    }
 
-/*
- * Initialize machine dependent state of a process
- *
- * @procp: New process data is written here
- * @flags: Optional flags
- *
- * Returns zero on success, otherwise a less than
- * zero value to indicate failure.
- */
-int md_proc_init(struct proc *procp, int flags);
-
-#endif  /* !_SYS_PROC_H_ */
+    memset(procp, 0, sizeof(*procp));
+    procp->pid = atomic_inc_int(&next_pid);
+    error = md_proc_init(procp, flags);
+    return error;
+}

@@ -27,46 +27,18 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _SYS_PROC_H_
-#define _SYS_PROC_H_
+#ifndef _MACHINE_PCB_H_
+#define _MACHINE_PCB_H_ 1
 
-#include <sys/types.h>
-#include <sys/queue.h>
-#include <machine/pcb.h>    /* standard */
+#include <machine/vas.h>
 
 /*
- * A process describes a running program image
- * on the system.
+ * Represents MD specific process data
  *
- * @pid: Process ID
+ * @vas: Current virtual address space
  */
-struct proc {
-    pid_t pid;
-    struct md_pcb pcb;
-    TAILQ_ENTRY(proc) link;
+struct md_pcb {
+    struct vm_vas vas;
 };
 
-/*
- * Initialize a process into a basic minimal
- * state
- *
- * @procp: New process data is written here
- * @flags: Optional flags
- *
- * Returns zero on success, otherwise a less than
- * zero value to indicate failure.
- */
-int proc_init(struct proc *procp, int flags);
-
-/*
- * Initialize machine dependent state of a process
- *
- * @procp: New process data is written here
- * @flags: Optional flags
- *
- * Returns zero on success, otherwise a less than
- * zero value to indicate failure.
- */
-int md_proc_init(struct proc *procp, int flags);
-
-#endif  /* !_SYS_PROC_H_ */
+#endif  /* _MACHINE_PCB_H_ */
