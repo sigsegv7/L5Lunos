@@ -44,6 +44,9 @@
  * @len: Length of mapping (4K aligned)
  * @prot: Memory protection flags (PROT_*)
  *
+ * XXX: If spec->va or spec->pa is a value of zero, an address
+ *      will be assigned and shared by both.
+ *
  * Returns zero on success, otherwise a less than zero value
  * on failure.
  */

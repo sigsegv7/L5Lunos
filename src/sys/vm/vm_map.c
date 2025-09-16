@@ -31,6 +31,7 @@
 #include <sys/param.h>
 #include <sys/errno.h>
 #include <sys/syslog.h>
+#include <vm/physseg.h>
 #include <vm/mmu.h>
 #include <vm/map.h>
 #include <vm/vm.h>
@@ -57,6 +58,22 @@ __vm_map(struct vm_vas *vas, struct mmu_map *spec, size_t len, int prot)
 
     /* Must be 4K aligned */
     len = ALIGN_UP(len, PSIZE);
+
+    /*
+     * If we encounter any address that is zero, we
+     * must assign our own.
+     */
+    if (spec->pa == 0 || spec->va == 0) {
+        spec->pa = vm_alloc_frame(len / PSIZE);
+        if (spec->va == 0)
+            spec->va = spec->pa;
+    }
+
+    if (spec->pa == 0) {
+        return -ENOMEM;
+    }
+
+    /* Must be on a 4K boundary */
     spec->va = ALIGN_DOWN(spec->va, PSIZE);
     spec->pa = ALIGN_DOWN(spec->pa, PSIZE);
 
