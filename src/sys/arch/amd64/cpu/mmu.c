@@ -257,7 +257,6 @@ mmu_read_level(struct vm_vas *vas, vaddr_t va, pglvl_t lvl, vaddr_t **res, bool 
 
         /* Write the new entry */
         addr |= (PTE_P | PTE_RW | PTE_US);
-        addr = (uintptr_t)PHYS_TO_VIRT(addr);
         cur[index] = addr;
 
         /*
