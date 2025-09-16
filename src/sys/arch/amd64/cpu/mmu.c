@@ -147,6 +147,22 @@ __mmu_read_cr3(void)
 }
 
 /*
+ * Write a value to the CR3 register
+ *
+ * @cr3: Value to write
+ */
+static inline void
+__mmu_write_cr3(uint64_t val)
+{
+    __ASMV(
+        "mov %0, %%cr3"
+        :
+        : "r" (val)
+        : "memory"
+    );
+}
+
+/*
  * Acquire the paging level used by the
  * current processing element (pcore)
  */
@@ -360,6 +376,20 @@ mmu_new_vas(struct vm_vas *res)
     }
 
     res->cr3 = VIRT_TO_PHYS(dest);
+    return 0;
+}
+
+/*
+ * Switch the VAS
+ */
+int
+mmu_write_vas(struct vm_vas *vas)
+{
+    if (vas->cr3 == 0) {
+        return -EINVAL;
+    }
+
+    __mmu_write_cr3(vas->cr3);
     return 0;
 }
 

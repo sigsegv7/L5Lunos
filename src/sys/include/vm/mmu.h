@@ -106,4 +106,15 @@ int mmu_this_vas(struct vm_vas *vasres_p);
  */
 int mmu_new_vas(struct vm_vas *res);
 
+/*
+ * Apply a virtual address descriptor to the current
+ * process and flush out the entire TLB
+ *
+ * @vas: Virtual address space to switch to
+ *
+ * Returns zero on success, otherwise a less than zero
+ * value to indicate error.
+ */
+int mmu_write_vas(struct vm_vas *vas);
+
 #endif  /* !_MACHINE_MMU_H_ */
