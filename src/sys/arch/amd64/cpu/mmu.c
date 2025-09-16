@@ -97,6 +97,8 @@ prot_to_pte(int prot)
         pte_flags |= PTE_P;
     if (ISSET(prot, MMU_PROT_WRITE))
         pte_flags |= PTE_RW;
+    if (ISSET(prot, MMU_PROT_USER))
+        pte_flags |= PTE_US;
     if (ISSET(prot, MMU_PROT_EXEC))
         pte_flags &= ~PTE_NX;
 

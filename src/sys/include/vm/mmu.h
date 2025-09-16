@@ -48,6 +48,7 @@
 #define MMU_PROT_READ   PROT_READ   /* Readable */
 #define MMU_PROT_WRITE  PROT_WRITE  /* Writable */
 #define MMU_PROT_EXEC   PROT_EXEC   /* Executable */
+#define MMU_PROT_USER   PROT_USER   /* User visible */
 
 /*
  * This will represent a virtual to
