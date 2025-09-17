@@ -37,6 +37,13 @@
 #include <limine.h>
 #include <string.h>
 
+/* From kconf */
+#if defined(__DUMP_MEMMAP)
+#define DUMP_MEMMAP __DUMP_MEMMAP
+#else
+#define DUMP_MEMMAP 0
+#endif
+
 #define BYTES_PER_MIB 8388608
 
 static size_t pages_free = 0;
@@ -147,7 +154,11 @@ physmem_init_bitmap(void)
 
         start = ent->base;
         end = ent->base + ent->length;
-        printf("sysmem: [%p -> %p]: %s\n", start, end, typestr);
+
+        /* Should we dump the memory map? */
+        if (DUMP_MEMMAP) {
+            printf("sysmem: [%p -> %p]: %s\n", start, end, typestr);
+        }
 
         if (ent->type != LIMINE_MEMMAP_USABLE) {
             continue;

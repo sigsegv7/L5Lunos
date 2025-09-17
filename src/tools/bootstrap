@@ -37,7 +37,12 @@ build_omar() {
     $MAKE -C tools/omar
 }
 
+build_kconf() {
+    $MAKE -C tools/kconf/
+}
+
 build() {
+    build_kconf
     build_limine
     build_omar
 }

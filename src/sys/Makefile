@@ -10,11 +10,11 @@ all: os lib md
 
 .PHONY: os
 os:
-	cd os; make CC=$(CC) LD=$(LD) AS=$(AS) TARGETDIR=$(TARGETDIR)
+	cd os; make CC=$(CC) LD=$(LD) AS=$(AS) TARGETDIR=$(TARGETDIR) CONF=$(CONF)
 
 .PHONY: md
 md:
-	cd $(TARGETDIR); make CC=$(CC) LD=$(LD) AS=$(AS)
+	cd $(TARGETDIR); make CC=$(CC) LD=$(LD) AS=$(AS) CONF=$(CONF)
 
 .PHONY: clean
 clean:

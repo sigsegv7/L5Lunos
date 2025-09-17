@@ -1,0 +1,1 @@
+option DUMP_MEMMAP  yes     // Dump memory map on boot

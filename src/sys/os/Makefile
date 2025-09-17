@@ -4,7 +4,7 @@ include ../conf/sys.mk
 override PROMPT := printf "%s\t\t%s\n"
 
 TARGET_LIB = ../target/libkern.a
-CFLAGS = -I../include/ -I../include/lib/ -I../target/header/ $(MI_CFLAGS) -O0
+CFLAGS = -I../include/ -I../include/lib/ -I../target/header/ $(MI_CFLAGS) -O0 $(CONF)
 CFILES = $(shell find . -name "*.c")
 CFILES += $(shell find ../vm -name "*.c")
 CFILES += $(shell find ../lib -name "*.c")
