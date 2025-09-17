@@ -5,7 +5,7 @@ CFILES = $(shell find . -name "*.c")
 CFLAGS = -L$(LIBC_DIR) -lc $(INTERNAL_CFLAGS)
 OBJECTS = $(CFILES:%.c=%.o)
 
-$(SYSROOT)/usr/bin/test: $(OBJECTS)
+$(SYSROOT)/usr/bin/init: $(OBJECTS)
 	$(LD) $(OBJECTS) -o $@ $(CFLAGS)
 
 %.o: %.c
