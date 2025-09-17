@@ -39,6 +39,8 @@
 #include <machine/lapic.h>
 #include <string.h>
 
+extern struct proc g_rootproc;
+
 /*
  * Put the current process into userland for its first
  * run. The catch is that we have never been in userland
@@ -211,4 +213,42 @@ md_sched_switch(struct trapframe *tf)
 done:
     lapic_eoi();
     lapic_timer_oneshot_us(SCHED_QUANTUM);
+}
+
+/*
+ * Commit procedural murder
+ */
+int
+md_proc_kill(struct proc *procp, int flags)
+{
+    struct proc *self;
+    struct pcore *core = this_core();
+    struct md_pcb *pcbp;
+
+    if (core == NULL) {
+        return -ENXIO;
+    }
+
+    /* Default to ourself */
+    if (procp == NULL) {
+        procp = core->curproc;
+    }
+
+    /* Release the VAS */
+    pcbp = &procp->pcb;
+    mmu_free_vas(&pcbp->vas);
+
+    /* Sanity check */
+    if ((self = core->curproc) == NULL) {
+        printf("kill: could not get self, using rootproc\n");
+        self = &g_rootproc;
+    }
+
+    /* If this is us, spin time */
+    if (self->pid == procp->pid) {
+        core->curproc = NULL;
+        md_proc_yield();
+    }
+
+    return 0;
 }

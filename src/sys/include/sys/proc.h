@@ -32,6 +32,7 @@
 
 #include <sys/types.h>
 #include <sys/cdefs.h>
+#include <sys/param.h>
 #include <sys/queue.h>
 #include <machine/pcb.h>    /* standard */
 
@@ -46,14 +47,18 @@
  * on the system.
  *
  * @pid: Process ID
+ * @flags: State flags (see PROC_*)
  * @pcb: Process control block
  * @link: TAILQ link
  */
 struct proc {
     pid_t pid;
+    uint32_t flags;
     struct md_pcb pcb;
     TAILQ_ENTRY(proc) link;
 };
+
+#define PROC_EXITING BIT(0)
 
 /*
  * Initialize a process into a basic minimal
@@ -68,6 +73,17 @@ struct proc {
 int proc_init(struct proc *procp, int flags);
 
 /*
+ * Kill a process with a specific status code
+ *
+ * @procp: Process to kill
+ * @status: Status code to send
+ *
+ * Returns zero on success, otherwise a less than
+ * zero value is returned on failure.
+ */
+int proc_kill(struct proc *procp, int status);
+
+/*
  * Initialize machine dependent state of a process
  *
  * @procp: New process data is written here
@@ -77,6 +93,18 @@ int proc_init(struct proc *procp, int flags);
  * zero value to indicate failure.
  */
 int md_proc_init(struct proc *procp, int flags);
+
+/*
+ * Machine dependent kill routine which cleans up
+ * things that exist within the process control block
+ *
+ * @procp: Process to kill
+ * @flags: Optional flags to use
+ *
+ * Returns zero on success, otherwise less than zero
+ * value on failure.
+ */
+int md_proc_kill(struct proc *procp, int flags);
 
 /*
  * Set the instruction pointer field of a specific

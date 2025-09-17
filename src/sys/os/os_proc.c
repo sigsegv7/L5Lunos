@@ -52,3 +52,17 @@ proc_init(struct proc *procp, int flags)
     error = md_proc_init(procp, flags);
     return error;
 }
+
+/*
+ * Kill a specific process
+ */
+int
+proc_kill(struct proc *procp, int status)
+{
+    if (procp == NULL) {
+        return -EINVAL;
+    }
+
+    procp->flags |= PROC_EXITING;
+    return md_proc_kill(procp, 0);
+}
