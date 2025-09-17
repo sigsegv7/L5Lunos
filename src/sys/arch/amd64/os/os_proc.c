@@ -137,7 +137,5 @@ md_set_ip(struct proc *procp, uintptr_t ip)
     pcbp = &procp->pcb;
     tfp = &pcbp->tf;
     tfp->rip = ip;
-    mmu_write_vas(&procp->pcb.vas);
-    __proc_kick(tfp);
     return 0;
 }
