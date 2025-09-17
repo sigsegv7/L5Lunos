@@ -46,6 +46,8 @@
  * on the system.
  *
  * @pid: Process ID
+ * @pcb: Process control block
+ * @link: TAILQ link
  */
 struct proc {
     pid_t pid;
