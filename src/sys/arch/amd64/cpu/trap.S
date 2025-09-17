@@ -107,3 +107,9 @@ INTR_ENTRY(lapic_tmr_isr)
     mov %rsp, %rdi
     call md_sched_switch
 INTR_EXIT(lapic_tmr_isr)
+
+    .global syscall_isr
+INTR_ENTRY(syscall_isr)
+    mov %rsp, %rdi
+    call trap_syscall
+INTR_EXIT(syscall_isr)

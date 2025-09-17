@@ -31,6 +31,7 @@
 #define _SYS_PROC_H_
 
 #include <sys/types.h>
+#include <sys/syscall.h>
 #include <sys/cdefs.h>
 #include <sys/param.h>
 #include <sys/queue.h>
@@ -131,5 +132,11 @@ __dead void md_proc_yield(void);
  * @procp: Process pointer
  */
 __dead void md_proc_kick(struct proc *procp);
+
+/*
+ * Exit the current process - exit(2) syscall
+ */
+scret_t sys_exit(struct syscall_args *scargs);
+
 #endif  /* !_KERNEL */
 #endif  /* !_SYS_PROC_H_ */

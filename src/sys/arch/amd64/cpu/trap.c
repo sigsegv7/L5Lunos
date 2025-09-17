@@ -36,6 +36,7 @@
 #include <sys/cdefs.h>
 #include <sys/panic.h>
 #include <sys/syslog.h>
+#include <sys/syscall.h>
 #include <machine/trap.h>
 
 /*
@@ -143,6 +144,24 @@ trapframe_dump(struct trapframe *tf)
         tf->rbx, tf->rsi, tf->rdi,
         tf->rflags, cr2, cr3,
         tf->rbp, tf->rsp, tf->rip);
+}
+
+void
+trap_syscall(struct trapframe *tf)
+{
+    struct syscall_args scargs = {
+        .arg[0] = tf->rdi,
+        .arg[1] = tf->rsi,
+        .arg[2] = tf->rdx,
+        .arg[3] = tf->r10,
+        .arg[4] = tf->r9,
+        .arg[5] = tf->r8,
+        .tf = tf
+    };
+
+    if (tf->rax < MAX_SYSCALLS && tf->rax > 0) {
+        tf->rax = g_sctab[tf->rax](&scargs);
+    }
 }
 
 void

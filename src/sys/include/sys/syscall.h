@@ -27,43 +27,34 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _MACHINE_TRAP_H_
-#define _MACHINE_TRAP_H_
+#ifndef _SYS_SYSCALL_H_
+#define _SYS_SYSCALL_H_
 
-#if !defined(__ASSEMBLER__)
-#include <machine/frame.h>
-#endif
+#include <sys/types.h>
 
-#define TRAP_NONE           0       /* Used for general interrupts */
-#define TRAP_BREAKPOINT     1       /* Breakpoint */
-#define TRAP_ARITH_ERR      2       /* Arithmetic error (e.g division by 0) */
-#define TRAP_OVERFLOW       3       /* Overflow */
-#define TRAP_BOUND_RANGE    4       /* BOUND range exceeded */
-#define TRAP_INVLOP         5       /* Invalid opcode */
-#define TRAP_DOUBLE_FAULT   6       /* Double fault */
-#define TRAP_INVLTSS        7       /* Invalid TSS */
-#define TRAP_SEGNP          8       /* Segment not present */
-#define TRAP_PROTFLT        9       /* General protection */
-#define TRAP_PAGEFLT        10      /* Page fault */
-#define TRAP_NMI            11      /* Non-maskable interrupt */
-#define TRAP_SS             12      /* Stack-segment fault */
+/*
+ * Syscall numbers
+ */
+#define SYS_none    0x00
+#define SYS_exit    0x01
 
-#if !defined(__ASSEMBLER__)
+#if defined(_KERNEL)
+/*
+ * Acquire a specific syscall argument
+ */
+#define SCARG(SCARGS, TYPE, SYSNO) ((TYPE)(SCARGS)->arg[(SYSNO)])
 
-void breakpoint_handler(void *sf);
-void arith_err(void *sf);
-void overflow(void *sf);
-void bound_range(void *sf);
-void invl_op(void *sf);
-void double_fault(void *sf);
-void invl_tss(void *sf);
-void segnp(void *sf);
-void general_prot(void *sf);
-void page_fault(void *sf);
-void nmi(void *sf);
-void ss_fault(void *sf);
-void trap_syscall(struct trapframe *tf);
-void trap_handler(struct trapframe *tf);
+typedef ssize_t scret_t;
+typedef ssize_t scarg_t;
 
-#endif  /* !__ASSEMBLER__ */
-#endif  /* !_MACHINE_TRAP_H_ */
+struct syscall_args {
+    scarg_t arg[6];
+    struct trapframe *tf;
+};
+
+extern scret_t(*g_sctab[])(struct syscall_args *);
+extern const size_t MAX_SYSCALLS;
+
+#endif  /* _KERNEL */
+
+#endif  /* !_SYS_SYSCALL_H_ */
