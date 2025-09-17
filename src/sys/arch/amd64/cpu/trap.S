@@ -104,8 +104,6 @@ TRAP_EXIT_EC(ss_fault)
 
     .globl lapic_tmr_isr
 INTR_ENTRY(lapic_tmr_isr)
-    // TODO
     mov %rsp, %rdi
-    cli
-    hlt
+    call md_sched_switch
 INTR_EXIT(lapic_tmr_isr)

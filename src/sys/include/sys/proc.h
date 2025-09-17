@@ -31,6 +31,7 @@
 #define _SYS_PROC_H_
 
 #include <sys/types.h>
+#include <sys/cdefs.h>
 #include <sys/queue.h>
 #include <machine/pcb.h>    /* standard */
 
@@ -86,5 +87,18 @@ int md_proc_init(struct proc *procp, int flags);
  * zero value to indicate failure.
  */
 int md_set_ip(struct proc *procp, uintptr_t ip);
+
+/*
+ * Put the current process into a halt loop
+ * until the next one runs.
+ */
+__dead void md_proc_yield(void);
+
+/*
+ * Kick a process into a user context
+ *
+ * @procp: Process pointer
+ */
+__dead void md_proc_kick(struct proc *procp);
 
 #endif  /* !_SYS_PROC_H_ */

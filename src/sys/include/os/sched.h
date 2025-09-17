@@ -35,6 +35,7 @@
 #include <sys/proc.h>
 #include <os/spinlock.h>
 
+#define SCHED_QUANTUM 10000
 #define SCHED_NQUEUES 4
 
 /*
@@ -48,6 +49,13 @@ struct sched_queue {
     struct spinlock lock;
     size_t nproc;
 };
+
+/*
+ * Context switch to another process
+ *
+ * @tf: Current CPU context frame
+ */
+void md_sched_switch(struct trapframe *tf);
 
 /*
  * Enqueue a new process to a queue

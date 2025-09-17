@@ -36,6 +36,7 @@
 #include <machine/pcb.h>
 #include <machine/gdt.h>
 #include <machine/frame.h>
+#include <machine/lapic.h>
 #include <string.h>
 
 /*
@@ -43,12 +44,16 @@
  * run. The catch is that we have never been in userland
  * from this context so we'll have to fake an IRET frame
  * to force the processor to have a CPL of 3.
- *
- * @tfp: Trapframe of context to enter
  */
-static inline void
-__proc_kick(struct trapframe *tfp)
+__dead void
+md_proc_kick(struct proc *procp)
 {
+    struct md_pcb *pcbp = &procp->pcb;
+    struct trapframe *tfp = &pcbp->tf;
+
+    mmu_write_vas(&pcbp->vas);
+    lapic_timer_oneshot_us(SCHED_QUANTUM);
+
     __ASMV(
         "sti\n"
         "mov %0, %%rax\n"
@@ -67,6 +72,8 @@ __proc_kick(struct trapframe *tfp)
           "m" (tfp->rflags),
           "r" (tfp->rip)
     );
+
+    __builtin_unreachable();
 }
 
 /*
@@ -122,6 +129,21 @@ md_proc_init(struct proc *procp, int flags)
 }
 
 /*
+ * Process idle loop
+ */
+__dead void
+md_proc_yield(void)
+{
+    /* Clear pending interrupts and oneshot */
+    lapic_eoi();
+    lapic_timer_oneshot_us(9000);
+
+    for (;;) {
+        __ASMV("sti; hlt");
+    }
+}
+
+/*
  * Set process instruction pointer
  */
 int
@@ -138,4 +160,55 @@ md_set_ip(struct proc *procp, uintptr_t ip)
     tfp = &pcbp->tf;
     tfp->rip = ip;
     return 0;
+}
+
+void
+md_sched_switch(struct trapframe *tf)
+{
+    struct proc *self, *proc = NULL;
+    struct md_pcb *pcbp;
+    struct pcore *core;
+    int error;
+
+    if ((core = this_core()) == NULL) {
+        printf("sched_switch: could not get core\n");
+        goto done;
+    }
+
+    /* Don't switch if no self */
+    if ((self = core->curproc) == NULL) {
+        md_proc_yield();
+    }
+
+    error = sched_enq(&core->scq, self);
+    if (error < 0) {
+        goto done;
+    }
+
+    /*
+     * Save the current trapframe to our process control
+     * block as we'll want it later when we're back.
+     */
+    pcbp = &self->pcb;
+    memcpy(&pcbp->tf, tf, sizeof(*tf));
+
+    /*
+     * Grab the next process. If we cannot find any, assume
+     * we are the only one and continue on...
+     */
+    error = sched_deq(&core->scq, &proc);
+    if (error < 0) {
+        goto done;
+    }
+
+    /* Load the next trapframe into the live one */
+    pcbp = &proc->pcb;
+    memcpy(tf, &pcbp->tf, sizeof(*tf));
+    core->curproc = proc;
+
+    /* Switch the address space and hope for the best */
+    mmu_write_vas(&pcbp->vas);
+done:
+    lapic_eoi();
+    lapic_timer_oneshot_us(SCHED_QUANTUM);
 }
