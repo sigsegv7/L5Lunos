@@ -148,8 +148,8 @@ elf64_do_load(Elf64_Ehdr *eh, struct proc *proc)
             }
 
             /* Copy the segment data */
-            tmp = (uintptr_t)PTR_OFFSET(eh, phdr->p_offset);
-            memset(PHYS_TO_VIRT(frame), tmp, phdr->p_memsz);
+            tmp = PTR_OFFSET(eh, phdr->p_offset);
+            memcpy(PHYS_TO_VIRT(frame), tmp, phdr->p_filesz);
 
             /* Map the segment */
             spec.va = phdr->p_vaddr;
