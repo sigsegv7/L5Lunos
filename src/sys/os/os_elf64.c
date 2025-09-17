@@ -116,14 +116,12 @@ elf64_do_load(Elf64_Ehdr *eh, struct proc *proc)
     PTR_OFFSET(PHDR_BASE, eh->e_phentsize*(INDEX))
     phdr_base = PTR_OFFSET(eh, eh->e_phoff);
     for (int i = 0; i < eh->e_phnum; ++i) {
-        prot = 0;
+        prot = PROT_READ | PROT_USER;
         phdr = PHDR_I(phdr_base, i);
 
         /* What segment type is this? */
         switch (phdr->p_type) {
         case PT_LOAD:
-            if (ISSET(phdr->p_flags, PF_R))
-                prot |= PROT_READ;
             if (ISSET(phdr->p_flags, PF_W))
                 prot |= PROT_WRITE;
             if (ISSET(phdr->p_flags, PF_X))
