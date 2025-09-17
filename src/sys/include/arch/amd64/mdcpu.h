@@ -50,6 +50,8 @@
  * @x2apic: Has the x2APIC? Is 1 if true
  * @tss: Task state segment for this core
  * @lapic_tmr_freq: Local APIC timer frequency
+ * @gdt: Global descriptor table instance
+ * @gdtr: GDT descriptor
  */
 struct mdcore {
     uint32_t apic_id;
