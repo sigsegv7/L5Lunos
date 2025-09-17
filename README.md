@@ -12,7 +12,7 @@
 - Printf-style kernel logging
 - Video console
 - I/O APIC
-- Local APIC timer
+- Local APIC timer(s)
 - Processor local APIC(s)
 - 16550 UART I/O
 - i8254
