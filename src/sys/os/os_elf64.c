@@ -203,6 +203,11 @@ elf_load(const char *path, struct proc *proc, struct loaded_elf *res)
         return error;
     }
 
+    error = elf64_do_load(eh, proc);
+    if (error < 0) {
+        return error;
+    }
+
     res->entrypoint = eh->e_entry;
     return 0;
 }
