@@ -31,14 +31,17 @@
 #define _MACHINE_PCB_H_ 1
 
 #include <machine/vas.h>
+#include <machine/frame.h>
 
 /*
  * Represents MD specific process data
  *
  * @vas: Current virtual address space
+ * @tf: Processor state save
  */
 struct md_pcb {
     struct vm_vas vas;
+    struct trapframe tf;
 };
 
 #endif  /* _MACHINE_PCB_H_ */
