@@ -2,10 +2,11 @@ include ../../data/build/user.mk
 
 CFILES = $(shell find . -name "*.c")
 CFILES = $(shell find . -name "*.c")
+CFLAGS = -L$(LIBC_DIR) -lc $(INTERNAL_CFLAGS)
 OBJECTS = $(CFILES:%.c=%.o)
 
 $(SYSROOT)/usr/bin/test: $(OBJECTS)
-	$(LD) $(OBJECTS) -o $@ $(INTERNAL_CFLAGS)
+	$(LD) $(OBJECTS) -o $@ $(CFLAGS)
 
 %.o: %.c
 	$(CC) $(INTERNAL_CFLAGS) -c $(CFLAGS) $< -o $@

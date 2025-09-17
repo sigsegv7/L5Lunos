@@ -1,6 +1,5 @@
-__attribute__((naked))
 void
-_start(void)
+main(void)
 {
     for (;;);
 }
