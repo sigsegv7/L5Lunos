@@ -85,6 +85,8 @@ void cpu_init(struct pcore *pcore);
  *
  * @index: Index / logical ID of desired processor
  *
+ * [MD]
+ *
  * Returns a pointer to the core descriptor on success,
  * otherwise NULL to represent failure.
  */
@@ -94,6 +96,8 @@ struct pcore *cpu_get(uint16_t index);
  * Get the current processing element (core) as
  * a 'pcore' descriptor.
  *
+ * [MD]
+ *
  * Returns NULL on failure.
  */
 struct pcore *this_core(void);
@@ -101,6 +105,8 @@ struct pcore *this_core(void);
 /*
  * Start up the application processes from the
  * bootstrap processor.
+ *
+ * [MD]
  */
 void bsp_ap_startup(void);
 #endif  /* _KERNEL */
