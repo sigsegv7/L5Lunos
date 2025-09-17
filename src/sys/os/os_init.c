@@ -6,8 +6,16 @@
 #include <acpi/acpi.h>
 #include <io/cons/cons.h>
 #include <vm/vm.h>
+#include <logo.h>
 
 struct pcore g_bsp;
+
+static void
+boot_print(void)
+{
+    printf("%s\n", g_LOGO);
+    printf("booting l5 lunos v0.0.1...\n");
+}
 
 /*
  * Kernel entrypoint
@@ -15,11 +23,12 @@ struct pcore g_bsp;
 __dead void
 main(void)
 {
-    printf("booting l5 lunos v0.0.1...\n");
+
     acpi_early_init();
 
     cons_init();
     syslog_toggle(true);
+    boot_print();
 
     cpu_conf(&g_bsp);
     vm_init();
