@@ -103,8 +103,8 @@ elf64_do_load(Elf64_Ehdr *eh, struct proc *proc)
     struct mmu_map spec;
     Elf64_Phdr *phdr, *phdr_base;
     paddr_t frame;
-    size_t npges, len, misalign;
-    uintptr_t tmp;
+    size_t npgs, len, misalign;
+    void *tmp;
     int error, prot;
 
     if (eh == NULL || proc == NULL) {
@@ -135,8 +135,13 @@ elf64_do_load(Elf64_Ehdr *eh, struct proc *proc)
             misalign = phdr->p_memsz & (PSIZE - 1);
             len = phdr->p_memsz;
             len = ALIGN_UP(len + misalign, PSIZE);
+            npgs = len / PSIZE;
 
-            frame = vm_alloc_frame(1);
+            if (npgs == 0) {
+                ++npgs;
+            }
+
+            frame = vm_alloc_frame(npgs);
             if (frame == 0) {
                 printf("elf64_do_load: could not alloc frame\n");
                 return -ENOMEM;
@@ -152,7 +157,7 @@ elf64_do_load(Elf64_Ehdr *eh, struct proc *proc)
             error = vm_map(
                 &pcbp->vas,
                 &spec,
-                phdr->p_memsz,
+                len,
                 prot
             );
 
@@ -160,7 +165,9 @@ elf64_do_load(Elf64_Ehdr *eh, struct proc *proc)
                 printf("elf64_do_load: failed to map segment\n");
                 return error;
             }
+            break;
         }
+#undef _PHDR_I
     }
 
     return 0;
