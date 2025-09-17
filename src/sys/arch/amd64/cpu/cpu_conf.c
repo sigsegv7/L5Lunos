@@ -70,6 +70,6 @@ cpu_conf(struct pcore *pcore)
 void
 cpu_init(struct pcore *pcore)
 {
-    lapic_init();
     platform_boot();
+    lapic_init();
 }
