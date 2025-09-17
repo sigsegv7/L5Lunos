@@ -394,6 +394,17 @@ mmu_write_vas(struct vm_vas *vas)
 }
 
 /*
+ * Allocate the frame used for a VAS
+ */
+int
+mmu_free_vas(struct vm_vas *vas)
+{
+    vm_free_frame(vas->cr3, 1);
+    vas->cr3 = 0;
+    return 0;
+}
+
+/*
  * Verify that we are in a known state
  */
 int

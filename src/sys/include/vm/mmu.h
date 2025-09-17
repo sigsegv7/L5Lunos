@@ -117,4 +117,14 @@ int mmu_new_vas(struct vm_vas *res);
  */
 int mmu_write_vas(struct vm_vas *vas);
 
+/*
+ * Destroy a virtual address space
+ *
+ * @vas: VAS to destroy
+ *
+ * Returns zero on success, otherwise a less than
+ * zero value to indicate error.
+ */
+int mmu_free_vas(struct vm_vas *vas);
+
 #endif  /* !_MACHINE_MMU_H_ */
