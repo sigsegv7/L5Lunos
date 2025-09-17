@@ -2,7 +2,7 @@ TARGET = amd64
 KBIN = sys/l5
 SHIMDIR = shim
 SHIMBIN = BOOTX64.EFI
-SYSROOT = root
+SYSROOT = $(shell pwd)/root
 OMAR = tools/omar/bin/omar
 ISO = lunos.iso
 
@@ -18,17 +18,23 @@ QEMU_FLAGS = --enable-kvm -serial stdio -cdrom $(ISO) \
 			-M q35 -cpu host -smp 4 -m 2G
 
 .PHONY: all
-all: root sys image
+all: root user sys image
 
 .PHONY: sys
 sys:
 	cd sys/; make CC=$(CC) AS=$(AS) LD=$(LD) TARGET=$(TARGET) CONF=$(CONF)
 	cp $(KBIN) root/boot/
 
+.PHONY: user
+user:
+	cd cmd/; make CC=$(CC) AS=$(AS) LD=$(LD) TARGET=$(TARGET) \
+		SYSROOT=$(SYSROOT)
+
 root:
 	mkdir -p $(SYSROOT)/
 	mkdir -p $(SYSROOT)/boot/
 	mkdir -p $(SYSROOT)/usr/include/
+	mkdir -p $(SYSROOT)/usr/bin/
 	mkdir -p sys/target/header/
 	rsync -av sys/include/arch/$(TARGET)/ sys/target/header/machine/
 
