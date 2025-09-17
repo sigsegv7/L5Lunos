@@ -113,6 +113,8 @@ sched_deq(struct sched_queue *q, struct proc **procp)
     spinlock_acquire(&q->lock);
     proc = TAILQ_FIRST(&q->q);
     TAILQ_REMOVE(&q->q, proc, link);
+
+    *procp = proc;
     --q->nproc;
     spinlock_release(&q->lock);
     return 0;
