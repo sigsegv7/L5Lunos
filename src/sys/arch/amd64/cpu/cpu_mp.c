@@ -31,6 +31,7 @@
 #include <sys/param.h>
 #include <sys/syslog.h>
 #include <sys/panic.h>
+#include <sys/atomic.h>
 #include <sys/cpuvar.h>
 #include <sys/limits.h>
 #include <os/kalloc.h>
@@ -72,7 +73,8 @@ ap_entry(struct limine_smp_info *)
     cpu_conf(pcore);
     cpu_init(pcore);
 
-    corelist[ncores_up++] = pcore;
+    corelist[ncores_up - 1] = pcore;
+    atomic_inc_64(&ncores_up);
     spinlock_release(&lock);
     for (;;);
 }
