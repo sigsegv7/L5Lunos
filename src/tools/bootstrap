@@ -58,4 +58,5 @@ echo
 echo "----------------------------------"
 echo -e "\n"
 
+make root
 build           # Build sources
