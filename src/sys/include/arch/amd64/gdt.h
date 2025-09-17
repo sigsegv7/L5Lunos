@@ -87,7 +87,7 @@ extern struct gdt_entry g_gdt_data[GDT_ENTRY_COUNT];
 extern const struct gdtr g_gdtr;
 
 __always_inline static inline void
-gdt_load(void)
+gdt_load(struct gdtr *gdtr)
 {
     __ASMV("lgdt %0\n"
            "push %1\n"              /* Push code segment selector */
@@ -102,7 +102,7 @@ gdt_load(void)
            "  mov %%ax, %%gs\n"
            "  mov %%ax, %%ss\n"
            :
-           : "m" (g_gdtr), "i"(KERNEL_CS), "i"(KERNEL_DS)
+           : "m" (*gdtr), "i"(KERNEL_CS), "i"(KERNEL_DS)
            : "rax", "memory"
     );
 }

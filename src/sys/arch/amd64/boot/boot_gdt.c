@@ -91,8 +91,3 @@ struct gdt_entry g_gdt_data[GDT_ENTRY_COUNT] = {
 
 /* Verify that the GDT is of the correct size */
 __static_assert(sizeof(g_gdt_data) == (8 * GDT_ENTRY_COUNT));
-
-const struct gdtr g_gdtr = {
-    .limit = sizeof(g_gdt_data) - 1,
-    .offset = (uintptr_t)&g_gdt_data[0]
-};

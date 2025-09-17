@@ -33,6 +33,7 @@
 #include <sys/types.h>
 #include <sys/cdefs.h>
 #include <machine/tss.h>
+#include <machine/gdt.h>
 
 #define md_spinwait() __ASMV("pause")
 #define md_intoff()   __ASMV("cli")
@@ -57,6 +58,8 @@ struct mdcore {
     uint8_t x2apic : 1;
     struct tss_entry tss;
     size_t lapic_tmr_freq;
+    struct gdt_entry gdt[GDT_ENTRY_COUNT];
+    struct gdtr gdtr;
 };
 
 #endif  /* !_MACHINE_MDCPU_H_ */

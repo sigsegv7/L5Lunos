@@ -34,6 +34,7 @@
 #include <machine/trap.h>
 #include <machine/lapic.h>
 #include <machine/gdt.h>
+#include <string.h>
 
 /*
  * Initialize interrupt vectors
@@ -58,8 +59,20 @@ init_vectors(void)
 void
 cpu_conf(struct pcore *pcore)
 {
+    struct mdcore *mdcore;
+    struct gdtr *gdtr;
+
+    /* Copy the template GDT */
+    mdcore = &pcore->md;
+    memcpy(mdcore->gdt, &g_gdt_data, sizeof(g_gdt_data));
+
+    /* Set up the GDTR */
+    gdtr = &mdcore->gdtr;
+    gdtr->offset = (uintptr_t)&mdcore->gdt[0];
+    gdtr->limit = sizeof(g_gdt_data) - 1;
+
     /* We use %GS to store the processor */
-    gdt_load();
+    gdt_load(&mdcore->gdtr);
     pcore->self = pcore;
     wrmsr(IA32_GS_BASE, (uintptr_t)pcore);
 

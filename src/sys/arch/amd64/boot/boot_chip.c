@@ -61,8 +61,10 @@ static void
 init_tss(struct pcore *pcore)
 {
     struct tss_desc *desc;
+    struct mdcore *mdcore;
 
-    desc = (struct tss_desc *)&g_gdt_data[GDT_TSS_INDEX];
+    mdcore = &pcore->md;
+    desc = (struct tss_desc *)&mdcore->gdt[GDT_TSS_INDEX];
     write_tss(pcore, desc);
     tss_load();
 }
