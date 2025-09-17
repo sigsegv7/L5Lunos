@@ -35,6 +35,12 @@
 #include <machine/pcb.h>    /* standard */
 
 /*
+ * The stack starts here and grows down
+ */
+#define STACK_TOP   0xBFFFFFFF
+#define STACK_LEN   4096
+
+/*
  * A process describes a running program image
  * on the system.
  *
@@ -68,5 +74,17 @@ int proc_init(struct proc *procp, int flags);
  * zero value to indicate failure.
  */
 int md_proc_init(struct proc *procp, int flags);
+
+/*
+ * Set the instruction pointer field of a specific
+ * process
+ *
+ * @procp: Process to update
+ * @ip: Instruction pointer to write
+ *
+ * Returns zero on success, otherwise a less than
+ * zero value to indicate failure.
+ */
+int md_set_ip(struct proc *procp, uintptr_t ip);
 
 #endif  /* !_SYS_PROC_H_ */
