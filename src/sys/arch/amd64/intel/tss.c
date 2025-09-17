@@ -70,9 +70,11 @@ alloc_resources(struct mdcore *mdcore)
 int
 tss_alloc_stack(union tss_stack *entry_out, size_t size)
 {
+    const size_t PSIZE = DEFAULT_PAGESIZE;
     uintptr_t base;
 
-    base = vm_alloc_frame(1);
+    base = ALIGN_UP(base, PSIZE);
+    base = vm_alloc_frame(size / PSIZE);
     if (base == 0) {
         panic("tss_alloc_stack: failed to allocate stack\n");
     }
