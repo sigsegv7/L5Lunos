@@ -89,8 +89,8 @@ cpu_get(uint16_t index)
         return &g_bsp;
     }
 
-    if ((index - 1) >= ncores_up) {
-        index %= (ncores_up - 1);
+    if ((index - 1) >= (ncores_up - 1)) {
+        return NULL;
     }
 
     return corelist[index - 1];
