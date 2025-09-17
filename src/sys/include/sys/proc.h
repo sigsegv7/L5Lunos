@@ -42,6 +42,7 @@
 #define STACK_TOP   0xBFFFFFFF
 #define STACK_LEN   4096
 
+#if defined(_KERNEL)
 /*
  * A process describes a running program image
  * on the system.
@@ -130,5 +131,5 @@ __dead void md_proc_yield(void);
  * @procp: Process pointer
  */
 __dead void md_proc_kick(struct proc *procp);
-
+#endif  /* !_KERNEL */
 #endif  /* !_SYS_PROC_H_ */
