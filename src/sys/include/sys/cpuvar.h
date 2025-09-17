@@ -32,6 +32,7 @@
 
 #include <sys/types.h>
 #include <sys/cdefs.h>
+#include <sys/proc.h>
 #if defined(_KERNEL)
 #include <os/sched.h>
 #include <machine/mdcpu.h>
@@ -43,12 +44,14 @@
  * independent.
  *
  * @id: Monotonic logical ID
+ * @curproc: Current process running
  * @scq: Scheduler queue
  * @md: Machine dependent processor information
  * @self: Chain pointer to self
  */
 struct pcore {
     uint32_t id;
+    struct proc *curproc;
 #if defined(_KERNEL)
     struct sched_queue scq;
     struct mdcore md;
