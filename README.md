@@ -21,6 +21,16 @@ share any existing operating system sources.
 - i8254
 - i8259
 
+## Build instructions
+
+To build the system, run the following to generate an ISO image:
+
+```sh
+tools/bootstrap.sh             # Build and fetch prerequisites
+tools/tools/build-toolchain.sh # Build the cross compilation toolchain
+make
+```
+
 ## License
 
 This project is licensed under the BSD 3 clause
