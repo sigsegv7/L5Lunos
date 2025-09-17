@@ -33,6 +33,7 @@
 #include <sys/types.h>
 #include <sys/cdefs.h>
 #include <sys/proc.h>
+#include <sys/param.h>
 #if defined(_KERNEL)
 #include <os/sched.h>
 #include <machine/mdcpu.h>
@@ -60,6 +61,35 @@ struct pcore {
 };
 
 #if defined(_KERNEL)
+
+typedef enum {
+    CORE_ARBITER_RR,    /* Round robin */
+} arbiter_type_t;
+
+/*
+ * The processor core arbiter assists in scheduling
+ * processor cores to be used for execution.
+ *
+ * @rr_id: Round robin ID; next processor to be scheduled
+ * @type: Arbitration policy (CORE_ARBITER_RR is default)
+ * @lock: Protects the ID
+ */
+struct core_arbiter {
+    size_t rr_id;
+    arbiter_type_t type;
+    struct spinlock lock;
+} __aligned(COHERENCY_UNIT);
+
+/*
+ * Return a pointer to the next processor that
+ * is ready for queues to be assigned to them
+ *
+ * [MI]
+ *
+ * Returns NULL on failure
+ */
+struct pcore *cpu_sched(void);
+
 /*
  * Configure a processor core on the system
  *

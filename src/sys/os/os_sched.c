@@ -33,12 +33,48 @@
  */
 
 #include <sys/types.h>
+#include <sys/cdefs.h>
 #include <sys/errno.h>
 #include <sys/syslog.h>
 #include <sys/panic.h>
 #include <sys/queue.h>
 #include <sys/cpuvar.h>
 #include <os/sched.h>
+
+__cacheline_aligned
+static struct core_arbiter arbiter = {
+    .rr_id = 0,
+    .type = CORE_ARBITER_RR
+};
+
+/*
+ * Schedule the next processor core
+ */
+struct pcore *
+cpu_sched(void)
+{
+    struct pcore *retval;
+
+    spinlock_acquire(&arbiter.lock);
+    switch (arbiter.type) {
+    case CORE_ARBITER_RR:
+        retval = cpu_get(arbiter.rr_id++);
+
+        /*
+         * If we made it at the end, wrap to the beginning.
+         * XXX: Us getting entry 0 would make the next be 1.
+         */
+        if (retval == NULL) {
+            arbiter.rr_id = 1;
+            retval = cpu_get(0);
+        }
+
+        break;
+    }
+
+    spinlock_release(&arbiter.lock);
+    return retval;
+}
 
 /*
  * Enqueue a process into a queue
