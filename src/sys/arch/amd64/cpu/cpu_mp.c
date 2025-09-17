@@ -79,6 +79,23 @@ ap_entry(struct limine_smp_info *)
     for (;;);
 }
 
+/*
+ * Get a specific core descriptor
+ */
+struct pcore *
+cpu_get(uint16_t index)
+{
+    if (index == 0) {
+        return &g_bsp;
+    }
+
+    if ((index - 1) >= ncores_up) {
+        index %= (ncores_up - 1);
+    }
+
+    return corelist[index - 1];
+}
+
 void
 bsp_ap_startup(void)
 {

@@ -80,6 +80,17 @@ void cpu_conf(struct pcore *pcore);
 void cpu_init(struct pcore *pcore);
 
 /*
+ * Get a specific CPU descriptor using a logical
+ * ID number (`index') as a key
+ *
+ * @index: Index / logical ID of desired processor
+ *
+ * Returns a pointer to the core descriptor on success,
+ * otherwise NULL to represent failure.
+ */
+struct pcore *cpu_get(uint16_t index);
+
+/*
  * Get the current processing element (core) as
  * a 'pcore' descriptor.
  *
