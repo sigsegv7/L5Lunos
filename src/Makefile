@@ -18,7 +18,7 @@ QEMU_FLAGS = --enable-kvm -serial stdio -cdrom $(ISO) \
 			-M q35 -cpu host -smp 4 -m 2G
 
 .PHONY: all
-all: root user sys image
+all: root user sys lib image
 
 .PHONY: sys
 sys:
@@ -29,6 +29,11 @@ sys:
 user:
 	cd cmd/; make CC=$(CC) AS=$(AS) LD=$(LD) TARGET=$(TARGET) \
 		SYSROOT=$(SYSROOT)
+
+.PHONY: lib
+lib:
+	cd lib/; make CC=$(CC) AS=$(AS) LD=$(LD) TARGET=$(TARGET) \
+				  SYSROOT=$(SYSROOT)
 
 root:
 	mkdir -p $(SYSROOT)/
