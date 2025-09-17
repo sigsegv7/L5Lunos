@@ -119,11 +119,6 @@ elf64_do_load(Elf64_Ehdr *eh, struct proc *proc)
         prot = 0;
         phdr = PHDR_I(phdr_base, i);
 
-        /* Don't cover blank segments */
-        if (phdr->p_memsz == 0) {
-            continue;
-        }
-
         /* What segment type is this? */
         switch (phdr->p_type) {
         case PT_LOAD:
@@ -133,6 +128,10 @@ elf64_do_load(Elf64_Ehdr *eh, struct proc *proc)
                 prot |= PROT_WRITE;
             if (ISSET(phdr->p_flags, PF_X))
                 prot |= PROT_EXEC;
+
+            if (phdr->p_memsz == 0 && phdr->p_filesz == 0) {
+                continue;
+            }
 
             /* Re-align the length */
             misalign = phdr->p_memsz & (PSIZE - 1);
