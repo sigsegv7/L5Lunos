@@ -1,1 +1,4 @@
 option DUMP_MEMMAP  yes     // Dump memory map on boot
+
+// PCI switches and knobs
+setval PCI_MAX_BUS  8       // Max buses to scan on boot

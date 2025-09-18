@@ -35,7 +35,14 @@
 #include <io/pci/pci.h>
 #include <io/pci/cam.h>
 
-#define PCI_BUS_ROOT 0
+#if defined(__PCI_MAX_BUS)
+#define PCI_MAX_BUS  __PCI_MAX_BUS
+#if PCI_MAX_BUS > 256
+#error "PCI_MAX_BUS must be <= 256"
+#endif  /* PCI_MAX_BUS */
+#else
+#define PCI_MAX_BUS 1
+#endif  /* __PCI_MAX_BUS */
 
 static struct cam_hook cam;
 
@@ -160,5 +167,8 @@ pci_init_bus(void)
         panic("pci_init_bus: failed to init CAM\n");
     }
 
-    pci_enum_bus(PCI_BUS_ROOT);
+    printf("pci: enumerating %d buses\n", PCI_MAX_BUS);
+    for (int i = 0; i < PCI_MAX_BUS; ++i) {
+        pci_enum_bus(i);
+    }
 }
