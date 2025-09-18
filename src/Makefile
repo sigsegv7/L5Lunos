@@ -11,7 +11,6 @@ BINUTILS_DIR := $(shell pwd)/cc/toolchain/build-binutils
 CC := $(shell pwd)/cc/gcc/bin/x86_64-pc-ethos-gcc
 LD := $(BINUTILS_DIR)/bin/x86_64-pc-ethos-ld
 AS := $(BINUTILS_DIR)/bin/x86_64-pc-ethos-as
-CONF := $(shell cat sys/conf/GENERIC | tools/kconf/kconf)
 
 # QEMU emulator flags
 QEMU_FLAGS = --enable-kvm -serial stdio -cdrom $(ISO) \
@@ -22,7 +21,7 @@ all: root user sys lib image
 
 .PHONY: sys
 sys:
-	cd sys/; make CC=$(CC) AS=$(AS) LD=$(LD) TARGET=$(TARGET) CONF=$(CONF)
+	cd sys/; make CC=$(CC) AS=$(AS) LD=$(LD) TARGET=$(TARGET) TOOLS=$(shell pwd)/tools
 	cp $(KBIN) root/boot/
 
 .PHONY: user
