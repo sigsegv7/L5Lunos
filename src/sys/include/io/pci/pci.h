@@ -43,11 +43,15 @@ typedef uint32_t pcival_t;
  * @bus: Bus number of device
  * @slot: Slot number of device
  * @func: Function number of device
+ * @vendor: Vendor ID
+ * @device: Device ID
  */
 struct pci_device {
     uint16_t bus;
     uint8_t slot;
     uint8_t func;
+    uint16_t vendor;
+    uint16_t device;
 };
 
 /*
