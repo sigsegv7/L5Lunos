@@ -30,10 +30,13 @@
 #include <sys/types.h>
 #include <sys/param.h>
 #include <sys/cdefs.h>
+#include <sys/queue.h>
 #include <sys/panic.h>
 #include <sys/syslog.h>
+#include <os/kalloc.h>
 #include <io/pci/pci.h>
 #include <io/pci/cam.h>
+#include <string.h>
 
 #if defined(__PCI_MAX_BUS)
 #define PCI_MAX_BUS  __PCI_MAX_BUS
@@ -44,6 +47,7 @@
 #define PCI_MAX_BUS 1
 #endif  /* __PCI_MAX_BUS */
 
+static TAILQ_HEAD(, pci_device) devlist;
 static struct cam_hook cam;
 
 /*
@@ -53,6 +57,7 @@ static struct cam_hook cam;
 static void
 pci_register_dev(struct pci_device *dev)
 {
+    struct pci_device *devp;
     pcireg_t vend_dev;
     uint16_t device_id;
     uint16_t vendor_id;
@@ -88,6 +93,17 @@ pci_register_dev(struct pci_device *dev)
         dev->bus, dev->slot,
         dev->func
     );
+
+    /* Allocate a seperate one to queue */
+    devp = kalloc(sizeof(*devp));
+    if (devp == NULL) {
+        printf("pci_register_dev: failed to alloc devp\n");
+        return;
+    }
+
+    /* Queue a copy */
+    memcpy(devp, dev, sizeof(*devp));
+    TAILQ_INSERT_TAIL(&devlist, devp, link);
 }
 
 /*
@@ -159,6 +175,7 @@ pci_writel(struct pci_device *dp, pcireg_t reg, uint32_t v)
 void
 pci_init_bus(void)
 {
+    struct pci_device *dp;
     int error;
 
     error = pci_cam_init(&cam);
@@ -168,7 +185,10 @@ pci_init_bus(void)
     }
 
     printf("pci: enumerating %d buses\n", PCI_MAX_BUS);
+    TAILQ_INIT(&devlist);
     for (int i = 0; i < PCI_MAX_BUS; ++i) {
         pci_enum_bus(i);
     }
+
+    printf("bridge: detected %d devices\n", devlist.nelem);
 }

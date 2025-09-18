@@ -31,6 +31,7 @@
 #define _PCI_PCI_H_ 1
 
 #include <sys/types.h>
+#include <sys/queue.h>
 
 /* PCI specific types */
 typedef uint32_t pcireg_t;
@@ -52,6 +53,7 @@ struct pci_device {
     uint8_t func;
     uint16_t vendor;
     uint16_t device;
+    TAILQ_ENTRY(pci_device) link;
 };
 
 /*
