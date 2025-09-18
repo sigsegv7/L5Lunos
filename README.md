@@ -3,10 +3,15 @@
 Written mostly solo and completely from scratch, not Linux based nor does it
 share any existing operating system sources.
 
+## About the name
+
+The OS itself is named Lunos which is has the root word "lunar" (meaning moon).
+
+The kernel (L5) is named after the [L5 lagrange point](https://en.wikipedia.org/wiki/Lagrange_point).
+
 ## Current status
 
 **Under heavy development**
-
 
 ## Progress
 
