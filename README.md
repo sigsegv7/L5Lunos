@@ -17,6 +17,7 @@ share any existing operating system sources.
 - I/O APIC
 - Local APIC timer(s)
 - Processor local APIC(s)
+- Syscall windows, domains and platform latches
 - 16550 UART I/O
 - i8254
 - i8259
