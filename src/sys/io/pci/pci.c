@@ -64,15 +64,22 @@ pci_register_dev(struct pci_device *dev)
         return;
     }
 
+    dev->vendor = vendor_id;
+    dev->device = device_id;
+
     /*
      * Log out the BDF notation as well as vendor,
      * and logical slot ID.
+     *
+     * XXX: The device and vendor id are in the format of
+     *      "[V:D]" where 'V' is the vendor ID and 'D' is the
+     *      device ID.
      */
     printf(
-        "bridge: device @ pci <%x.%x.%x>\n",
+        "bridge: device [%x:%x] @ pci <%x.%x.%x>\n",
+        dev->device, dev->vendor,
         dev->bus, dev->slot,
-        dev->func, dev->vendor,
-        dev->slot
+        dev->func
     );
 }
 
