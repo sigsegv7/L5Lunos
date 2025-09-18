@@ -173,7 +173,7 @@ trap_syscall(struct trapframe *tf)
     /* Get the current window */
     self = pcore->curproc;
     scdp = &self->scdom;
-    scwp = &scdp->slots[0];
+    scwp = &scdp->slots[scdp->platch];
     if (scwp->sctab == NULL && scwp->p == 0) {
         printf("trap_syscall: no sctab (platch=%x)\n", scdp->platch);
         return;
