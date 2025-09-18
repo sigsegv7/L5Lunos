@@ -82,12 +82,35 @@ struct vop {
  * [V]  Set up by VFS
  * [D/V]: Both D and V
  *
- * @vtype: Vnode type  [D/V]
+ * @type: Vnode type  [D/V]
  * @vops:  Vnode operations hooks [D]
  */
 struct vnode {
-    vtype_t vtype;
+    vtype_t type;
     struct vop *vops;
 };
+
+/*
+ * Allocate a new vnode
+ *
+ * @resp: Result pointer is written here
+ * @type: Vnode type
+ * @flags: Optional flags
+ *
+ * Return zero on success, otherwise a less than zero
+ * on failure.
+ */
+int vfs_valloc(struct vnode **resp, vtype_t type, int flags);
+
+/*
+ * Deallocate / release a vnode
+ *
+ * @vp: Vnode to release
+ * @flags: Optional flags
+ *
+ * Returns zero on success, otherwise less than zero
+ * on failure.
+ */
+int vfs_vrel(struct vnode *vp, int flags);
 
 #endif  /* !_OS_VNODE_H_ */
