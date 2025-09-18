@@ -30,9 +30,18 @@
 #include <sys/cdefs.h>
 #include <sys/cpuvar.h>
 #include <sys/syslog.h>
+#include <io/pci/cam.h>
 
 __weak void
 bsp_ap_startup(void)
 {
     printf("bsp_ap_startup: unimplemented\n");
+}
+
+__weak int
+pci_cam_init(struct cam_hook *chp)
+{
+    (void)chp;
+    printf("pci_cam_init: unimplemented\n");
+    return 0;
 }

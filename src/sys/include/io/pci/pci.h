@@ -27,60 +27,54 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef _PCI_PCI_H_
+#define _PCI_PCI_H_ 1
+
 #include <sys/types.h>
-#include <sys/panic.h>
-#include <sys/cpuvar.h>
-#include <machine/uart.h>
-#include <machine/boot.h>
-#include <machine/i8259.h>
-#include <machine/ioapic.h>
-#include <machine/tss.h>
-#include <machine/gdt.h>
-#include <io/pci/pci.h>
-#include <stdbool.h>
 
-static void
-chipset_init(void)
-{
-    static bool once = false;
-
-    if (once) {
-        return;
-    }
-
-    once = true;
-    ioapic_init();
-
-    uart_init();
-    i8259_disable();
-    pci_init_bus();
-}
+/* PCI specific types */
+typedef uint32_t pcireg_t;
+typedef uint32_t pcival_t;
 
 /*
- * Initialize and load the task state segment
+ * Represents a device attached to the PCI
+ * bus
+ *
+ * @bus: Bus number of device
+ * @slot: Slot number of device
+ * @func: Function number of device
  */
-static void
-init_tss(struct pcore *pcore)
-{
-    struct tss_desc *desc;
-    struct mdcore *mdcore;
+struct pci_device {
+    uint16_t bus;
+    uint8_t slot;
+    uint8_t func;
+};
 
-    mdcore = &pcore->md;
-    desc = (struct tss_desc *)&mdcore->gdt[GDT_TSS_INDEX];
-    write_tss(pcore, desc);
-    tss_load();
-}
+/*
+ * Read from a specific register on a specific PCI
+ * enabled device.
+ *
+ * @dp: Device to read from
+ * @reg: Offset of desired register
+ *
+ * Returns the 32-bit register value on success
+ */
+pcireg_t pci_readl(struct pci_device *dp, pcireg_t reg);
 
-void
-platform_boot(void)
-{
-    struct pcore *core;
+/*
+ * Write a value to a specific register on a specific
+ * PCI enabled device.
+ *
+ * @dp: Device to write to
+ * @reg: Offset of the desired register
+ * @v: 32-bit value to be written
+ */
+void pci_writel(struct pci_device *dp, pcireg_t reg, pcival_t v);
 
-    /* Try to get the current core */
-    if ((core = this_core()) == NULL) {
-        panic("platform_boot: could not get core\n");
-    }
+/*
+ * Initialize the root bus and enumerate attached
+ * devices.
+ */
+void pci_init_bus(void);
 
-    init_tss(core);
-    chipset_init();
-}
+#endif  /* !PCI_PCI_H_ */

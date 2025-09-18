@@ -28,59 +28,49 @@
  */
 
 #include <sys/types.h>
+#include <sys/param.h>
+#include <sys/cdefs.h>
 #include <sys/panic.h>
-#include <sys/cpuvar.h>
-#include <machine/uart.h>
-#include <machine/boot.h>
-#include <machine/i8259.h>
-#include <machine/ioapic.h>
-#include <machine/tss.h>
-#include <machine/gdt.h>
+#include <sys/syslog.h>
 #include <io/pci/pci.h>
-#include <stdbool.h>
+#include <io/pci/cam.h>
 
-static void
-chipset_init(void)
+static struct cam_hook cam;
+
+/*
+ * Read from a specific register
+ */
+pcireg_t
+pci_readl(struct pci_device *dp, pcireg_t reg)
 {
-    static bool once = false;
-
-    if (once) {
-        return;
+    if (dp == NULL) {
+        return 0;
     }
 
-    once = true;
-    ioapic_init();
-
-    uart_init();
-    i8259_disable();
-    pci_init_bus();
+    return cam.cam_readl(dp, reg);
 }
 
 /*
- * Initialize and load the task state segment
+ * Write to a specific register
  */
-static void
-init_tss(struct pcore *pcore)
+void
+pci_writel(struct pci_device *dp, pcireg_t reg, uint32_t v)
 {
-    struct tss_desc *desc;
-    struct mdcore *mdcore;
+    if (dp == NULL) {
+        return;
+    }
 
-    mdcore = &pcore->md;
-    desc = (struct tss_desc *)&mdcore->gdt[GDT_TSS_INDEX];
-    write_tss(pcore, desc);
-    tss_load();
+    return cam.cam_writel(dp, reg, v);
 }
 
 void
-platform_boot(void)
+pci_init_bus(void)
 {
-    struct pcore *core;
+    int error;
 
-    /* Try to get the current core */
-    if ((core = this_core()) == NULL) {
-        panic("platform_boot: could not get core\n");
+    error = pci_cam_init(&cam);
+    if (error < 0) {
+        printf("pci_init_bus: pci_cam_init() returned %d\n", error);
+        panic("pci_init_bus: failed to init CAM\n");
     }
-
-    init_tss(core);
-    chipset_init();
 }
