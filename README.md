@@ -22,6 +22,23 @@ share any existing operating system sources.
 - i8254
 - i8259
 
+## Goals
+
+- POSIX compliancy
+- PCI
+- PCIe
+- PCI(e) MSI
+- PCI(e) MSI-X
+- File I/O syscalls
+- AHCI/SATA support
+- NVMe support
+- Single-level store orthogonal to disk/ram
+- UNIX-like FS layered on SLS
+- Block I/O framework
+- USB support (xHCI / USB 3.0)
+- Capability based security
+...
+
 ## Build instructions
 
 To build the system, run the following to generate an ISO image:
