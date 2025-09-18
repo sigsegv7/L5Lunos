@@ -57,7 +57,7 @@ pci_register_dev(struct pci_device *dev)
     /* Get the vendor and device ID */
     vend_dev = pci_readl(dev, PCIREG_VENDOR_ID);
     vendor_id = vend_dev & 0xFFFF;
-    device_id = (vendor_id >> 16) & 0xFFFF;
+    device_id = (vend_dev >> 16) & 0xFFFF;
 
     /* Does this device exist? */
     if (vendor_id == 0xFFFF) {
