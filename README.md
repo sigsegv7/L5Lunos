@@ -18,6 +18,8 @@ share any existing operating system sources.
 - Local APIC timer(s)
 - Processor local APIC(s)
 - Syscall windows, domains and platform latches
+- OSMORA Archive Format (OMAR) initramfs
+- ELF64 loader
 - 16550 UART I/O
 - i8254
 - i8259
