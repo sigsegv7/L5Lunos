@@ -25,7 +25,6 @@ share any existing operating system sources.
 ## Goals
 
 - POSIX compliancy
-- ~~Sliding syscall "namespaces" (windows/domains)~~
 - PCI
 - PCIe
 - PCI(e) MSI
@@ -35,6 +34,9 @@ share any existing operating system sources.
 - NVMe support
 - Single-level store orthogonal to disk/ram
 - UNIX-like FS layered on SLS
+- Block I/O framework
+- USB support (xHCI / USB 3.0)
+- Capability based security
 ...
 
 ## Build instructions
