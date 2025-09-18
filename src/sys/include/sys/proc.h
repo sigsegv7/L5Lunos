@@ -51,12 +51,14 @@
  * @pid: Process ID
  * @flags: State flags (see PROC_*)
  * @pcb: Process control block
+ * @scdom: Syscall domain
  * @link: TAILQ link
  */
 struct proc {
     pid_t pid;
     uint32_t flags;
     struct md_pcb pcb;
+    struct syscall_domain scdom;
     TAILQ_ENTRY(proc) link;
 };
 

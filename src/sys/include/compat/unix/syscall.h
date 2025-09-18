@@ -27,61 +27,18 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <sys/types.h>
-#include <sys/atomic.h>
-#include <sys/errno.h>
+#ifndef _UNIX_SYSCALL_H_
+#define _UNIX_SYSCALL_H_ 1
+
 #include <sys/proc.h>
-#include <string.h>
+#include <sys/param.h>
+#include <sys/syscall.h>
 
-static pid_t next_pid = 0;
+#ifdef _NEED_UNIX_SCTAB
+scret_t(*g_unix_sctab[])(struct syscall_args *) = {
+    [SYS_none]   = NULL,
+    [SYS_exit]   = sys_exit
+};
 
-/*
- * MI proc init code
- */
-int
-proc_init(struct proc *procp, int flags)
-{
-    struct syscall_domain *scdp;
-    struct syscall_win *winp;
-    int error;
-
-    if (procp == NULL) {
-        return -EINVAL;
-    }
-
-    /* Put the process in a known state */
-    scdp = &procp->scdom;
-    memset(procp, 0, sizeof(*procp));
-
-    /*
-     * Initialize each platform latch
-     */
-    for (platch_t p = 0; p < __SC_PLATCH_MAX; ++p) {
-        winp = &scdp->slots[p];
-        switch (p) {
-        case SC_PLATCH_UNIX:
-            winp->p = 1;
-            winp->sctab = &g_unix_sctab[0];
-            winp->nimpl = UNIX_SCTAB_LEN;
-            break;
-        }
-    }
-
-    procp->pid = atomic_inc_int(&next_pid);
-    error = md_proc_init(procp, flags);
-    return error;
-}
-
-/*
- * Kill a specific process
- */
-int
-proc_kill(struct proc *procp, int status)
-{
-    if (procp == NULL) {
-        return -EINVAL;
-    }
-
-    procp->flags |= PROC_EXITING;
-    return md_proc_kill(procp, 0);
-}
+#endif  /* !_NEED_UNIX_SCTAB */
+#endif  /* !_UNIX_SYSCALL_H_ */

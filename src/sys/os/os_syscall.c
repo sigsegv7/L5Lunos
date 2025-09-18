@@ -31,10 +31,7 @@
 #include <sys/types.h>
 #include <sys/param.h>
 #include <sys/proc.h>
+#define _NEED_UNIX_SCTAB
+#include <compat/unix/syscall.h>
 
-scret_t(*g_sctab[])(struct syscall_args *) = {
-    [SYS_none]   = NULL,
-    [SYS_exit]   = sys_exit
-};
-
-const size_t MAX_SYSCALLS = NELEM(g_sctab);
+const size_t UNIX_SCTAB_LEN = NELEM(g_unix_sctab);

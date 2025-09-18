@@ -34,5 +34,7 @@
 #define NAME_MAX 256
 #define CHAR_BIT 8
 #define CPU_MAX 256
+#define SC_MAX 64       /* Max syscalls */
+#define SCWIN_MAX 2    /* Max syscall windows */
 
 #endif  /* !_SYS_LIMITS_H_ */

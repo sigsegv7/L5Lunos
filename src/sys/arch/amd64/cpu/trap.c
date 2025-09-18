@@ -35,6 +35,7 @@
 #include <sys/param.h>
 #include <sys/cdefs.h>
 #include <sys/panic.h>
+#include <sys/cpuvar.h>
 #include <sys/syslog.h>
 #include <sys/syscall.h>
 #include <machine/trap.h>
@@ -149,6 +150,10 @@ trapframe_dump(struct trapframe *tf)
 void
 trap_syscall(struct trapframe *tf)
 {
+    struct pcore *pcore = this_core();
+    struct syscall_domain *scdp;
+    struct syscall_win *scwp;
+    struct proc *self;
     struct syscall_args scargs = {
         .arg[0] = tf->rdi,
         .arg[1] = tf->rsi,
@@ -159,8 +164,23 @@ trap_syscall(struct trapframe *tf)
         .tf = tf
     };
 
-    if (tf->rax < MAX_SYSCALLS && tf->rax > 0) {
-        tf->rax = g_sctab[tf->rax](&scargs);
+    /* Sanity check */
+    if (__unlikely(pcore == NULL)) {
+        printf("trap_syscall: pcore is NULL\n");
+        return;
+    }
+
+    /* Get the current window */
+    self = pcore->curproc;
+    scdp = &self->scdom;
+    scwp = &scdp->slots[0];
+    if (scwp->sctab == NULL && scwp->p == 0) {
+        printf("trap_syscall: no sctab (platch=%x)\n", scdp->platch);
+        return;
+    }
+
+    if (tf->rax < scwp->nimpl && tf->rax > 0) {
+        tf->rax = scwp->sctab[tf->rax](&scargs);
     }
 }
 
