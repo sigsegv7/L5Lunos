@@ -54,4 +54,15 @@ int vfs_init(void);
  */
 int vfs_by_index(uint16_t index, struct fs_info **resp);
 
+/*
+ * Count the number of components within a path and
+ * return a negative value if the path is invalid.
+ *
+ * @path: Path to check
+ *
+ * Returns the number of components on success,
+ * otherwise a less than zero value on failure.
+ */
+int vfs_cmp_cnt(const char *path);
+
 #endif  /* !_OS_VFS_H_ */

@@ -31,7 +31,32 @@
 #include <sys/errno.h>
 #include <os/vnode.h>
 #include <os/kalloc.h>
+#include <os/vfs.h>
 #include <string.h>
+
+/*
+ * Returns a value of zero if a character value
+ * within a path is valid, otherwise a less than
+ * zero value on error.
+ */
+static int
+vfs_pathc_valid(char c)
+{
+    /* Handle [A-Za-z] */
+    if (c >= 'a' && c <= 'z')
+        return 0;
+    if (c >= 'A' && c <= 'Z')
+        return 0;
+
+    /* Handle [0-9] and '/' */
+    if (c >= '0' && c <= '9')
+        return 0;
+    if (c == '/')
+        return 0;
+
+    return -1;
+
+}
 
 /*
  * Allocate a new vnode
@@ -66,4 +91,45 @@ vfs_vrel(struct vnode *vp, int flags)
 
     kfree(vp);
     return 0;
+}
+
+
+/*
+ * Count number of components
+ */
+int
+vfs_cmp_cnt(const char *path)
+{
+    const char *p;
+    int error, cnt = -1;
+
+    if (path == NULL) {
+        return -EINVAL;
+    }
+
+    if (*path != '/') {
+        return -ENOENT;
+    }
+
+    p = path;
+    cnt = 0;
+
+    while (*p != '\0') {
+        while (*p == '/')
+            ++p;
+        while (*p != '/' && *p != '\0')
+            error = vfs_pathc_valid(*p++);
+
+        /* Invalid character? */
+        if (error < 0)
+            return -EINVAL;
+
+        /* Break if we got NUL */
+        if (*p == '\0')
+            break;
+
+        ++p, ++cnt;
+    }
+
+    return cnt + 1;
 }
