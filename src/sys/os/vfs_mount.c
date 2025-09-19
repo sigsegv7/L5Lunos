@@ -29,6 +29,7 @@
 
 #include <sys/types.h>
 #include <sys/syslog.h>
+#include <sys/param.h>
 #include <sys/errno.h>
 #include <sys/cdefs.h>
 #include <sys/mount.h>
@@ -40,6 +41,34 @@
  * mountpoint is put here.
  */
 static struct mountlist root;
+
+
+/*
+ * Allocate a new mountpoint
+ */
+int
+mount_alloc(const char *name, struct mount **mp_res)
+{
+    struct mount *mp;
+    size_t len, slen;
+
+    if (mp_res == NULL || name == NULL) {
+        return -EINVAL;
+    }
+
+    mp = kalloc(sizeof(*mp));
+    if (mp == NULL) {
+        printf("mount_alloc: allocation failure\n");
+        return -ENOMEM;
+    }
+
+    slen = strlen(name);
+    len = MIN(sizeof(mp->name), slen);
+    memcpy(mp->name, name, len);
+
+    *mp_res = mp;
+    return 0;
+}
 
 /*
  * Mount a filesystem

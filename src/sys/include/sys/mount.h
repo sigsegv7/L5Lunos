@@ -133,5 +133,16 @@ int mount(struct mount_args *margs, uint32_t flags);
  */
 int mountlist_init(struct mountlist *mlp);
 
+/*
+ * Allocate a new mountpoint
+ *
+ * @name: The name to allocate mountpoint as
+ * @mp_res: Result pointer is written here
+ *
+ * Returns zero on success, otherwise a less than
+ * zero value to indicate failure.
+ */
+int mount_alloc(const char *name, struct mount **mp_res);
+
 #endif  /* !_KERNEL */
 #endif  /* !_SYS_MOUNT_H_ */
