@@ -113,6 +113,28 @@ mount_to(struct mount_args *margs, struct mount **mp_res, int flags)
 }
 
 /*
+ * Lookup a specific mountpoint
+ */
+int
+mount_lookup(const char *name, struct mount **mp_res)
+{
+    struct mount *mp;
+
+    if (name == NULL || mp_res == NULL) {
+        return -EINVAL;
+    }
+
+    TAILQ_FOREACH(mp, &root.list, link) {
+        if (strcmp(mp->name, name) == 0) {
+            *mp_res = mp;
+            return 0;
+        }
+    }
+
+    return -ENOENT;
+}
+
+/*
  * Allocate a new mountpoint
  */
 int

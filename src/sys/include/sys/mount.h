@@ -118,6 +118,17 @@ struct vfsops {
 };
 
 /*
+ * Lookup a mountpoint existing on the system
+ *
+ * @name: Name of mountpoint
+ * @mp_res: Result of mountpoint is written here
+ *
+ * Returns zero on success, otherwise a less than zero
+ * value to indicate failure
+ */
+int mount_lookup(const char *name, struct mount **mp_res);
+
+/*
  * Mount a specific filesystem
  *
  * @margs: Mount arguments
