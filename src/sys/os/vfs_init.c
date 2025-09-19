@@ -27,70 +27,53 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <sys/cdefs.h>
-#include <sys/panic.h>
-#include <sys/sysvar.h>
-#include <sys/syslog.h>
-#include <sys/proc.h>
+#include <sys/types.h>
+#include <sys/errno.h>
+#include <sys/param.h>
 #include <sys/mount.h>
-#include <sys/cpuvar.h>
-#include <os/sched.h>
-#include <os/elfload.h>
 #include <os/vfs.h>
-#include <acpi/acpi.h>
-#include <io/cons/cons.h>
-#include <vm/vm.h>
-#include <logo.h>
-
-struct pcore g_bsp;
-struct proc g_rootproc;
-
-static void
-boot_print(void)
-{
-    printf("%s\n", g_LOGO);
-    printf("Copyright (c) 2025 Ian Marco Moffett, et al\n");
-    printf("booting l5 lunos %s...\n", _L5_VERSION);
-}
 
 /*
- * Kernel entrypoint
+ * The filesystem table
  */
-__dead void
-main(void)
+static struct fs_info fstab[] = {
+    { MOUNT_INITRD, &g_omar_vfsops, 0 }
+};
+
+/*
+ * Get entry by index
+ */
+int
+vfs_by_index(uint16_t index, struct fs_info **resp)
 {
-    struct loaded_elf elf;
-    struct pcore *core;
-    int error;
-
-    acpi_early_init();
-
-    cons_init();
-    syslog_toggle(true);
-    boot_print();
-
-    cpu_conf(&g_bsp);
-    vm_init();
-
-    cpu_init(&g_bsp);
-    bsp_ap_startup();
-
-    /* Mount root */
-    vfs_init();
-    mountlist_init(NULL);
-
-    sched_init();
-    core = this_core();
-    proc_init(&g_rootproc, 0);
-    core->curproc = &g_rootproc;
-
-    error = elf_load("/usr/bin/init", &g_rootproc, &elf);
-    if (error < 0) {
-        panic("could not load init\n");
+    if (resp == NULL) {
+        return -EINVAL;
     }
 
-    md_set_ip(&g_rootproc, elf.entrypoint);
-    md_proc_kick(&g_rootproc);
-    panic("end of kernel reached\n");
-    for (;;);
+    if (index >= NELEM(fstab)) {
+        return -ENOENT;
+    }
+
+    *resp = &fstab[index];
+    return 0;
+}
+
+int
+vfs_init(void)
+{
+    const struct vfsops *vfsops;
+    struct fs_info *fip;
+    size_t nelem = NELEM(fstab);
+
+    /*
+     * Initialize each filesystem
+     */
+    for (size_t i = 0; i < nelem; ++i) {
+        fip = &fstab[i];
+        vfsops = fip->vfsops;
+        if (vfsops->init != NULL) {
+            vfsops->init(fip);
+        }
+    }
+    return 0;
 }

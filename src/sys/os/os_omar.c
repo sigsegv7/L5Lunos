@@ -32,6 +32,7 @@
 #include <sys/errno.h>
 #include <sys/bootvars.h>
 #include <sys/cdefs.h>
+#include <sys/mount.h>
 #include <sys/panic.h>
 #include <sys/syslog.h>
 #include <os/omar.h>
@@ -143,7 +144,7 @@ initrd_get_file(const char *path, struct initrd_node *res)
  * Initialize the initrd
  */
 static int
-initrd_init(void)
+initrd_init(struct fs_info *fip)
 {
     struct bootvars bootvars;
     struct bootvar_io *bvio = NULL;
@@ -187,13 +188,6 @@ initrd_open(const char *path, char **res)
         return -ENOENT;
     }
 
-    if (__initrd_root == NULL) {
-        error = initrd_init();
-        if (error < 0) {
-            panic("initrd: failed to setup initrd\n");
-        }
-    }
-
     error = initrd_get_file(path, &node);
     if (error < 0) {
         printf("initrd: failed to open '%s'\n", path);
@@ -203,3 +197,7 @@ initrd_open(const char *path, char **res)
     *res = node.data;
     return node.size;
 }
+
+struct vfsops g_omar_vfsops = {
+    .init = initrd_init
+};

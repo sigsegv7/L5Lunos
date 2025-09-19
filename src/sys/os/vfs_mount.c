@@ -27,70 +27,93 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <sys/cdefs.h>
-#include <sys/panic.h>
-#include <sys/sysvar.h>
+#include <sys/types.h>
 #include <sys/syslog.h>
-#include <sys/proc.h>
+#include <sys/errno.h>
+#include <sys/cdefs.h>
 #include <sys/mount.h>
-#include <sys/cpuvar.h>
-#include <os/sched.h>
-#include <os/elfload.h>
 #include <os/vfs.h>
-#include <acpi/acpi.h>
-#include <io/cons/cons.h>
-#include <vm/vm.h>
-#include <logo.h>
+#include <string.h>
 
-struct pcore g_bsp;
-struct proc g_rootproc;
+/*
+ * Represents the root mountlist, every other
+ * mountpoint is put here.
+ */
+static struct mountlist root;
 
-static void
-boot_print(void)
+/*
+ * Mount a filesystem
+ */
+int
+mount(struct mount_args *margs, uint32_t flags)
 {
-    printf("%s\n", g_LOGO);
-    printf("Copyright (c) 2025 Ian Marco Moffett, et al\n");
-    printf("booting l5 lunos %s...\n", _L5_VERSION);
+    const struct vfsops *vfsops;
+    struct fs_info *fip = NULL;
+    int error;
+
+    if (margs == NULL) {
+        return -EINVAL;
+    }
+
+    /* XXX: Unused as of now */
+    (void)margs->source;
+    (void)margs->target;
+    (void)margs->data;
+
+    /* XXX: Requires fstype for now */
+    if (margs->fstype == NULL) {
+        return -ENOENT;
+    }
+
+    /*
+     * Now we go through each entry of the filesystem
+     * table and if it matches the filesystem type,
+     * we're good.
+     */
+    for (uint8_t i = 0;; ++i) {
+        error = vfs_by_index(i, &fip);
+        if (error != 0) {
+            return -ENOENT;
+        }
+
+        if (strcmp(fip->name, margs->fstype) == 0) {
+            break;
+        }
+    }
+
+
+    /* Sanity check */
+    if (__unlikely(fip == NULL)) {
+        printf("mount: got NULL filesystem info\n");
+        return -ENOENT;
+    }
+
+    vfsops = fip->vfsops;
+    if (__unlikely(vfsops->mount == NULL)) {
+        printf("mount: fs does not implement mount!\n");
+        return -EIO;
+    }
+
+    vfsops->mount(fip, margs);
+    return 0;
 }
 
 /*
- * Kernel entrypoint
+ * Initialize the mountlist
  */
-__dead void
-main(void)
+int
+mountlist_init(struct mountlist *mlp)
 {
-    struct loaded_elf elf;
-    struct pcore *core;
-    int error;
-
-    acpi_early_init();
-
-    cons_init();
-    syslog_toggle(true);
-    boot_print();
-
-    cpu_conf(&g_bsp);
-    vm_init();
-
-    cpu_init(&g_bsp);
-    bsp_ap_startup();
-
-    /* Mount root */
-    vfs_init();
-    mountlist_init(NULL);
-
-    sched_init();
-    core = this_core();
-    proc_init(&g_rootproc, 0);
-    core->curproc = &g_rootproc;
-
-    error = elf_load("/usr/bin/init", &g_rootproc, &elf);
-    if (error < 0) {
-        panic("could not load init\n");
+    if (mlp == NULL) {
+        mlp = &root;
     }
 
-    md_set_ip(&g_rootproc, elf.entrypoint);
-    md_proc_kick(&g_rootproc);
-    panic("end of kernel reached\n");
-    for (;;);
+    /* Don't initialize twice */
+    if (mlp->i) {
+        return -EPERM;
+    }
+
+    TAILQ_INIT(&mlp->list);
+    mlp->i = 1;
+    return 0;
 }

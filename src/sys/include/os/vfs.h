@@ -27,70 +27,31 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <sys/cdefs.h>
-#include <sys/panic.h>
-#include <sys/sysvar.h>
-#include <sys/syslog.h>
-#include <sys/proc.h>
+#ifndef _OS_VFS_H_
+#define _OS_VFS_H_ 1
+
+#include <sys/types.h>
 #include <sys/mount.h>
-#include <sys/cpuvar.h>
-#include <os/sched.h>
-#include <os/elfload.h>
-#include <os/vfs.h>
-#include <acpi/acpi.h>
-#include <io/cons/cons.h>
-#include <vm/vm.h>
-#include <logo.h>
-
-struct pcore g_bsp;
-struct proc g_rootproc;
-
-static void
-boot_print(void)
-{
-    printf("%s\n", g_LOGO);
-    printf("Copyright (c) 2025 Ian Marco Moffett, et al\n");
-    printf("booting l5 lunos %s...\n", _L5_VERSION);
-}
 
 /*
- * Kernel entrypoint
+ * Initialize the virtual filesystem
+ * layer
+ *
+ * Returns zero on success, otherwise a less
+ * than zero value on failure.
  */
-__dead void
-main(void)
-{
-    struct loaded_elf elf;
-    struct pcore *core;
-    int error;
+int vfs_init(void);
 
-    acpi_early_init();
+/*
+ * Get a VFS file table entry by index.
+ *
+ * @index: Index to desired entry
+ * @resp: Result pointer is written here
+ *
+ * Returns zero on success and the entry being
+ * found, otherwise a less than zero failure if
+ * the entry has not been found.
+ */
+int vfs_by_index(uint16_t index, struct fs_info **resp);
 
-    cons_init();
-    syslog_toggle(true);
-    boot_print();
-
-    cpu_conf(&g_bsp);
-    vm_init();
-
-    cpu_init(&g_bsp);
-    bsp_ap_startup();
-
-    /* Mount root */
-    vfs_init();
-    mountlist_init(NULL);
-
-    sched_init();
-    core = this_core();
-    proc_init(&g_rootproc, 0);
-    core->curproc = &g_rootproc;
-
-    error = elf_load("/usr/bin/init", &g_rootproc, &elf);
-    if (error < 0) {
-        panic("could not load init\n");
-    }
-
-    md_set_ip(&g_rootproc, elf.entrypoint);
-    md_proc_kick(&g_rootproc);
-    panic("end of kernel reached\n");
-    for (;;);
-}
+#endif  /* !_OS_VFS_H_ */
