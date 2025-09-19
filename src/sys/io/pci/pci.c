@@ -27,6 +27,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Description: MI PCI(e) bus driver
+ * Author: Ian Marco Moffett
+ */
+
 #include <sys/types.h>
 #include <sys/param.h>
 #include <sys/errno.h>
