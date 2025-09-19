@@ -34,6 +34,7 @@
 #include <sys/cdefs.h>
 #include <sys/mount.h>
 #include <os/vfs.h>
+#include <os/kalloc.h>
 #include <string.h>
 
 /*
@@ -42,6 +43,74 @@
  */
 static struct mountlist root;
 
+/*
+ * Mount a filesystem to a specific location
+ *
+ * @margs: Mount arguments to use
+ * @mp_res: Mountpoint result pointer written here
+ * @flags: Optional flags
+ */
+static int
+mount_to(struct mount_args *margs, struct mount **mp_res, int flags)
+{
+    int ncmp, error;
+    const char *p, *pcur;
+    struct mount *mp;
+    size_t len;
+    char namebuf[FSNAME_MAX];
+
+    if (margs == NULL) {
+        return -EINVAL;
+    }
+
+    /* XXX: Requires target */
+    if (margs->target == NULL) {
+        return -EINVAL;
+    }
+
+    /* XXX: Requires fstype */
+    if (margs->fstype == NULL) {
+        return -EINVAL;
+    }
+
+    ncmp = vfs_cmp_cnt(margs->target);
+    if (ncmp > 1 || ncmp < 0) {
+        printf("mount_to: got bad path\n");
+        return -EINVAL;
+    }
+
+    p = margs->target;
+    pcur = p;
+
+    /*
+     * Get all the way to the end of the first component
+     * with the end pointer.
+     */
+    while (*pcur == '/')
+        ++pcur;
+    while (*pcur != '/' && *pcur != '\0')
+        ++pcur;
+
+    /* Compute the length of the first component */
+    len = (size_t)PTR_NOFFSET(pcur, (uintptr_t)p);
+    if (len >= sizeof(namebuf) - 1 || len == 0) {
+        printf("mount_to: bad path\n");
+        return -EINVAL;
+    }
+
+    memcpy(namebuf, p, len);
+    namebuf[len] = '\0';
+
+    /* Allocate the actual mountpoint */
+    error = mount_alloc(namebuf, &mp);
+    if (error < 0) {
+        return error;
+    }
+
+    TAILQ_INSERT_TAIL(&root.list, mp, link);
+    *mp_res = mp;
+    return 0;
+}
 
 /*
  * Allocate a new mountpoint
@@ -77,6 +146,7 @@ int
 mount(struct mount_args *margs, uint32_t flags)
 {
     const struct vfsops *vfsops;
+    struct mount *mpp;
     struct fs_info *fip = NULL;
     int error;
 
@@ -86,12 +156,14 @@ mount(struct mount_args *margs, uint32_t flags)
 
     /* XXX: Unused as of now */
     (void)margs->source;
-    (void)margs->target;
     (void)margs->data;
 
     /* XXX: Requires fstype for now */
     if (margs->fstype == NULL) {
         return -ENOENT;
+    }
+    if (margs->target == NULL) {
+        return -EINVAL;
     }
 
     /*
@@ -110,7 +182,6 @@ mount(struct mount_args *margs, uint32_t flags)
         }
     }
 
-
     /* Sanity check */
     if (__unlikely(fip == NULL)) {
         printf("mount: got NULL filesystem info\n");
@@ -123,7 +194,20 @@ mount(struct mount_args *margs, uint32_t flags)
         return -EIO;
     }
 
-    vfsops->mount(fip, margs);
+    if ((error = vfsops->mount(fip, margs)) < 0) {
+        printf("mount: fs mount failure\n");
+        return error;
+    }
+
+    /* Do the actual mount */
+    error = mount_to(margs, &mpp, flags);
+    if (error < 0) {
+        printf("mount: mount_to() returned %d\n", error);
+        return error;
+    }
+
+    /* The filesystem should give us its vnode */
+    mpp->vp = margs->vp_res;
     return 0;
 }
 
@@ -133,6 +217,12 @@ mount(struct mount_args *margs, uint32_t flags)
 int
 mountlist_init(struct mountlist *mlp)
 {
+    struct mount_args margs;
+
+    memset(&margs, 0, sizeof(margs));
+    margs.target = "/";
+    margs.fstype = MOUNT_INITRD;
+
     if (mlp == NULL) {
         mlp = &root;
     }
@@ -144,5 +234,6 @@ mountlist_init(struct mountlist *mlp)
 
     TAILQ_INIT(&mlp->list);
     mlp->i = 1;
+    mount(&margs, 0);
     return 0;
 }

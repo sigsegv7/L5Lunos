@@ -56,12 +56,15 @@ extern struct vfsops g_omar_vfsops;
 
 /*
  * Represents a mountpoint
+ *
+ * @vp: Vnode of mount
+ * @name: Mountname
+ * @link: TAILQ link
  */
 struct mount {
     struct vnode *vp;
-    const char *name;
+    char name[FSNAME_MAX];
     TAILQ_ENTRY(mount) link;
-    TAILQ_HEAD(, mount) buckets;
 };
 
 /*
@@ -76,12 +79,14 @@ struct mountlist {
 /*
  * Arguments for mount()
  *
+ * @vp_res: Vnode result
  * @source: Specifies the source filesystem to mount
  * @target: Specifies the location to mount source
  * @fstype: File system type
  * @data: Filesystem specific data
  */
 struct mount_args {
+    struct vnode *vp_res;
     const char *source;
     const char *target;
     const char *fstype;

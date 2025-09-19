@@ -46,6 +46,7 @@
 #define OMAR_DIR    1
 #define BLOCK_SIZE 512
 
+static struct vop omar_vops;
 static const char *__initrd_root = NULL;
 static size_t initrd_size = 0;
 
@@ -169,6 +170,29 @@ initrd_init(struct fs_info *fip)
 }
 
 /*
+ * Mount the initrd
+ */
+static int
+initrd_mount(struct fs_info *fip, struct mount_args *margs)
+{
+    int error;
+    struct vnode *vp;
+
+    if (fip == NULL || margs == NULL) {
+        return -EINVAL;
+    }
+
+    error = vfs_valloc(&margs->vp_res, VTYPE_DIR, 0);
+    if (error < 0) {
+        return error;
+    }
+
+    vp = margs->vp_res;
+    vp->vops = &omar_vops;
+    return 0;
+}
+
+/*
  * Open an entry within the OMAR initrd
  * image.
  */
@@ -198,6 +222,11 @@ initrd_open(const char *path, char **res)
     return node.size;
 }
 
+static struct vop omar_vops = {
+    .lookup = NULL
+};
+
 struct vfsops g_omar_vfsops = {
-    .init = initrd_init
+    .init = initrd_init,
+    .mount = initrd_mount
 };
