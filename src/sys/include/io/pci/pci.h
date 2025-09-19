@@ -58,6 +58,20 @@ struct pci_device {
     TAILQ_ENTRY(pci_device) link;
 };
 
+typedef enum {
+    PCI_LU_VENDEV,      /* Vendor / device */
+    PCI_LU_CLASSREV,    /* Class / subclass */
+} lookup_type_t;
+
+/*
+ * Lookup a device on the PCI(e) bus by using the pci_descriptor
+ * as a lookup key.
+ *
+ * @lookup: Lookup descriptor that must match a device
+ * @type:  Lookup type
+ */
+int pci_bus_lookup(struct pci_device *lookup, lookup_type_t type);
+
 /*
  * Read from a specific register on a specific PCI
  * enabled device.

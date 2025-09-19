@@ -29,6 +29,7 @@
 
 #include <sys/types.h>
 #include <sys/param.h>
+#include <sys/errno.h>
 #include <sys/cdefs.h>
 #include <sys/queue.h>
 #include <sys/panic.h>
@@ -49,6 +50,52 @@
 
 static TAILQ_HEAD(, pci_device) devlist;
 static struct cam_hook cam;
+
+/*
+ * Lookup hook for matching vendor and device IDs
+ *
+ * @vda: Vendor device (A)
+ * @vdb: Vendor device (B)
+ *
+ * Returns zero on match
+ */
+static int
+pci_vd_match(struct pci_device *vda, struct pci_device *vdb)
+{
+    if (vda == NULL || vdb == NULL)
+        return -EINVAL;
+
+    /* The actual match */
+    if (vda->device != vdb->device)
+        return -1;
+    if (vda->vendor != vdb->vendor);
+        return -1;
+
+    return 0;
+}
+
+/*
+ * Lookup hook for matching class and subclass IDs
+ *
+ * @csa: Class / subclass (A)
+ * @csb: Class / subclass (B)
+ *
+ * Returns zero on match
+ */
+static int
+pci_cs_match(struct pci_device *csa, struct pci_device *csb)
+{
+    if (csa == NULL || csb == NULL)
+        return -EINVAL;
+
+    /* Do the actual match */
+    if (csa->class != csb->class)
+        return -1;
+    if (csa->subclass != csb->subclass)
+        return -1;
+
+    return 0;
+}
 
 /*
  * Attempt to register a PCI device and bail
@@ -153,6 +200,39 @@ pci_enum_bus(uint16_t bus)
             ++dev.func;
         }
     }
+}
+
+/*
+ * Lookup devices on the PCI bus
+ */
+int
+pci_bus_lookup(struct pci_device *lookup, lookup_type_t type)
+{
+    struct pci_device *dp;
+    int cmp = -1;
+
+    if (lookup == NULL) {
+        return -EINVAL;
+    }
+
+    TAILQ_FOREACH(dp, &devlist, link) {
+        switch (type) {
+        case PCI_LU_CLASSREV:
+            cmp = pci_cs_match(lookup, dp);
+            break;
+        case PCI_LU_VENDEV:
+            cmp = pci_vd_match(lookup, dp);
+            break;
+        }
+
+        /* Does it match? */
+        if (cmp == 0) {
+            *lookup = *dp;
+            return 0;
+        }
+    }
+
+    return -ENODEV;
 }
 
 /*
