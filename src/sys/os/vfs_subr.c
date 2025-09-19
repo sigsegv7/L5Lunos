@@ -111,6 +111,11 @@ vfs_cmp_cnt(const char *path)
         return -ENOENT;
     }
 
+    /* Is pointing to root? */
+    if (path[0] == '/' && path[1] == '\0') {
+        return 1;
+    }
+
     p = path;
     cnt = 0;
 
