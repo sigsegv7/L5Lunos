@@ -51,6 +51,8 @@ struct pci_device {
     uint16_t bus;
     uint8_t slot;
     uint8_t func;
+    uint8_t class;
+    uint8_t subclass;
     uint16_t vendor;
     uint16_t device;
     TAILQ_ENTRY(pci_device) link;

@@ -59,6 +59,8 @@ pci_register_dev(struct pci_device *dev)
 {
     struct pci_device *devp;
     pcireg_t vend_dev;
+    uint32_t classrev;
+    uint8_t class, subclass;
     uint16_t device_id;
     uint16_t vendor_id;
 
@@ -71,6 +73,11 @@ pci_register_dev(struct pci_device *dev)
     vendor_id = vend_dev & 0xFFFF;
     device_id = (vend_dev >> 16) & 0xFFFF;
 
+    /* Get the class and revision */
+    classrev = pci_readl(dev, PCIREG_CLASSREV);
+    class = PCIREG_CLASS(classrev);
+    subclass = PCIREG_SUBCLASS(classrev);
+
     /* Does this device exist? */
     if (vendor_id == 0xFFFF) {
         return;
@@ -78,6 +85,8 @@ pci_register_dev(struct pci_device *dev)
 
     dev->vendor = vendor_id;
     dev->device = device_id;
+    dev->class = class;
+    dev->subclass = subclass;
 
     /*
      * Log out the BDF notation as well as vendor,
