@@ -41,6 +41,17 @@
 #include <machine/vas.h>    /* standard */
 #include <vm/vm.h>
 
+/* Caching types */
+#define MMU_CACHE_UC BIT(0) /* Uncachable */
+#define MMU_CACHE_WT BIT(1) /* Write-through */
+#define MMU_CACHE_GL BIT(2) /* Global (if supported) */
+
+/*
+ * Represents caching attributes that can be applied
+ * to the address space (see VM_CACHE_* above).
+ */
+typedef uint16_t cacheattr_t;
+
 /*
  * Standard memory protection flags
  */
@@ -126,5 +137,17 @@ int mmu_write_vas(struct vm_vas *vas);
  * zero value to indicate error.
  */
 int mmu_free_vas(struct vm_vas *vas);
+
+/*
+ * Update page-level caching attributes
+ *
+ * @vas: Virtual address space to target
+ * @va: Virtual page base to update
+ * @attr: Attributes to set
+ *
+ * Returns zero on success, otherwise a less than
+ * zero value to indicate error.
+ */
+int pmap_set_cache(struct vm_vas *vas, vaddr_t va, cacheattr_t attr);
 
 #endif  /* !_MACHINE_MMU_H_ */

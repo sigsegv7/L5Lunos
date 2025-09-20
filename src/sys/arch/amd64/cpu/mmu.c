@@ -405,6 +405,51 @@ mmu_free_vas(struct vm_vas *vas)
 }
 
 /*
+ * Set caching attributes
+ */
+int
+pmap_set_cache(struct vm_vas *vas, vaddr_t va, cacheattr_t attr)
+{
+    uintptr_t *pte, pa;
+    uint32_t flags;
+    int error;
+    size_t idx;
+
+    /* We'll modify page-level attributes */
+    error = mmu_read_level(
+        vas, va, MMU_TBL,
+        &pte, true
+    );
+
+    if (error < 0) {
+        return -EINVAL;
+    }
+
+    /* Uncachable? */
+    if (ISSET(attr, MMU_CACHE_UC)) {
+        flags |= PTE_PCD;
+        flags &= ~PTE_PWT;
+        attr &= ~MMU_CACHE_WT;
+    }
+
+    /* Write through? */
+    if (ISSET(attr, MMU_CACHE_WT)) {
+        flags &= ~PTE_PCD;
+        flags |= PTE_PWT;
+    }
+
+    /* Not global? */
+    if (!ISSET(attr, MMU_CACHE_GL)) {
+        flags &= ~PTE_GLOBAL;
+    }
+
+    /* Update attributes and flush the TLB */
+    pte[idx] = pa | flags;
+    __invlpg((void *)va);
+    return 0;
+}
+
+/*
  * Verify that we are in a known state
  */
 int
