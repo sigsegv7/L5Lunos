@@ -46,7 +46,7 @@ pci_bar_size(struct pci_device *dev, uint8_t bar)
     uint32_t reg_tmp, reg;
     uint8_t barreg = pci_get_barreg(bar);
 
-    if (dev == NULL) {
+    if (dev == NULL || barreg == 0) {
         return -EINVAL;
     }
 
