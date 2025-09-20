@@ -40,6 +40,7 @@
 #include <sys/panic.h>
 #include <sys/syslog.h>
 #include <os/kalloc.h>
+#include <os/module.h>
 #include <io/pci/pci.h>
 #include <io/pci/cam.h>
 #include <string.h>
@@ -54,6 +55,7 @@
 #endif  /* __PCI_MAX_BUS */
 
 static TAILQ_HEAD(, pci_device) devlist;
+static TAILQ_HEAD(, pci_adv) advlist;
 static struct cam_hook cam;
 
 /*
@@ -266,10 +268,34 @@ pci_writel(struct pci_device *dp, pcireg_t reg, uint32_t v)
     return cam.cam_writel(dp, reg, v);
 }
 
+/*
+ * Advocate for a specific device
+ */
+int
+pci_advoc(struct pci_adv *advp)
+{
+    struct pci_adv *adv_new;
+
+    if (advp == NULL) {
+        return -EINVAL;
+    }
+
+    adv_new = kalloc(sizeof(*adv_new));
+    if (adv_new == NULL) {
+        printf("pci_advoc: could not alloc adv\n");
+        return -ENOMEM;
+    }
+    *adv_new = *advp;
+    TAILQ_INSERT_TAIL(&advlist, advp, link);
+    return 0;
+}
+
 void
 pci_init_bus(void)
 {
-    struct pci_device *dp;
+    struct pci_adv *advp;
+    struct pci_device dev;
+    lookup_type_t lup;
     int error;
 
     error = pci_cam_init(&cam);
@@ -278,11 +304,26 @@ pci_init_bus(void)
         panic("pci_init_bus: failed to init CAM\n");
     }
 
-    printf("pci: enumerating %d buses\n", PCI_MAX_BUS);
+    /* Initialize device and advocation list */
     TAILQ_INIT(&devlist);
+    TAILQ_INIT(&advlist);
+
+    printf("pci: enumerating %d buses\n", PCI_MAX_BUS);
     for (int i = 0; i < PCI_MAX_BUS; ++i) {
         pci_enum_bus(i);
     }
 
+    __MODULES_INIT(MODTYPE_PCI);
     printf("bridge: detected %d devices\n", devlist.nelem);
+
+    /* Now allocate load the drivers */
+    TAILQ_FOREACH(advp, &advlist, link) {
+        dev = advp->lookup;
+        lup = advp->classrev ? PCI_LU_CLASSREV : PCI_LU_VENDEV;
+
+        error = pci_bus_lookup(&dev, lup);
+        if (error == 0) {
+            advp->attach(advp);
+        }
+    }
 }

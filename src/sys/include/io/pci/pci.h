@@ -32,6 +32,22 @@
 
 #include <sys/types.h>
 #include <sys/queue.h>
+#include <sys/cdefs.h>
+
+/*
+ * Use for making instances of the pci_adv
+ * structure.
+ */
+#define PCI_CS_ID(CLASS, SUBCLASS)  \
+    {                               \
+        .class = (CLASS),           \
+        .subclass = (SUBCLASS)      \
+    }
+#define PCI_DV_ID(DEVICE, VENDOR)   \
+    {                               \
+        .device = (DEVICE),         \
+        .vendor = (VENDOR)          \
+    }
 
 /* PCI specific types */
 typedef uint32_t pcireg_t;
@@ -58,6 +74,25 @@ struct pci_device {
     TAILQ_ENTRY(pci_device) link;
 };
 
+/*
+ * Structure that allows a device driver of a PCI
+ * bus node to advocate for its workings. In other words,
+ * it registers itself to be the driver of the device.
+ *
+ * @lookup: Lookup arguments
+ * @attach: Attach the driver
+ * @classrev: IF 1, identified by class/subclass
+ *
+ * XXX: The `lookup` field is used for both input arguments
+ *      as well as output results
+ */
+struct pci_adv {
+    struct pci_device lookup;
+    int(*attach)(struct pci_adv *ap);
+    uint8_t classrev : 1;
+    TAILQ_ENTRY(pci_adv) link;
+};
+
 typedef enum {
     PCI_LU_VENDEV,      /* Vendor / device */
     PCI_LU_CLASSREV,    /* Class / subclass */
@@ -71,6 +106,16 @@ typedef enum {
  * @type:  Lookup type
  */
 int pci_bus_lookup(struct pci_device *lookup, lookup_type_t type);
+
+/*
+ * Advocate for a specific device as its driver.
+ *
+ * @advp: Advocation descriptor
+ *
+ * Returns zero on success, otherwise a less than
+ * zero value on failure.
+ */
+int pci_advoc(struct pci_adv *advp);
 
 /*
  * Read from a specific register on a specific PCI
