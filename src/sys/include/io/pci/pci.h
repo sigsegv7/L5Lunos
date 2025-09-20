@@ -62,6 +62,7 @@ typedef uint32_t pcival_t;
  * @func: Function number of device
  * @vendor: Vendor ID
  * @device: Device ID
+ * @bar: Base address registers
  */
 struct pci_device {
     uint16_t bus;
@@ -71,6 +72,7 @@ struct pci_device {
     uint8_t subclass;
     uint16_t vendor;
     uint16_t device;
+    uint32_t bar[6];
     TAILQ_ENTRY(pci_device) link;
 };
 

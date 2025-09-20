@@ -142,6 +142,14 @@ pci_register_dev(struct pci_device *dev)
     dev->class = class;
     dev->subclass = subclass;
 
+    /* Set up base address registers */
+    dev->bar[0] = pci_readl(dev, PCIREG_BAR0);
+    dev->bar[1] = pci_readl(dev, PCIREG_BAR1);
+    dev->bar[2] = pci_readl(dev, PCIREG_BAR2);
+    dev->bar[3] = pci_readl(dev, PCIREG_BAR3);
+    dev->bar[4] = pci_readl(dev, PCIREG_BAR4);
+    dev->bar[5] = pci_readl(dev, PCIREG_BAR5);
+
     /*
      * Log out the BDF notation as well as vendor,
      * and logical slot ID.
