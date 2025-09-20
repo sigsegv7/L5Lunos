@@ -37,6 +37,7 @@
 #include <os/sched.h>
 #include <os/elfload.h>
 #include <os/vfs.h>
+#include <os/module.h>
 #include <acpi/acpi.h>
 #include <io/cons/cons.h>
 #include <vm/vm.h>
@@ -78,6 +79,9 @@ main(void)
     /* Mount root */
     vfs_init();
     mountlist_init(NULL);
+
+    /* Initialize generic modules */
+    __MODULES_INIT(MODTYPE_GENERIC);
 
     sched_init();
     core = this_core();
