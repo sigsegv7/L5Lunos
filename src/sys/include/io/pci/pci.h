@@ -106,6 +106,11 @@ typedef enum {
  *
  * @lookup: Lookup descriptor that must match a device
  * @type:  Lookup type
+ *
+ * XXX: The result is written back to 'lookup'
+ *
+ * Returns zero on success, otherwise a less than zero value
+ * on failure.
  */
 int pci_bus_lookup(struct pci_device *lookup, lookup_type_t type);
 
