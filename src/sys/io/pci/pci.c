@@ -331,6 +331,7 @@ pci_init_bus(void)
 
         error = pci_bus_lookup(&dev, lup);
         if (error == 0) {
+            memcpy(&advp->lookup, &dev, sizeof(advp->lookup));
             advp->attach(advp);
         }
     }
