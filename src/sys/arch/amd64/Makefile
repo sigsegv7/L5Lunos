@@ -14,7 +14,7 @@ ASMOBJECTS = $(ASMFILES:.S=.S.o)
 DEPS = $(CFILES:.c=.d)
 ASMDEPS = $(ASMFILES:.S=.S.d)
 OBJECTS = $(CFILES:%.c=%.o)
-LD_FLAGS = -Tconf/sys.ld -L../../target -lkern
+LD_FLAGS = -Tconf/sys.ld -L../../target --whole-archive -l:libkern.a --no-whole-archive
 
 .PHONY: all
 all: $(OBJECTS) $(ASMOBJECTS)
