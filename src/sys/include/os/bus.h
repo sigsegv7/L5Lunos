@@ -27,59 +27,47 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _PCI_BAR_H_
-#define _PCI_BAR_H_ 1
+#ifndef _OS_BUS_H_
+#define _OS_BUS_H_
 
 #include <sys/types.h>
-#include <sys/cdefs.h>
-#include <os/bus.h>
-#include <io/pci/pci.h>
-#include <io/pci/cam.h>
+
+typedef enum {
+    BUS_PCI_NONE,
+    BUS_PCI_PCI,
+} bus_type_t;
 
 /*
- * Convert a BAR number to BAR register offset
- *
- * @bar: Bar number
- *
- * Returns a register offset of the desired BAR on success,
- * otherwise a value of 0 to indicate failure
+ * Represents a physical or virtual MMIO address that
+ * allows tranmission and reception on the bus.
  */
-__always_inline static inline uint8_t
-pci_get_barreg(uint8_t bar)
-{
-    switch (bar) {
-    case 0: return PCIREG_BAR0;
-    case 1: return PCIREG_BAR1;
-    case 2: return PCIREG_BAR2;
-    case 3: return PCIREG_BAR3;
-    case 4: return PCIREG_BAR4;
-    case 5: return PCIREG_BAR5;
-    default: return 0;
-    }
-}
+typedef uintptr_t bus_addr_t;
 
 /*
- * Get the number of bytes a BAR region covers
+ * Represents a bus space that can be used with certain
+ * bus interfaces
  *
- * @dev: Device of BAR to check
- * @bar: BAR number of BAR to check
- *
- * Returns the number of bytes the BAR region spans on success,
- * otherwise a less than zero value on failure.
+ * @va_base: Virtual address base
+ * @length: Length at buffer
+ * @type: Type of the space space (see BUS_*)
  */
-ssize_t pci_bar_size(struct pci_device *dev, uint8_t bar);
+struct bus_space {
+    void *va_base;
+    size_t length;
+    bus_type_t type;
+};
 
 /*
- * Map a BAR into host address space for the current
- * process.
+ * Initialize a bus space descriptor and map a physical
+ * bus address.
  *
- * @dev: Device of BAR to map
- * @bar: BAR number of BAR to map
- * @bs_res: Result is written here
+ * @bp: Bus space descriptor to use
+ * @pa: Physical bus address to map.
+ * @len: Length of mapping to use
  *
- * Returns zero on success, otherwise a less than
- * zero value to indicate failure.
+ * Returns zero on success, otherwise a less than zero
+ * value.
  */
-int pci_map_bar(struct pci_device *dev, uint8_t bar, struct bus_space *bs_res);
+int bus_space_map(struct bus_space *bp, bus_addr_t pa, size_t len);
 
-#endif  /* !_PCI_BAR_H_ */
+#endif  /* !_OS_BUS_H_ */

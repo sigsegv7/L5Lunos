@@ -65,3 +65,33 @@ pci_bar_size(struct pci_device *dev, uint8_t bar)
     pci_writel(dev, barreg, reg_tmp);
     return reg;
 }
+
+/*
+ * Map a BAR into host memory
+ */
+int
+pci_map_bar(struct pci_device *dev, uint8_t bar, struct bus_space *bs_res)
+{
+    size_t len;
+    bus_addr_t pa;
+    uint8_t barreg = pci_get_barreg(bar);
+    uintptr_t tmp;
+
+    if (dev == NULL || bs_res == NULL) {
+        return -EINVAL;
+    }
+
+    if (barreg == 0) {
+        return -EINVAL;
+    }
+
+    /* This must be MMIO */
+    tmp = pci_readl(dev, barreg);
+    if (PCI_BAR_IO(tmp)) {
+        return -EINVAL;
+    }
+
+    pa = tmp & ~0x7;
+    len = pci_bar_size(dev, bar);
+    return bus_space_map(bs_res, pa, len);
+}

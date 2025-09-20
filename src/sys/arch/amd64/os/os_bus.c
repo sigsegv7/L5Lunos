@@ -27,59 +27,58 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _PCI_BAR_H_
-#define _PCI_BAR_H_ 1
-
 #include <sys/types.h>
 #include <sys/cdefs.h>
+#include <sys/errno.h>
+#include <sys/syslog.h>
+#include <sys/param.h>
 #include <os/bus.h>
-#include <io/pci/pci.h>
-#include <io/pci/cam.h>
+#include <vm/physseg.h>
+#include <vm/mmu.h>
+#include <vm/vm.h>
+#include <vm/map.h>
 
 /*
- * Convert a BAR number to BAR register offset
- *
- * @bar: Bar number
- *
- * Returns a register offset of the desired BAR on success,
- * otherwise a value of 0 to indicate failure
+ * Map a BAR address into host memory
  */
-__always_inline static inline uint8_t
-pci_get_barreg(uint8_t bar)
+int
+bus_space_map(struct bus_space *bp, bus_addr_t pa, size_t len)
 {
-    switch (bar) {
-    case 0: return PCIREG_BAR0;
-    case 1: return PCIREG_BAR1;
-    case 2: return PCIREG_BAR2;
-    case 3: return PCIREG_BAR3;
-    case 4: return PCIREG_BAR4;
-    case 5: return PCIREG_BAR5;
-    default: return 0;
+    static size_t PSIZE = DEFAULT_PAGESIZE;
+    struct vm_vas vas;
+    struct mmu_map spec;
+    vaddr_t va;
+    int error;
+
+    if (bp == NULL || pa == 0) {
+        return -EINVAL;
     }
+
+    /* Get the current VAS */
+    error = mmu_this_vas(&vas);
+    if (error < 0) {
+        printf("bus_space_map: could not read VAS\n");
+        return error;
+    }
+
+    spec.pa = pa;
+    spec.va = va;
+    error = vm_map(&vas, &spec, len, PROT_READ | PROT_WRITE);
+    if (error < 0) {
+        printf("bus_space_map: could not map base\n");
+        return error;
+    }
+
+    /* Mark uncachable and global */
+    pmap_set_cache(
+        &vas, pa,
+        MMU_CACHE_UC |
+        MMU_CACHE_GL
+    );
+
+    /* Identity mapped */
+    bp->va_base = (void *)pa;
+    bp->length = len;
+    bp->type = BUS_PCI_PCI;
+    return 0;
 }
-
-/*
- * Get the number of bytes a BAR region covers
- *
- * @dev: Device of BAR to check
- * @bar: BAR number of BAR to check
- *
- * Returns the number of bytes the BAR region spans on success,
- * otherwise a less than zero value on failure.
- */
-ssize_t pci_bar_size(struct pci_device *dev, uint8_t bar);
-
-/*
- * Map a BAR into host address space for the current
- * process.
- *
- * @dev: Device of BAR to map
- * @bar: BAR number of BAR to map
- * @bs_res: Result is written here
- *
- * Returns zero on success, otherwise a less than
- * zero value to indicate failure.
- */
-int pci_map_bar(struct pci_device *dev, uint8_t bar, struct bus_space *bs_res);
-
-#endif  /* !_PCI_BAR_H_ */
