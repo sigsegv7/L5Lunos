@@ -78,6 +78,7 @@
 #define PCI_CAP_MSIX    0x11
 
 /* PCI BAR defines */
+#define PCI_BAR_IO(BAR)   (((BAR) & 1) == 1)
 #define PCI_BAR_TYPE(BAR) ((BAR >> 1) & 3)
 #define PCI_BAR_32(BAR) (PCI_BAR_TYPE(BAR) == 0x0)
 #define PCI_BAR_64(BAR) (PCI_BAR_TYPE(BAR) == 0x2)
