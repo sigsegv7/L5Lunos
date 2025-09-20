@@ -31,6 +31,7 @@
 #define _VM_H_ 1
 
 #include <sys/types.h>
+#include <sys/queue.h>
 #include <sys/bootvars.h>
 
 #define VM_HIGHER_HALF (get_kernel_base())
@@ -41,6 +42,21 @@
 /* Physical/virtual address */
 typedef uintptr_t vaddr_t;
 typedef uintptr_t paddr_t;
+
+/*
+ * Describes a virtual memory range
+ *
+ * @pa_base: Physical memory base
+ * @va_base: Virtual memory base
+ * @len: Length of region
+ * @link: Queue link
+ */
+struct vm_range {
+    paddr_t pa_base;
+    vaddr_t va_base;
+    size_t len;
+    TAILQ_ENTRY(vm_range) link;
+};
 
 void vm_init(void);
 

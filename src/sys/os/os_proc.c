@@ -30,10 +30,37 @@
 #include <sys/types.h>
 #include <sys/atomic.h>
 #include <sys/errno.h>
+#include <sys/cdefs.h>
+#include <sys/queue.h>
 #include <sys/proc.h>
+#include <vm/vm.h>
+#include <vm/physseg.h>
+#include <os/kalloc.h>
 #include <string.h>
 
 static pid_t next_pid = 0;
+
+/*
+ * Deallocate saved memory ranges
+ *
+ * @proc: Process to target
+ */
+static void
+proc_clear_ranges(struct proc *proc)
+{
+    const size_t PSIZE = DEFAULT_PAGESIZE;
+    struct vm_range *range;
+    size_t n_pages;
+
+    TAILQ_FOREACH(range, &proc->maplist, link) {
+        if (range == NULL) {
+            continue;
+        }
+
+        n_pages = ALIGN_UP(range->len, PSIZE) / PSIZE;
+        vm_free_frame(range->pa_base, n_pages);
+    }
+}
 
 /*
  * MI proc init code
@@ -52,6 +79,7 @@ proc_init(struct proc *procp, int flags)
     /* Put the process in a known state */
     scdp = &procp->scdom;
     memset(procp, 0, sizeof(*procp));
+    TAILQ_INIT(&procp->maplist);
 
     /*
      * Initialize each platform latch
@@ -73,6 +101,31 @@ proc_init(struct proc *procp, int flags)
 }
 
 /*
+ * Add range to process
+ */
+int
+proc_add_range(struct proc *procp, vaddr_t va, paddr_t pa, size_t len)
+{
+    const size_t PSIZE = DEFAULT_PAGESIZE;
+    struct vm_range *range;
+
+    if (procp == NULL) {
+        return -EINVAL;
+    }
+
+    range = kalloc(sizeof(*range));
+    if (range == NULL) {
+        return -ENOMEM;
+    }
+
+    range->pa_base = pa;
+    range->va_base = va;
+    range->len = ALIGN_UP(len, PSIZE);
+    TAILQ_INSERT_TAIL(&procp->maplist, range, link);
+    return 0;
+}
+
+/*
  * Kill a specific process
  */
 int
@@ -83,5 +136,6 @@ proc_kill(struct proc *procp, int status)
     }
 
     procp->flags |= PROC_EXITING;
+    proc_clear_ranges(procp);
     return md_proc_kill(procp, 0);
 }

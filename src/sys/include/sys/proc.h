@@ -35,6 +35,7 @@
 #include <sys/cdefs.h>
 #include <sys/param.h>
 #include <sys/queue.h>
+#include <vm/vm.h>
 #include <machine/pcb.h>    /* standard */
 
 /*
@@ -52,6 +53,7 @@
  * @flags: State flags (see PROC_*)
  * @pcb: Process control block
  * @scdom: Syscall domain
+ * @maplist: List of mapped regions
  * @link: TAILQ link
  */
 struct proc {
@@ -59,6 +61,7 @@ struct proc {
     uint32_t flags;
     struct md_pcb pcb;
     struct syscall_domain scdom;
+    TAILQ_HEAD(, vm_range) maplist;
     TAILQ_ENTRY(proc) link;
 };
 
@@ -81,6 +84,21 @@ int proc_init(struct proc *procp, int flags);
  * Returns NULL if none
  */
 struct proc *proc_self(void);
+
+/*
+ * Allocate a range descriptor and add it to the
+ * process's range tracking list for cleanup upon
+ * exit.
+ *
+ * @procp: Process to initialize the range of
+ * @va: Virtual address to use
+ * @pa: Physical address to use
+ * @len: Length to use
+ *
+ * Returns zero on success, otherwise a less than
+ * zero value upon error.
+ */
+int proc_add_range(struct proc *procp, vaddr_t va, paddr_t pa, size_t len);
 
 /*
  * Kill a process with a specific status code

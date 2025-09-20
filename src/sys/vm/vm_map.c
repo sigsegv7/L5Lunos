@@ -103,15 +103,19 @@ __vm_map(struct vm_vas *vas, struct mmu_map *spec, size_t len, int prot)
 int
 vm_map(struct vm_vas *vas, struct mmu_map *spec, size_t len, int prot)
 {
+    const size_t PSIZE = DEFAULT_PAGESIZE;
     int retval;
     size_t unmap_len;
     struct mmu_map spec_cpy;
+    struct proc *self = proc_self();
 
     if (spec != NULL) {
         spec_cpy = *spec;
     }
 
+
     /* If this fails, unmap the partial region */
+    len = ALIGN_UP(len, PSIZE);
     retval = __vm_map(vas, spec, len, prot);
     if (retval != 0) {
         printf("vm_map: could not map <%p>\n", spec_cpy.va);
@@ -119,6 +123,11 @@ vm_map(struct vm_vas *vas, struct mmu_map *spec, size_t len, int prot)
 
         __vm_map(vas, &spec_cpy, unmap_len, 0);
         return -1;
+    }
+
+    /* Add the range if we can */
+    if (self != NULL) {
+        proc_add_range(self, spec->va, spec->pa, len);
     }
 
     /* Place a guard page at the end */
