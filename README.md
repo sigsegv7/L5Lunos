@@ -28,11 +28,11 @@ The kernel (L5) is named after the [L5 lagrange point](https://en.wikipedia.org/
 - 16550 UART I/O
 - i8254
 - i8259
+- PCI
 
 ## Goals
 
 - POSIX compliancy
-- PCI
 - PCIe
 - PCI(e) MSI
 - PCI(e) MSI-X
