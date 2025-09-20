@@ -77,6 +77,12 @@ struct proc {
 int proc_init(struct proc *procp, int flags);
 
 /*
+ * Get the current running process on the system
+ * Returns NULL if none
+ */
+struct proc *proc_self(void);
+
+/*
  * Kill a process with a specific status code
  *
  * @procp: Process to kill

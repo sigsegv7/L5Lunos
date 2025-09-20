@@ -252,3 +252,18 @@ md_proc_kill(struct proc *procp, int flags)
 
     return 0;
 }
+
+/*
+ * Get the current running process
+ */
+struct proc *
+proc_self(void)
+{
+    struct pcore *core = this_core();
+
+    if (core == NULL) {
+        return NULL;
+    }
+
+    return core->curproc;
+}
