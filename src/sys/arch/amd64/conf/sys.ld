@@ -23,6 +23,12 @@ SECTIONS
         *(.rodata .rodata.*)
     } :rodata
 
+    .modules : {
+        __modules_init_start = .;
+        KEEP(*(.modules .modules))
+        __modules_init_end = .;
+    } :rodata
+
     . += CONSTANT(MAXPAGESIZE);
 
     .data : {
