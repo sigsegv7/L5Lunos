@@ -17,7 +17,7 @@ QEMU_FLAGS = --enable-kvm -serial stdio -cdrom $(ISO) \
 			-M q35 -cpu host -smp 4 -m 2G
 
 .PHONY: all
-all: root user sys lib image
+all: root lib user sys image
 
 .PHONY: sys
 sys:
