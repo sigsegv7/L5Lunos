@@ -27,67 +27,14 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <sys/bootvars.h>
-#include <sys/panic.h>
-#include <sys/syslog.h>
-#include <acpi/acpi.h>
-#include <acpi/tables.h>
-#if defined(__x86_64__)
-#include <machine/hpet.h>
-#endif
-#include <vm/vm.h>
+#ifndef _MACHINE_HPET_H_
+#define _MACHINE_HPET_H_
 
-static size_t root_sdt_len = 0;
-static struct acpi_root_sdt *root_sdt = NULL;
-static uintptr_t rsdp_pa = 0;   /* [physical address] */
-
-size_t
-acpi_get_root_sdt_len(void)
-{
-    return root_sdt_len;
-}
-
-void *
-acpi_get_root_sdt(void)
-{
-    return root_sdt;
-}
+#include <sys/types.h>
 
 /*
- * ACPI initialization
+ * Initialize the HPET into a basic state
  */
-int
-acpi_early_init(void)
-{
-    struct bootvars bootvars;
-    struct acpi_rsdp *rsdp;
-    int error;
+int hpet_init(void);
 
-    error = bootvars_read(&bootvars, 0);
-    if (error < 0) {
-        panic("acpi: failed to read bootvars\n");
-    }
-
-    /* Fetch the RSDP */
-    rsdp = bootvars.rsdp;
-    rsdp_pa = VIRT_TO_PHYS(rsdp);
-
-    /* Fetch the root SDT */
-    if (rsdp->revision >= 2) {
-        root_sdt = PHYS_TO_VIRT(rsdp->xsdt_addr);
-        printf("acpi: using XSDT as root SDT\n");
-    } else {
-        root_sdt = PHYS_TO_VIRT(rsdp->rsdt_addr);
-        printf("acpi: using RSDT as root SDT\n");
-    }
-
-    if (acpi_checksum(&root_sdt->hdr) != 0) {
-        panic("root SDT checksum is invalid!\n");
-    }
-
-    root_sdt_len = (root_sdt->hdr.length - sizeof(root_sdt->hdr)) / 4;
-#if defined(__x86_64__)
-    hpet_init();
-#endif
-    return 0;
-}
+#endif  /* !_MACHINE_HPET_H_ */
