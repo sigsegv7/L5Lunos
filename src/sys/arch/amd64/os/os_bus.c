@@ -47,34 +47,11 @@ bus_space_map(struct bus_space *bp, bus_addr_t pa, size_t len)
     static size_t PSIZE = DEFAULT_PAGESIZE;
     struct vm_vas vas;
     struct mmu_map spec;
-    vaddr_t va;
     int error;
 
     if (bp == NULL || pa == 0) {
         return -EINVAL;
     }
-
-    /* Get the current VAS */
-    error = mmu_this_vas(&vas);
-    if (error < 0) {
-        printf("bus_space_map: could not read VAS\n");
-        return error;
-    }
-
-    spec.pa = pa;
-    spec.va = va;
-    error = vm_map(&vas, &spec, len, PROT_READ | PROT_WRITE);
-    if (error < 0) {
-        printf("bus_space_map: could not map base\n");
-        return error;
-    }
-
-    /* Mark uncachable and global */
-    pmap_set_cache(
-        &vas, pa,
-        MMU_CACHE_UC |
-        MMU_CACHE_GL
-    );
 
     /* Identity mapped */
     bp->va_base = (void *)pa;
