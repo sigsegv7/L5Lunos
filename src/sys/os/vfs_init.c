@@ -32,6 +32,7 @@
 #include <sys/param.h>
 #include <sys/mount.h>
 #include <os/vfs.h>
+#include <string.h>
 
 /*
  * The filesystem table
@@ -39,6 +40,31 @@
 static struct fs_info fstab[] = {
     { MOUNT_INITRD, &g_omar_vfsops, 0 }
 };
+
+/*
+ * Get entry by name
+ */
+int
+vfs_by_name(const char *name, struct fs_info **resp)
+{
+    size_t nelem;
+    int retval = -ENOENT;
+
+    if (name == NULL || resp == NULL) {
+        return -EINVAL;
+    }
+
+    nelem = NELEM(fstab);
+    for (int i = 0; i < nelem; ++i) {
+        if (strcmp(fstab[i].name, name) == 0) {
+            *resp = &fstab[i];
+            retval = 0;
+            break;
+        }
+    }
+
+    return retval;
+}
 
 /*
  * Get entry by index

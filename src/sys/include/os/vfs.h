@@ -43,6 +43,17 @@
 int vfs_init(void);
 
 /*
+ * Get a VFS file table entry by name
+ *
+ * @name: Name of desired entry
+ * @resp: Result pointer is written here
+ *
+ * Returns zero on success, otherwise a less than zero
+ * value upon failure.
+ */
+int vfs_by_name(const char *name, struct fs_info **resp);
+
+/*
  * Get a VFS file table entry by index.
  *
  * @index: Index to desired entry
