@@ -286,6 +286,13 @@ ahci_hba_init(struct ahci_hba *hba)
     hba->pi = mmio_read32(&io->pi);
     hba->nport = AHCI_CAP_NP(cap) + 1;
 
+    /* Only support 64-bit addressing as of now */
+    if (AHCI_CAP_S64A(cap) == 0) {
+        pr_trace("HBA does not support 64-bit addressing\n");
+        pr_trace("aborting..\n");
+        return -ENOTSUP;
+    }
+
     /*
      * We cannot be so certain what state the BIOS or whatever
      * firmware left the host controller in, therefore the HBA

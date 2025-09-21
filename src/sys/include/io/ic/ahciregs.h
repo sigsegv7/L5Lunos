@@ -134,6 +134,7 @@ struct hba_memspace {
 #define AHCI_CAP_EMS(CAP) ((CAP >> 6) & 1)      /* Enclosure management support */
 #define AHCI_CAP_SAL(CAP) ((CAP >> 25) & 1)     /* Supports activity LED */
 #define AHCI_CAP_SSS(CAP) ((CAP >> 27) & 1)     /* Supports staggered spin up */
+#define AHCI_CAP_S64A(CAP) ((CAP >> 31) & 1)    /* Supports 64-bit addressing */
 
 /*
  * Device detection (DET) and Interface power
