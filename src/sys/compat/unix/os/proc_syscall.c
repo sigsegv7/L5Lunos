@@ -33,8 +33,7 @@
 #include <sys/proc.h>
 #include <sys/cdefs.h>
 #include <sys/param.h>
-
-#include <sys/syslog.h>
+#include <compat/unix/syscall.h>
 
 /*
  * ARG 0: Status

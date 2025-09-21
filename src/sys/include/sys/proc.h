@@ -159,10 +159,5 @@ __dead void md_proc_yield(void);
  */
 __dead void md_proc_kick(struct proc *procp);
 
-/*
- * Exit the current process - exit(2) syscall
- */
-scret_t sys_exit(struct syscall_args *scargs);
-
 #endif  /* !_KERNEL */
 #endif  /* !_SYS_PROC_H_ */

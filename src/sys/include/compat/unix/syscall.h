@@ -34,6 +34,11 @@
 #include <sys/param.h>
 #include <sys/syscall.h>
 
+/*
+ * Exit the current process - exit(2) syscall
+ */
+scret_t sys_exit(struct syscall_args *scargs);
+
 #ifdef _NEED_UNIX_SCTAB
 scret_t(*g_unix_sctab[])(struct syscall_args *) = {
     [SYS_none]   = NULL,
