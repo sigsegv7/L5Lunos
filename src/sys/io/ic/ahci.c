@@ -109,8 +109,17 @@ ahci_hba_reset(struct ahci_hba *hba)
     uint32_t ghc;
     int error;
 
-    /* Begin the reset */
+    /*
+     * The HBA must be in an AHCI aware state before
+     * we can follow through with a reset
+     */
     ghc = mmio_read32(&io->ghc);
+    if (!ISSET(ghc, AHCI_GHC_AE)) {
+        ghc |= AHCI_GHC_AE;
+        mmio_write32(&io->ghc, ghc);
+    }
+
+    /* Now perform the actual reset */
     ghc |= AHCI_GHC_HR;
     mmio_write32(&io->ghc, ghc);
 
@@ -135,11 +144,6 @@ ahci_hba_init(struct ahci_hba *hba)
     uint32_t ghc;
     int error;
 
-    /* Ensure the host controller is AHCI aware */
-    ghc = mmio_read32(&io->ghc);
-    ghc |= AHCI_GHC_AE;
-    mmio_write32(&io->ghc, ghc);
-
     /*
      * We cannot be so certain what state the BIOS or whatever
      * firmware left the host controller in, therefore the HBA
@@ -148,6 +152,17 @@ ahci_hba_init(struct ahci_hba *hba)
     if ((error = ahci_hba_reset(hba)) < 0) {
         return error;
     }
+
+    /*
+     * Make the HBA AHCI aware, we do this after the reset
+     * as the reset logic ensures of this before continuing.
+     *
+     * We simply do it twice as the reset value is zero and we
+     * want to ensure it is still AHCI aware after this.
+     */
+    ghc = mmio_read32(&io->ghc);
+    ghc |= AHCI_GHC_AE;
+    mmio_write32(&io->ghc, ghc);
     return 0;
 }
 
