@@ -27,36 +27,43 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _UNIX_SYSCALL_H_
-#define _UNIX_SYSCALL_H_ 1
-
-#include <sys/proc.h>
-#include <sys/param.h>
 #include <sys/syscall.h>
+#include <sys/syslog.h>
+#include <sys/errno.h>
+#include <os/filedesc.h>
+#include <io/cons/cons.h>
+#include <sys/proc.h>
+#include <string.h>
+
+#define STDOUT_FILENO 1
 
 /*
- * Syscall numbers
+ * XXX: STUB
  */
-#define SYS_none    0x00
-#define SYS_exit    0x01
-#define SYS_write   0x02
+ssize_t
+write(int fd, const void *buf, size_t count)
+{
+    int error;
+    char kbuf[1024];
 
-/*
- * Exit the current process - exit(2) syscall
- */
-scret_t sys_exit(struct syscall_args *scargs);
+    /* Must be valid */
+    error = proc_check_addr(proc_self(), (uintptr_t)buf, count);
+    if (error < 0) {
+        return error;
+    }
 
-/*
- * Write to a file descriptor - write(2) syscall
- */
-scret_t sys_write(struct syscall_args *scargs);
+    memcpy(kbuf, buf, count);
 
-#ifdef _NEED_UNIX_SCTAB
-scret_t(*g_unix_sctab[])(struct syscall_args *) = {
-    [SYS_none]   = NULL,
-    [SYS_exit]   = sys_exit,
-    [SYS_write]  = sys_write
-};
+    switch (fd) {
+    case STDOUT_FILENO:
+        cons_putstr(
+            &g_root_scr, kbuf,
+            count
+        );
+        break;
+    default:
+        return -EBADF;
+    }
 
-#endif  /* !_NEED_UNIX_SCTAB */
-#endif  /* !_UNIX_SYSCALL_H_ */
+    return count;
+}

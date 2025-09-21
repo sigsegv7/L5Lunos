@@ -27,71 +27,21 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _SYS_SYSCALL_H_
-#define _SYS_SYSCALL_H_
+#ifndef _OS_FILEDESC_H_
+#define _OS_FILEDESC_H_ 1
 
 #include <sys/types.h>
-#include <sys/limits.h>
-
-#if defined(_KERNEL)
-/*
- * Acquire a specific syscall argument
- */
-#define SCARG(SCARGS, TYPE, SYSNO) ((TYPE)(SCARGS)->arg[(SYSNO)])
-
-typedef ssize_t scret_t;
-typedef ssize_t scarg_t;
-
-struct syscall_args {
-    scarg_t arg[6];
-    struct trapframe *tf;
-};
-
-/* Syscall callback */
-typedef scret_t(*sccb_t)(struct syscall_args *);
 
 /*
- * L5 supports syscall windows in where there can be a
- * given set of syscalls and whatever syscall traps into
- * kernel space will address the syscalls referenced by the
- * current focused window. The window can be slid to change
- * the type of syscall interface used by the running application.
+ * Write to a file descriptor
  *
- * @sctab: Syscall table for this window
- * @nimpl: The number of syscalls implemented
- * @p: Present bit to indicate usability
- */
-struct syscall_win {
-    sccb_t *sctab;
-    size_t nimpl;
-    uint8_t p : 1;
-};
-
-/*
- * Valid platform latch constants
- */
-typedef enum {
-    SC_PLATCH_UNIX = 0x00,
-    SC_PLATCH_L5,
-    __SC_PLATCH_MAX
-} platch_t;
-
-/*
- * L5 provides the concept of "syscall domains". A syscall domain
- * is a collection of syscall windows along with a sliding index
- * known as the platform latch (`platch') to govern which syscall
- * interface is to be used.
+ * @fd: File descriptor to write to
+ * @buf: Buffer to write
+ * @count: Buffer byte count
  *
- * @slots: List of windows within this domain
- * @platch: Platform latch
+ * Returns the number of bytes written on success, otherwise
+ * a less than zero value on error.
  */
-struct syscall_domain {
-    struct syscall_win slots[SCWIN_MAX];
-    platch_t platch;
-};
+ssize_t write(int fd, const void *buf, size_t count);
 
-/* Implemented platforms */
-extern scret_t(*g_unix_sctab[])(struct syscall_args *);
-extern const size_t UNIX_SCTAB_LEN;
-#endif  /* _KERNEL */
-#endif  /* !_SYS_SYSCALL_H_ */
+#endif  /* !_OS_FILEDESC_H_ */

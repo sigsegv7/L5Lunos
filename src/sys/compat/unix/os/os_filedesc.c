@@ -27,71 +27,26 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _SYS_SYSCALL_H_
-#define _SYS_SYSCALL_H_
-
+#include <sys/syscall.h>
 #include <sys/types.h>
-#include <sys/limits.h>
+#include <os/filedesc.h>
+#include <compat/unix/syscall.h>
 
-#if defined(_KERNEL)
-/*
- * Acquire a specific syscall argument
- */
-#define SCARG(SCARGS, TYPE, SYSNO) ((TYPE)(SCARGS)->arg[(SYSNO)])
-
-typedef ssize_t scret_t;
-typedef ssize_t scarg_t;
-
-struct syscall_args {
-    scarg_t arg[6];
-    struct trapframe *tf;
-};
-
-/* Syscall callback */
-typedef scret_t(*sccb_t)(struct syscall_args *);
+#include <sys/syslog.h>
 
 /*
- * L5 supports syscall windows in where there can be a
- * given set of syscalls and whatever syscall traps into
- * kernel space will address the syscalls referenced by the
- * current focused window. The window can be slid to change
- * the type of syscall interface used by the running application.
+ * Write syscall
  *
- * @sctab: Syscall table for this window
- * @nimpl: The number of syscalls implemented
- * @p: Present bit to indicate usability
+ * ARG0: (int)fd
+ * ARG1: (const void *)buf
+ * ARG2: (size_t)count
  */
-struct syscall_win {
-    sccb_t *sctab;
-    size_t nimpl;
-    uint8_t p : 1;
-};
+scret_t
+sys_write(struct syscall_args *scargs)
+{
+    int fd = SCARG(scargs, int, 0);
+    const void *buf = SCARG(scargs, const void *, 1);
+    size_t count = SCARG(scargs, size_t, 2);
 
-/*
- * Valid platform latch constants
- */
-typedef enum {
-    SC_PLATCH_UNIX = 0x00,
-    SC_PLATCH_L5,
-    __SC_PLATCH_MAX
-} platch_t;
-
-/*
- * L5 provides the concept of "syscall domains". A syscall domain
- * is a collection of syscall windows along with a sliding index
- * known as the platform latch (`platch') to govern which syscall
- * interface is to be used.
- *
- * @slots: List of windows within this domain
- * @platch: Platform latch
- */
-struct syscall_domain {
-    struct syscall_win slots[SCWIN_MAX];
-    platch_t platch;
-};
-
-/* Implemented platforms */
-extern scret_t(*g_unix_sctab[])(struct syscall_args *);
-extern const size_t UNIX_SCTAB_LEN;
-#endif  /* _KERNEL */
-#endif  /* !_SYS_SYSCALL_H_ */
+    return write(fd, buf, count);
+}
