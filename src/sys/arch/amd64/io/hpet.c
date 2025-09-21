@@ -42,6 +42,9 @@
 #include <acpi/tables.h>
 #include <machine/hpet.h>
 
+#define FSEC_PER_SECOND 1000000000000000ULL
+#define USEC_PER_SECOND 1000000ULL
+
 #define HPET_REG_CAPS               0x00
 #define HPET_GENERAL_CONFIG         0x10
 #define HPET_REG_MAIN_COUNTER       0xF0
@@ -119,6 +122,23 @@ hpet_msleep(size_t ms)
 }
 
 /*
+ * Get time since init in usec
+ */
+static size_t
+hpet_time_usec(void)
+{
+    uint64_t period, freq, caps;
+    uint64_t counter;
+
+    caps = hpet_read(HPET_REG_CAPS);
+    period = CAP_CLK_PERIOD(caps);
+    freq = FSEC_PER_SECOND / period;
+
+    counter = hpet_read(HPET_REG_MAIN_COUNTER);
+    return (counter * USEC_PER_SECOND) / freq;
+}
+
+/*
  * Initialize the HPET
  */
 int
@@ -162,8 +182,9 @@ hpet_init(void)
 
     /* Initialize as clock device */
     clkdev.name = "IA-PC HPET";
-    clkdev.attr = CLKDEV_MSLEEP;
+    clkdev.attr = CLKDEV_MSLEEP | CLKDEV_GET_USEC;
     clkdev.msleep = hpet_msleep;
+    clkdev.get_time_usec = hpet_time_usec;
     if (clkdev_register(&clkdev) < 0) {
         printf("hpet_init: could not register clock device\n");
         return -1;

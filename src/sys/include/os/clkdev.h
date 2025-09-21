@@ -34,7 +34,8 @@
 #include <sys/param.h>
 
 /* Clock attributes */
-#define CLKDEV_MSLEEP BIT(0)    /* Has msleep() */
+#define CLKDEV_MSLEEP    BIT(0)  /* Has msleep() */
+#define CLKDEV_GET_USEC  BIT(1)  /* Get elapsed usec */
 
 #define MAX_CLKDEV 4
 
@@ -44,11 +45,13 @@
  *
  * @name: Name of clock
  * @msleep: Sleep for 'n' msec
+ * @get_time_usec: Get time since init in microseconds
  * @attr: Attribute mask
  */
 struct clkdev {
     const char *name;
     int(*msleep)(size_t ms);
+    size_t(*get_time_usec)(void);
     uint16_t attr;
 };
 
