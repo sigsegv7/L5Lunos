@@ -34,6 +34,12 @@
 
 struct ahci_hba {
     volatile struct hba_memspace *io;
+    uint32_t pi;
+    uint32_t nport;
+};
+
+struct ahci_port {
+    volatile struct hba_port *io;
 };
 
 #define AHCI_TIMEOUT 500

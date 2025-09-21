@@ -144,6 +144,27 @@ ahci_hba_reset(struct ahci_hba *hba)
 }
 
 /*
+ * Initialize the ports of an HBA
+ */
+static int
+ahci_init_ports(struct ahci_hba *hba)
+{
+    volatile struct hba_memspace *io = hba->io;
+    uint32_t pi, nbits;
+
+    pi = hba->pi;
+    for (int i = 0; i < hba->nport; ++i) {
+        if (!ISSET(pi, BIT(i))) {
+            continue;
+        }
+
+        dtrace("port %d implemented\n", i);
+    }
+
+    return 0;
+}
+
+/*
  * Put the HBA as well as its devices in an initialized
  * state so that they may be used for operation.
  */
@@ -151,8 +172,13 @@ static int
 ahci_hba_init(struct ahci_hba *hba)
 {
     volatile struct hba_memspace *io = hba->io;
-    uint32_t ghc;
+    uint32_t ghc, cap;
     int error;
+
+    /* Yoink from firmware before reset */
+    cap = mmio_read32(&io->cap);
+    hba->pi = mmio_read32(&io->pi);
+    hba->nport = AHCI_CAP_NP(cap) + 1;
 
     /*
      * We cannot be so certain what state the BIOS or whatever
@@ -173,7 +199,7 @@ ahci_hba_init(struct ahci_hba *hba)
     ghc = mmio_read32(&io->ghc);
     ghc |= AHCI_GHC_AE;
     mmio_write32(&io->ghc, ghc);
-    return 0;
+    return ahci_init_ports(hba);
 }
 
 /*
