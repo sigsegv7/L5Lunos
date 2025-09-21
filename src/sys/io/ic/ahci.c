@@ -36,10 +36,12 @@
 #include <sys/syslog.h>
 #include <sys/cdefs.h>
 #include <sys/errno.h>
+#include <sys/queue.h>
 #include <io/pci/pci.h>
 #include <io/pci/bar.h>
 #include <io/ic/ahciregs.h>
 #include <io/ic/ahcivar.h>
+#include <os/kalloc.h>
 #include <os/module.h>
 #include <os/clkdev.h>
 #include <os/mmio.h>
@@ -61,6 +63,7 @@ static struct pci_adv driver;
 static struct pci_device dev;
 static struct clkdev *clkdev;
 static struct ahci_hba root_hba;
+static TAILQ_HEAD(, ahci_port) portlist;
 
 /*
  * Poll register to have 'bits' set/unset.
@@ -97,6 +100,48 @@ ahci_poll32(volatile uint32_t *reg, uint32_t bits, bool pollset)
         if (elapsed_msec > AHCI_TIMEOUT) {
             return -ETIME;
         }
+    }
+
+    return 0;
+}
+
+/*
+ * Stop a running port, turn off the command list engine,
+ * as well as its FIS receive engine
+ *
+ * @port: Port to stop
+ *
+ * Returns zero if the port has been stopped successfully,
+ * otherwise a less than zero value
+ */
+static int
+ahci_port_stop(struct ahci_port *port)
+{
+    volatile struct hba_port *io = port->io;
+    uint32_t cmd, mask;
+    int error;
+
+    /*
+     * If the port is already stopped, then don't try to do
+     * it again.
+     */
+    mask = AHCI_PXCMD_FR | AHCI_PXCMD_CR;
+    cmd = mmio_read32(&io->cmd);
+    if (!ISSET(cmd, mask)) {
+        dtrace("port %d already stopped\n", port->portno);
+        return 0;
+    }
+
+    /* Stop everything */
+    dtrace("stopping port %d...\n", port->portno);
+    cmd &= ~(AHCI_PXCMD_FRE | AHCI_PXCMD_ST);
+    mmio_write32(&io->cmd, cmd);
+
+    /* Wait until everything has truly stopped */
+    error = ahci_poll32(&io->cmd, mask, false);
+    if (error < 0) {
+        pr_trace("timed out stopping port %d\n", port->portno);
+        return error;
     }
 
     return 0;
@@ -144,13 +189,56 @@ ahci_hba_reset(struct ahci_hba *hba)
 }
 
 /*
+ * Logically detaches our link with the port, cleans up
+ * resources, etc.
+ *
+ * @port: Port to "detach"
+ */
+static void
+ahci_port_detach(struct ahci_port *port)
+{
+    if (port == NULL) {
+        return;
+    }
+
+    kfree(port);
+}
+
+/*
+ * Initialize a specific port on the HBA as per section
+ * 10.1.2 of the AHCI specification
+ *
+ * @hba: HBA port belongs to
+ * @port: Port to initialize
+ *
+ * XXX: Upon failure, the caller is to clean up resources relating
+ *      to 'port'
+ */
+static int
+ahci_init_port(struct ahci_hba *hba, struct ahci_port *port)
+{
+    volatile struct hba_port *regs;
+    uint32_t cmd;
+
+    if (hba == NULL || port == NULL) {
+        return -EINVAL;
+    }
+
+    ahci_port_stop(port);
+    TAILQ_INSERT_TAIL(&portlist, port, link);
+    return 0;
+}
+
+/*
  * Initialize the ports of an HBA
  */
 static int
 ahci_init_ports(struct ahci_hba *hba)
 {
     volatile struct hba_memspace *io = hba->io;
+    struct ahci_port *port;
     uint32_t pi, nbits;
+    int error;
 
     pi = hba->pi;
     for (int i = 0; i < hba->nport; ++i) {
@@ -158,7 +246,25 @@ ahci_init_ports(struct ahci_hba *hba)
             continue;
         }
 
+        /* Allocate a new port descriptor */
         dtrace("port %d implemented\n", i);
+        port = kalloc(sizeof(*port));
+        if (port == NULL) {
+            printf("failed to allocate port\n");
+            continue;
+        }
+
+        port->io = &io->ports[i];
+        port->portno = i;
+        port->parent = hba;
+
+        /* Initialize the port */
+        error = ahci_init_port(hba, port);
+        if (error < 0) {
+            ahci_port_detach(port);
+            printf("port init failed (error=%d)\n", error);
+            continue;
+        }
     }
 
     return 0;
@@ -226,6 +332,7 @@ ahci_init(struct module *modp)
     }
 
     root_hba.io = NULL;
+    TAILQ_INIT(&portlist);
     return 0;
 }
 

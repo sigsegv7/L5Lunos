@@ -30,16 +30,37 @@
 #ifndef _IC_AHCIVAR_H_
 #define _IC_AHCIVAR_H_  1
 
+#include <sys/queue.h>
 #include <io/ic/ahciregs.h>
 
+/*
+ * Represents an AHCI host bus adapter (HBA)
+ *
+ * @io: HBA register space
+ * @pi: Ports implemented
+ * @nport: Number of ports supported
+ *
+ * XXX: Just because 'n' ports are _supported_ by the HBA does
+ *      not mean the host will implement exactly 'n' ports.
+ */
 struct ahci_hba {
     volatile struct hba_memspace *io;
     uint32_t pi;
     uint32_t nport;
 };
 
+/*
+ * Represents a port on the host bus adapter
+ *
+ * @parent: Parent HBA this port belongs to
+ * @io: Port register space
+ * @portno: Port number
+ */
 struct ahci_port {
+    volatile struct ahci_hba *parent;
     volatile struct hba_port *io;
+    uint32_t portno;
+    TAILQ_ENTRY(ahci_port) link;
 };
 
 #define AHCI_TIMEOUT 500
