@@ -155,4 +155,19 @@ struct __packed acpi_gas {
 #define ACPI_GAS_DWORD  3   /* Dword access */
 #define ACPI_GAS_QWORD  4   /* Qword access */
 
+struct __packed acpi_hpet {
+    struct acpi_header hdr;
+    uint8_t hardware_rev_id;
+    uint8_t comparator_count : 5;
+    uint8_t counter_size : 1;
+    uint8_t reserved : 1;
+    uint8_t legacy_replacement : 1;
+    uint16_t pci_vendor_id;
+    struct acpi_gas gas;
+    uint8_t hpet_number;
+    uint16_t minimum_tick;
+    uint8_t page_protection;
+};
+
+
 #endif  /* _ACPI_TABLES_H_ */
