@@ -139,3 +139,26 @@ proc_kill(struct proc *procp, int status)
     proc_clear_ranges(procp);
     return md_proc_kill(procp, 0);
 }
+
+
+/*
+ * Check that an address is within the bounds of a
+ * process.
+ */
+int
+proc_check_addr(struct proc *proc, uintptr_t addr, size_t len)
+{
+    uintptr_t stack_base;
+    uintptr_t stack_end;
+
+    /* Within the bounds of the stack? */
+    stack_base = STACK_TOP - STACK_LEN;
+    if (addr >= stack_base && addr <= STACK_TOP) {
+        return 0;
+    }
+    if ((stack_base + len) < stack_end) {
+        return 0;
+    }
+
+    return -EFAULT;
+}

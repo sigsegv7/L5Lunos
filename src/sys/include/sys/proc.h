@@ -147,6 +147,19 @@ int md_proc_kill(struct proc *procp, int flags);
 int md_set_ip(struct proc *procp, uintptr_t ip);
 
 /*
+ * Check that a virtual address is within the bounds of
+ * a process.
+ *
+ * @proc: Process the address should be within
+ * @addr: Virtual address to check
+ * @len: Length of memory referenced by 'addr'
+ *
+ * Returns zero if the address is within the process bounds,
+ * otherwise a less than zero value on failure.
+ */
+int proc_check_addr(struct proc *proc, uintptr_t addr, size_t len);
+
+/*
  * Put the current process into a halt loop
  * until the next one runs.
  */
