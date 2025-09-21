@@ -64,12 +64,11 @@ main(void)
     struct pcore *core;
     int error;
 
-    acpi_early_init();
-
     cons_init();
     syslog_toggle(true);
     boot_print();
 
+    acpi_early_init();
     cpu_conf(&g_bsp);
     vm_init();
 
