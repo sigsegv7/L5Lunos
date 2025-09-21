@@ -179,12 +179,13 @@ cons_putstr(struct cons_scr *scr, const char *str, size_t len)
 
     ch.bg = scr->scr_bg;
     ch.fg = scr->scr_fg;
-    ch.y = scr->text_y;
-    ch.x = scr->text_x;
 
     spinlock_acquire(&scr->lock);
     for (size_t i = 0; i < len; ++i) {
+        ch.y = scr->text_y;
+        ch.x = scr->text_x;
         ch.c = str[i];
+
         if (cons_handle_spec(scr, ch.c) == ch.c) {
             continue;
         }
