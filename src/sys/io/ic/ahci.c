@@ -44,6 +44,13 @@
 #include <os/clkdev.h>
 #include <os/mmio.h>
 
+#define pr_trace(fmt, ...) printf("ahci: " fmt, ##__VA_ARGS__)
+#if defined(AHCI_DEBUG)
+#define dtrace(fmt, ...) printf("ahci: " fmt ##__VA_ARGS__)
+#else
+#define dtrace(...) __nothing
+#endif  /* AHCI_DEBUG */
+
 /*
  * Represents the PCI advocation descriptor for this
  * device so we can advertise ourselves as its driver.
@@ -109,6 +116,8 @@ ahci_hba_reset(struct ahci_hba *hba)
     uint32_t ghc;
     int error;
 
+    dtrace("resetting HBA...\n");
+
     /*
      * The HBA must be in an AHCI aware state before
      * we can follow through with a reset
@@ -126,10 +135,11 @@ ahci_hba_reset(struct ahci_hba *hba)
     /* Wait until it is done */
     error = ahci_poll32(&io->ghc, AHCI_GHC_HR, false);
     if (error < 0) {
-        printf("ahci: HBA reset timed out\n");
+        pr_trace("HBA reset timed out\n");
         return error;
     }
 
+    dtrace("HBA reset success\n");
     return 0;
 }
 
@@ -180,12 +190,12 @@ ahci_init(struct module *modp)
     clkmask = CLKDEV_MSLEEP | CLKDEV_GET_USEC;
     error = clkdev_get(clkmask, &clkdev);
     if (error < 0) {
-        printf("ahci_init: could not get clkdev\n");
+        pr_trace("could not get clkdev\n");
         return error;
     }
 
     if ((error = pci_advoc(&driver)) < 0) {
-        printf("ahci_init: failed to advocate for HBA\n");
+        pr_trace("failed to advocate for HBA\n");
         return error;
     }
 
@@ -209,12 +219,12 @@ ahci_attach(struct pci_adv *adv)
     }
 
     dev = adv->lookup;
-    printf("ahci: detected AHCI controller\n");
+    pr_trace("detected AHCI controller\n");
 
     /* Map ABAR */
     error = pci_map_bar(&dev, 5, &bs);
     if (error < 0) {
-        printf("ahci: failed to map bar 5 (error=%d)\n", error);
+        pr_trace("failed to map bar 5 (error=%d)\n", error);
         return error;
     }
 
