@@ -37,6 +37,7 @@
 #include <sys/param.h>
 #include <sys/syslog.h>
 #include <os/mmio.h>
+#include <os/clkdev.h>
 #include <acpi/acpi.h>
 #include <acpi/tables.h>
 #include <machine/hpet.h>
@@ -49,6 +50,7 @@
 #define CAP_NUM_TIM(caps)           (caps >> 8) & 0x1F
 #define CAP_CLK_PERIOD(caps)        (caps >> 32)
 
+static struct clkdev clkdev;
 static void *hpet_base = NULL;
 
 /*
@@ -157,5 +159,15 @@ hpet_init(void)
     hpet_write(HPET_REG_MAIN_COUNTER, 0);
     hpet_write(HPET_GENERAL_CONFIG, 1);
     printf("hpet: HPET initialized and enabled\n");
+
+    /* Initialize as clock device */
+    clkdev.name = "IA-PC HPET";
+    clkdev.attr = CLKDEV_MSLEEP;
+    clkdev.msleep = hpet_msleep;
+    if (clkdev_register(&clkdev) < 0) {
+        printf("hpet_init: could not register clock device\n");
+        return -1;
+    }
+
     return 0;
 }
