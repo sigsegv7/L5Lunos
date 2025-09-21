@@ -78,12 +78,12 @@ struct vop {
  * such as a file, directory, network file object,
  * etc.
  *
- * [D]: Set up by driver
+ * [F]: Set up by filesystem
  * [V]  Set up by VFS
- * [D/V]: Both D and V
+ * [F/V]: Both F and V
  *
- * @type: Vnode type  [D/V]
- * @vops:  Vnode operations hooks [D]
+ * @type: Vnode type  [F/V]
+ * @vops:  Vnode operations hooks [F]
  */
 struct vnode {
     vtype_t type;
