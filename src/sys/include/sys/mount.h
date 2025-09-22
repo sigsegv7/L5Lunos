@@ -48,6 +48,7 @@
 #define MOUNT_INITRD "initrd"   /* Initial ramdisk */
 
 /* Forward declarations */
+struct fs_info;
 struct vfsops;
 struct mount;
 
@@ -58,11 +59,13 @@ extern struct vfsops g_omar_vfsops;
  * Represents a mountpoint
  *
  * @vp: Vnode of mount
+ * @fs: The filesystem backing this mountpoint
  * @name: Mountname
  * @link: TAILQ link
  */
 struct mount {
     struct vnode *vp;
+    struct fs_info *fs;
     char name[FSNAME_MAX];
     TAILQ_ENTRY(mount) link;
 };
@@ -98,13 +101,25 @@ struct mount_args {
  *
  * @name: Filesystem type name
  * @vfsops: VFS operations vector
+ * @attr: Attribute mask that may be set by fs
  * @refcount: Mount count of this type
+ *
+ * XXX: The attributes mask is set by the filesystem and
+ *      intended as an optimization to provide a way for
+ *      filesystems set flags to modify behavior during
+ *      things like the lookup stage.
  */
 struct fs_info {
     char name[FSNAME_MAX];
     const struct vfsops *vfsops;
+    uint16_t attr;
     int refcount;
 };
+
+/*
+ * Filesystem attributes mask
+ */
+#define FS_ATTR_IMAGE BIT (0)    /* Is an image kind e.g., OSMORA OMAR */
 
 /*
  * VFS operations vector

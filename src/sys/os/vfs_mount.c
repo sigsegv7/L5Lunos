@@ -228,7 +228,7 @@ mount(struct mount_args *margs, uint32_t flags)
         return error;
     }
 
-    /* The filesystem should give us its vnode */
+    mpp->fs = fip;
     mpp->vp = margs->vp_res;
     return 0;
 }

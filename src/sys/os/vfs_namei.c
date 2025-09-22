@@ -43,6 +43,10 @@ int
 namei(struct nameidata *ndp)
 {
     struct mount *mp = NULL;
+    struct vnode *vp;
+    struct vop *vops;
+    struct vop_lookup_args lookup;
+    struct fs_info *fip;
     char namebuf[NAME_MAX];
     const char *p, *pcur;
     size_t len, i = 0;
@@ -61,6 +65,31 @@ namei(struct nameidata *ndp)
     if (error < 0) {
         printf("namei: failed to get rootfs\n");
         return error;
+    }
+
+    vp = mp->vp;
+    fip = mp->fs;
+
+    if ((vops = vp->vops) == NULL) {
+        printf("namei: failed to get vops\n");
+        return -EIO;
+    }
+
+    /* We need vops->lookup() */
+    if (vops->lookup == NULL) {
+        printf("namei: vops does not have lookup op\n");
+        return -EIO;
+    }
+
+    /*
+     * If this is an image we are looking up, then throw
+     * a path right at it.
+     */
+    if (ISSET(fip->attr, FS_ATTR_IMAGE)) {
+        lookup.name = ndp->path;
+        lookup.dirvp = mp->vp;
+        lookup.vpp = &vp;
+        return vops->lookup(&lookup);
     }
 
     printf("namei: f: %s\n", ndp->path);
