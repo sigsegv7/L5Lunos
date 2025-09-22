@@ -32,6 +32,7 @@
 
 #include <sys/queue.h>
 #include <io/ic/ahciregs.h>
+#include <io/dma/alloc.h>
 
 /*
  * Represents an AHCI host bus adapter (HBA)
