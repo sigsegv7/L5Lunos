@@ -32,7 +32,6 @@
 #include <sys/sysvar.h>
 #include <sys/syslog.h>
 #include <sys/proc.h>
-#include <sys/mount.h>
 #include <sys/cpuvar.h>
 #include <os/sched.h>
 #include <os/elfload.h>
@@ -74,10 +73,7 @@ main(void)
 
     cpu_init(&g_bsp);
     bsp_ap_startup();
-
-    /* Mount root */
     vfs_init();
-    mountlist_init(NULL);
 
     /* Initialize generic modules */
     __MODULES_INIT(MODTYPE_GENERIC);

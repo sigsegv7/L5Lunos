@@ -101,5 +101,7 @@ vfs_init(void)
             vfsops->init(fip);
         }
     }
+
+    mountlist_init(NULL);
     return 0;
 }
