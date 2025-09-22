@@ -346,7 +346,7 @@ ahci_init_ports(struct ahci_hba *hba)
         dtrace("port %d implemented\n", i);
         port = kalloc(sizeof(*port));
         if (port == NULL) {
-            printf("failed to allocate port\n");
+            dtrace("failed to allocate port\n");
             continue;
         }
 
@@ -358,7 +358,7 @@ ahci_init_ports(struct ahci_hba *hba)
         error = ahci_init_port(hba, port);
         if (error < 0) {
             ahci_port_detach(port);
-            printf("port init failed (error=%d)\n", error);
+            dtrace("port init failed (error=%d)\n", error);
             continue;
         }
     }
