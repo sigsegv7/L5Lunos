@@ -248,6 +248,75 @@ ahci_port_detach(struct ahci_port *port)
 }
 
 /*
+ * Send a COMRESET over the interface to reset a
+ * specific port. This is typically used after resetting
+ * the controller.
+ *
+ * @port: The target port to reset
+ */
+static int
+ahci_reset_port(struct ahci_port *port)
+{
+    const char *spdtab[5] = {
+        "0 Gbit/s (inactive)",
+        "1.5 Gbit/s",   /* SATA gen 1 */
+        "3 Gbit/s",     /* SATA gen 2 */
+        "6 Gbit/s",     /* SATA gen 3 */
+        "bad"           /* Reserved */
+    };
+    volatile struct hba_port *io;
+    uint32_t sctl, ssts;
+    uint8_t ipm, spd;
+
+    if (port == NULL) {
+        return -EINVAL;
+    }
+
+    io = port->io;
+
+    /*
+     * Section 3.3.11 of the AHCI spec states that to transmit a
+     * COMRESET on the interface, we'll need to hold a value of 1
+     * at PxSCTL.DET for a minimum of 1ms.
+     */
+    sctl = mmio_read32(&io->sctl);
+    sctl &= ~0xF;
+    sctl |= 1;
+    mmio_write32(&io->sctl, sctl);
+
+    /* Be generous and give it 3ms */
+    clkdev->msleep(3);
+
+    /* Stop COMRESET TX */
+    sctl &= ~0xF;
+    mmio_write32(&io->sctl, sctl);
+    ahci_port_start(port);
+
+    /* Give it some time to come up */
+    for (int i = 0; i < AHCI_TIMEOUT; ++i) {
+        clkdev->msleep(1);
+
+        /* Get the current port status */
+        ssts = mmio_read32(&io->ssts);
+        ipm = AHCI_PXSSTS_IPM(ssts);
+        if (ipm == AHCI_IPM_ACTIVE) {
+            break;
+        }
+    }
+
+    if (ipm != AHCI_IPM_ACTIVE) {
+        dtrace("port %d not active after reset\n", port->portno);
+        return -EIO;
+    }
+
+    spd = AHCI_PXSSTS_SPD(ssts);
+    pr_trace("port %d interface online\n", port->portno);
+    pr_trace("port %d clocked @ %s\n", port->portno, spdtab[spd]);
+    ahci_port_stop(port);
+    return 0;
+}
+
+/*
  * Initialize a specific port on the HBA as per section
  * 10.1.2 of the AHCI specification
  *
@@ -263,7 +332,6 @@ ahci_init_port(struct ahci_hba *hba, struct ahci_port *port)
     volatile struct hba_port *regs;
     struct ahci_cmd_hdr *cmdlist;
     uint32_t cmd, lo, hi;
-    uint32_t sig;
     void *va;
     int error;
 
@@ -271,14 +339,9 @@ ahci_init_port(struct ahci_hba *hba, struct ahci_port *port)
         return -EINVAL;
     }
 
-    if ((error = ahci_port_stop(port)) < 0) {
-        return error;
-    }
-
     regs = port->io;
-    sig = mmio_read32(&regs->sig);
-    if (sig == ATAPI_SIG) {
-        return -ENOTSUP;
+    if ((error = ahci_reset_port(port)) < 0) {
+        return error;
     }
 
     va = dma_alloc_pg(1);
@@ -336,6 +399,7 @@ ahci_init_ports(struct ahci_hba *hba)
     uint32_t pi, nbits;
     int error;
 
+    pr_trace("bringing up ports...\n");
     pi = hba->pi;
     for (int i = 0; i < hba->nport; ++i) {
         if (!ISSET(pi, BIT(i))) {
