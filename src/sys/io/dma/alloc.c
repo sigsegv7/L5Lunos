@@ -35,6 +35,7 @@
 #include <vm/mmu.h>
 #include <vm/map.h>
 #include <vm/vm.h>
+#include <string.h>
 
 /*
  * Allocate DMA pages
@@ -42,6 +43,7 @@
 void *
 dma_alloc_pg(size_t npages)
 {
+    const size_t PSIZE = DEFAULT_PAGESIZE;
     struct vm_vas vas;
     struct mmu_map spec;
     size_t length;
@@ -71,6 +73,7 @@ dma_alloc_pg(size_t npages)
     }
 
     buf = (void *)spec.va;
+    memset(buf, 0, npages * PSIZE);
 done:
     return buf;
 }
