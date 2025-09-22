@@ -56,11 +56,15 @@ struct ahci_hba {
  *
  * @parent: Parent HBA this port belongs to
  * @io: Port register space
+ * @cmdlist: Command list base
+ * @fis_rx: FIS recieve area
  * @portno: Port number
  */
 struct ahci_port {
     volatile struct ahci_hba *parent;
     volatile struct hba_port *io;
+    dma_addr_t cmdlist;
+    dma_addr_t fis_rx;
     uint32_t portno;
     TAILQ_ENTRY(ahci_port) link;
 };

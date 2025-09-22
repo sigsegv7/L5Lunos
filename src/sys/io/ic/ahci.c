@@ -41,6 +41,7 @@
 #include <io/pci/bar.h>
 #include <io/ic/ahciregs.h>
 #include <io/ic/ahcivar.h>
+#include <io/dma/alloc.h>
 #include <os/kalloc.h>
 #include <os/module.h>
 #include <os/clkdev.h>
@@ -148,6 +149,48 @@ ahci_port_stop(struct ahci_port *port)
 }
 
 /*
+ * Bring up an AHCI port, start the command list engine and
+ * FIS receive engine.
+ *
+ * @port: Port to bring up
+ *
+ * Returns zero if the port has been brought up successfully,
+ * otherwise a less than zero value
+ */
+static int
+ahci_port_start(struct ahci_port *port)
+{
+    volatile struct hba_port *io = port->io;
+    uint32_t cmd, mask;
+    int error;
+
+    if (port == NULL) {
+        return -EINVAL;
+    }
+
+    /* Don't start if already started */
+    mask = AHCI_PXCMD_FR | AHCI_PXCMD_CR;
+    cmd = mmio_read32(&io->cmd);
+    if (ISSET(cmd, mask)) {
+        dtrace("port %d already started\n", port->portno);
+        return 0;
+    }
+
+    /* Bring the port up */
+    cmd |= (AHCI_PXCMD_FRE | AHCI_PXCMD_ST);
+    mmio_write32(&io->cmd, cmd);
+
+    /* Wait until everything is up and running */
+    error = ahci_poll32(&io->cmd, mask, true);
+    if (error < 0) {
+        pr_trace("timed out starting port %d\n", port->portno);
+        return error;
+    }
+
+    return 0;
+}
+
+/*
  * Perform a full HBA reset by using the HR bit
  * within the GHC register.
  *
@@ -218,13 +261,66 @@ static int
 ahci_init_port(struct ahci_hba *hba, struct ahci_port *port)
 {
     volatile struct hba_port *regs;
-    uint32_t cmd;
+    struct ahci_cmd_hdr *cmdlist;
+    uint32_t cmd, lo, hi;
+    uint32_t sig;
+    void *va;
+    int error;
 
     if (hba == NULL || port == NULL) {
         return -EINVAL;
     }
 
-    ahci_port_stop(port);
+    if ((error = ahci_port_stop(port)) < 0) {
+        return error;
+    }
+
+    regs = port->io;
+    sig = mmio_read32(&regs->sig);
+    if (sig == ATAPI_SIG) {
+        return -ENOTSUP;
+    }
+
+    va = dma_alloc_pg(1);
+    port->cmdlist = dma_get_pa(va);
+
+    /* Program the command list in */
+    lo = port->cmdlist & 0xFFFFFFFF;
+    hi = (port->cmdlist >> 32) & 0xFFFFFFFF;
+    mmio_write32(&regs->clb, lo);
+    mmio_write32(&regs->clbu, hi);
+
+    /* Set up each command slot */
+    cmdlist = dma_get_va(port->cmdlist);
+    for (int i = 0; i < hba->nslots; ++i) {
+        va = dma_alloc_pg(1);
+        if (va == 0) {
+            cmdlist[i].prdtl = 0;
+            continue;
+        }
+
+        /* Allocate H2D FIS area */
+        cmdlist[i].prdtl = 1;
+        cmdlist[i].ctba = dma_get_pa(va);
+    }
+
+    /* Allocate FIS recieve area */
+    va = dma_alloc_pg(1);
+    port->fis_rx = dma_get_pa(va);
+
+    /* Program FIS recieve area for port */
+    lo = port->fis_rx & 0xFFFFFFFF;
+    hi = (port->fis_rx >> 32) & 0xFFFFFFFF;
+    mmio_write32(&regs->fb, lo);
+    mmio_write32(&regs->fbu, hi);
+
+    /* Clear errors and bring up the port */
+    mmio_write32(&regs->serr, 0xFFFFFFFF);
+    error = ahci_port_start(port);
+    if (error < 0) {
+        return error;
+    }
+
     TAILQ_INSERT_TAIL(&portlist, port, link);
     return 0;
 }
