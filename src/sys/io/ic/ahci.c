@@ -48,7 +48,7 @@
 
 #define pr_trace(fmt, ...) printf("ahci: " fmt, ##__VA_ARGS__)
 #if defined(AHCI_DEBUG)
-#define dtrace(fmt, ...) printf("ahci: " fmt ##__VA_ARGS__)
+#define dtrace(fmt, ...) printf("ahci: " fmt, ##__VA_ARGS__)
 #else
 #define dtrace(...) __nothing
 #endif  /* AHCI_DEBUG */
