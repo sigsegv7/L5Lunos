@@ -84,10 +84,12 @@ struct vop {
  *
  * @type: Vnode type  [F/V]
  * @vops:  Vnode operations hooks [F]
+ * @data: Filesystem specific data [F]
  */
 struct vnode {
     vtype_t type;
     struct vop *vops;
+    void *data;
 };
 
 /*
