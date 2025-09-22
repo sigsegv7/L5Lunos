@@ -35,6 +35,7 @@
 #include <sys/mount.h>
 #include <sys/panic.h>
 #include <sys/syslog.h>
+#include <os/kalloc.h>
 #include <os/omar.h>
 #include <string.h>
 #include <stdbool.h>
@@ -166,7 +167,46 @@ initrd_init(struct fs_info *fip)
         panic("initrd: could not find '%s'\n", INITRD_PATH);
     }
 
+    /* This is an image */
+    fip->attr |= FS_ATTR_IMAGE;
     return 0;
+}
+
+/*
+ * Lookup a file within the initrd
+ */
+static int
+initrd_lookup(struct vop_lookup_args *args)
+{
+    struct initrd_node np;
+    struct vnode *vp;
+    int error;
+
+    if (args->vpp == NULL) {
+        return -EINVAL;
+    }
+
+    /* Path must start with '/' */
+    if (*args->name++ != '/') {
+        return -ENOENT;
+    }
+
+    /* Get the actual file */
+    error = initrd_get_file(args->name, &np);
+    if (error < 0) {
+        return error;
+    }
+
+    /* Grab a vnode */
+    error = vfs_valloc(&vp, VTYPE_FILE, 0);
+    if (error < 0) {
+        return error;
+    }
+
+    vp->data = kalloc(sizeof(np));
+    memcpy(vp->data, &np, sizeof(np));
+    *args->vpp = vp;
+    return error;
 }
 
 /*
@@ -223,7 +263,7 @@ initrd_open(const char *path, char **res)
 }
 
 static struct vop omar_vops = {
-    .lookup = NULL
+    .lookup = initrd_lookup
 };
 
 struct vfsops g_omar_vfsops = {
