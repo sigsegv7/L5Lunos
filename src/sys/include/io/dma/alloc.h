@@ -31,7 +31,30 @@
 #define _DMA_ALLOC_H_
 
 #include <sys/types.h>
+#include <sys/cdefs.h>
 #include <vm/vm.h>
+
+/*
+ * Represents a physical address that may be used
+ * with direct memory access
+ */
+typedef uintptr_t dma_addr_t;
+
+/*
+ * Convert virtual DMA pages to physical DMA
+ * addresses.
+ */
+__always_inline static dma_addr_t
+dma_get_pa(void *pgbuf)
+{
+    return VIRT_TO_PHYS(pgbuf);
+}
+
+__always_inline static void *
+dma_get_va(dma_addr_t pa)
+{
+    return PHYS_TO_VIRT(pa);
+}
 
 /*
  * Allocate a buffer suitable for Direct Memory
