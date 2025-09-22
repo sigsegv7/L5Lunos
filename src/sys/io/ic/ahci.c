@@ -285,6 +285,7 @@ ahci_hba_init(struct ahci_hba *hba)
     cap = mmio_read32(&io->cap);
     hba->pi = mmio_read32(&io->pi);
     hba->nport = AHCI_CAP_NP(cap) + 1;
+    hba->nslots = AHCI_CAP_NCS(cap) + 1;
 
     /* Only support 64-bit addressing as of now */
     if (AHCI_CAP_S64A(cap) == 0) {

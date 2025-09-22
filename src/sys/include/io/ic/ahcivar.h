@@ -39,6 +39,7 @@
  * @io: HBA register space
  * @pi: Ports implemented
  * @nport: Number of ports supported
+ * @nslots: Number of command slots
  *
  * XXX: Just because 'n' ports are _supported_ by the HBA does
  *      not mean the host will implement exactly 'n' ports.
@@ -47,6 +48,7 @@ struct ahci_hba {
     volatile struct hba_memspace *io;
     uint32_t pi;
     uint32_t nport;
+    uint8_t nslots;
 };
 
 /*
