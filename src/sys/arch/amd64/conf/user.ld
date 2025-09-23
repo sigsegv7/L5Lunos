@@ -25,4 +25,9 @@ SECTIONS
         *(COMMON)
         *(.bss)
     }
+
+    /DISCARD/ : {
+        *(.eh_frame)
+        *(.note .note.*)
+    }
 }
