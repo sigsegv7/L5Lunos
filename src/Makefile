@@ -1,3 +1,5 @@
+.SILENT:
+
 TARGET = amd64
 KBIN = sys/l5
 SHIMDIR = shim
