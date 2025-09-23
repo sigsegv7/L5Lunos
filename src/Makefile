@@ -49,12 +49,14 @@ image:
 	mkdir -p iso_root/boot/
 	cp data/boot/limine.conf $(SHIMDIR)/limine/limine-bios.sys \
         $(SHIMDIR)/limine/limine-bios-cd.bin $(SHIMDIR)/limine/limine-uefi-cd.bin iso_root/
-	$(OMAR) -i $(SYSROOT) -o $(SYSROOT)/boot/initrd.omar
+	cp data/boot/wallpaper.jpg iso_root/boot
+	$(OMAR) -i $(SYSROOT) -o iso_root/boot/initrd.omar
 	cp sys/l5 iso_root/boot/
 	xorriso -as mkisofs -b limine-bios-cd.bin -no-emul-boot -boot-load-size 4\
 		-boot-info-table --efi-boot limine-uefi-cd.bin -efi-boot-part \
 		--efi-boot-image --protective-msdos-label iso_root/ -o $(ISO) 1>/dev/null
 	$(SHIMDIR)/limine/limine bios-install $(ISO) 1>/dev/null
+	rm -rf iso_root/
 
 
 .PHONY: qemu-amd64
