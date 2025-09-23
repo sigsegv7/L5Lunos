@@ -25,6 +25,7 @@ The kernel (L5) is named after the [L5 lagrange point](https://en.wikipedia.org/
 - Syscall windows, domains and platform latches
 - OSMORA Archive Format (OMAR) initramfs
 - ELF64 loader
+- Mandatory access control (MAC)
 - 16550 UART I/O
 - i8254
 - i8259
@@ -43,7 +44,6 @@ The kernel (L5) is named after the [L5 lagrange point](https://en.wikipedia.org/
 - UNIX-like FS layered on SLS
 - Block I/O framework
 - USB support (xHCI / USB 3.0)
-- Capability based security
 ...
 
 ## Build instructions
