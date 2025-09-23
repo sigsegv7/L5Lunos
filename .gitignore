@@ -6,6 +6,7 @@
 /src/sys/target
 /src/sys/os/amd64
 /src/iso_root
+/src/lib/libc/include/sys/
 *.o
 *.d
 *.iso

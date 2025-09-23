@@ -35,17 +35,6 @@
 #include <sys/syscall.h>
 
 /*
- * Default syscall numbers
- *
- * Defines marked as (mandatory) must be implemented
- * between latches.
- */
-#define SYS_none    0x00
-#define SYS_exit    0x01
-#define SYS_write   0x02
-#define SYS_cross   0x03    /* cross a border (mandatory) */
-
-/*
  * Exit the current process - exit(2) syscall
  */
 scret_t sys_exit(struct syscall_args *scargs);

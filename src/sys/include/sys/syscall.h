@@ -32,15 +32,29 @@
 
 #include <sys/types.h>
 #include <sys/limits.h>
+#if !defined(_KERNEL)
+#include <machine/syscall.h>
+#endif  /* _!KERNEL */
+
+/*
+ * Default syscall numbers
+ *
+ * Defines marked as (mandatory) must be implemented
+ * between latches.
+ */
+#define SYS_none    0x00
+#define SYS_exit    0x01
+#define SYS_write   0x02
+#define SYS_cross   0x03    /* cross a border (mandatory) */
+
+typedef __ssize_t scret_t;
+typedef __ssize_t scarg_t;
 
 #if defined(_KERNEL)
 /*
  * Acquire a specific syscall argument
  */
 #define SCARG(SCARGS, TYPE, SYSNO) ((TYPE)(SCARGS)->arg[(SYSNO)])
-
-typedef ssize_t scret_t;
-typedef ssize_t scarg_t;
 
 struct syscall_args {
     scarg_t arg[6];
