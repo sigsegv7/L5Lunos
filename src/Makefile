@@ -44,14 +44,14 @@ root:
 
 .PHONY: sysroot
 image:
+	mkdir -p iso_root/boot/
+	cp data/boot/limine.conf $(SHIMDIR)/limine/limine-bios.sys \
+        $(SHIMDIR)/limine/limine-bios-cd.bin $(SHIMDIR)/limine/limine-uefi-cd.bin iso_root/
 	$(OMAR) -i $(SYSROOT) -o $(SYSROOT)/boot/initrd.omar
-	cp $(SHIMDIR)/limine/limine-bios-cd.bin $(SYSROOT)/
-	cp $(SHIMDIR)/limine/limine-uefi-cd.bin $(SYSROOT)/
-	cp $(SHIMDIR)/limine/limine-bios.sys $(SYSROOT)/
-	cp -rf data/boot/* $(SYSROOT)/boot/
+	cp sys/l5 iso_root/boot/
 	xorriso -as mkisofs -b limine-bios-cd.bin -no-emul-boot -boot-load-size 4\
 		-boot-info-table --efi-boot limine-uefi-cd.bin -efi-boot-part \
-		--efi-boot-image --protective-msdos-label $(SYSROOT) -o $(ISO) 1>/dev/null
+		--efi-boot-image --protective-msdos-label iso_root/ -o $(ISO) 1>/dev/null
 	$(SHIMDIR)/limine/limine bios-install $(ISO) 1>/dev/null
 
 

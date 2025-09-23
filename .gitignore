@@ -5,6 +5,7 @@
 /src/sys/l5
 /src/sys/target
 /src/sys/os/amd64
+/src/iso_root
 *.o
 *.d
 *.iso
