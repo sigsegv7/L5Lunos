@@ -33,6 +33,7 @@
 #include <sys/cdefs.h>
 #include <vm/mmu.h>
 #include <vm/map.h>
+#include <vm/physseg.h>
 #include <machine/pcb.h>
 #include <machine/gdt.h>
 #include <machine/frame.h>
@@ -221,9 +222,11 @@ done:
 int
 md_proc_kill(struct proc *procp, int flags)
 {
+    const size_t PSIZE = DEFAULT_PAGESIZE;
     struct proc *self;
     struct pcore *core = this_core();
     struct md_pcb *pcbp;
+    struct vm_range *range;
 
     if (core == NULL) {
         return -ENXIO;
@@ -232,6 +235,15 @@ md_proc_kill(struct proc *procp, int flags)
     /* Default to ourself */
     if (procp == NULL) {
         procp = core->curproc;
+    }
+
+    /* Free every range */
+    TAILQ_FOREACH(range, &procp->maplist, link) {
+        if (range == NULL) {
+            continue;
+        }
+
+        vm_free_frame(range->pa_base, range->len / PSIZE);
     }
 
     /* Release the VAS */
