@@ -35,6 +35,7 @@
 #include <sys/cdefs.h>
 #include <sys/param.h>
 #include <sys/queue.h>
+#include <os/mac.h>
 #include <vm/vm.h>
 #include <machine/pcb.h>    /* standard */
 
@@ -53,6 +54,7 @@
  * @flags: State flags (see PROC_*)
  * @pcb: Process control block
  * @scdom: Syscall domain
+ * @level: Access level
  * @maplist: List of mapped regions
  * @link: TAILQ link
  */
@@ -61,6 +63,7 @@ struct proc {
     uint32_t flags;
     struct md_pcb pcb;
     struct syscall_domain scdom;
+    mac_level_t level;
     TAILQ_HEAD(, vm_range) maplist;
     TAILQ_ENTRY(proc) link;
 };

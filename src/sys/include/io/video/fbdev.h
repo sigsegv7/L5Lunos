@@ -27,46 +27,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _UNIX_SYSCALL_H_
-#define _UNIX_SYSCALL_H_ 1
+#ifndef _VIDEO_FBDEV_H_
+#define _VIDEO_FBDEV_H_
 
-#include <sys/proc.h>
-#include <sys/param.h>
-#include <sys/syscall.h>
+#include <os/mac.h>
 
-/*
- * Default syscall numbers
- *
- * Defines marked as (mandatory) must be implemented
- * between latches.
- */
-#define SYS_none    0x00
-#define SYS_exit    0x01
-#define SYS_write   0x02
-#define SYS_cross   0x03    /* cross a border (mandatory) */
+extern struct mac_border g_fbdev_border;
 
-/*
- * Exit the current process - exit(2) syscall
- */
-scret_t sys_exit(struct syscall_args *scargs);
-
-/*
- * Write to a file descriptor - write(2) syscall
- */
-scret_t sys_write(struct syscall_args *scargs);
-
-/*
- * Cross a resource border - L5 mandatory
- */
-scret_t sys_cross(struct syscall_args *scargs);
-
-#ifdef _NEED_UNIX_SCTAB
-scret_t(*g_unix_sctab[])(struct syscall_args *) = {
-    [SYS_none]   = NULL,
-    [SYS_exit]   = sys_exit,
-    [SYS_write]  = sys_write,
-    [SYS_cross]  = sys_cross
-};
-
-#endif  /* !_NEED_UNIX_SCTAB */
-#endif  /* !_UNIX_SYSCALL_H_ */
+#endif  /* !_VIDEO_FBDEV_H_ */

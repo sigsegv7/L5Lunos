@@ -27,46 +27,66 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _UNIX_SYSCALL_H_
-#define _UNIX_SYSCALL_H_ 1
-
+#include <sys/bootvars.h>
 #include <sys/proc.h>
-#include <sys/param.h>
-#include <sys/syscall.h>
+#include <sys/mman.h>
+#include <sys/types.h>
+#include <io/video/fbdev.h>
+#include <vm/map.h>
+#include <vm/mmu.h>
 
 /*
- * Default syscall numbers
- *
- * Defines marked as (mandatory) must be implemented
- * between latches.
+ * Map the framebuffer, we'll decided how many bytes
+ * is mapped.
  */
-#define SYS_none    0x00
-#define SYS_exit    0x01
-#define SYS_write   0x02
-#define SYS_cross   0x03    /* cross a border (mandatory) */
+static ssize_t
+fbdev_map(struct mac_border *mbp, struct mac_map_args *args)
+{
+    int prot = PROT_READ | PROT_WRITE | PROT_USER;
+    size_t max_size = 0;
+    struct bootvars bv;
+    struct proc *self = proc_self();
+    struct vm_vas vas;
+    struct bootvar_fb *fbvar;
+    struct mmu_map spec;
+    int error;
 
-/*
- * Exit the current process - exit(2) syscall
- */
-scret_t sys_exit(struct syscall_args *scargs);
+    /* Grab the bootvars */
+    error = bootvars_read(&bv, 0);
+    if (error < 0) {
+        return error;
+    }
 
-/*
- * Write to a file descriptor - write(2) syscall
- */
-scret_t sys_write(struct syscall_args *scargs);
+    /* Grab the current VAS for mapping */
+    error = mmu_this_vas(&vas);
+    if (error < 0) {
+        return error;
+    }
 
-/*
- * Cross a resource border - L5 mandatory
- */
-scret_t sys_cross(struct syscall_args *scargs);
+    fbvar = &bv.fbvars;
+    max_size = fbvar->width * fbvar->pitch;
+    if (args->len > max_size) {
+        args->len = max_size;
+    }
 
-#ifdef _NEED_UNIX_SCTAB
-scret_t(*g_unix_sctab[])(struct syscall_args *) = {
-    [SYS_none]   = NULL,
-    [SYS_exit]   = sys_exit,
-    [SYS_write]  = sys_write,
-    [SYS_cross]  = sys_cross
+    spec.pa = VIRT_TO_PHYS(fbvar->io);
+    spec.va = spec.pa;
+    error = vm_map(&vas, &spec, args->len, prot);
+    if (error < 0) {
+        return error;
+    }
+
+    *args->dp_res = (void *)VIRT_TO_PHYS(fbvar->io);
+    return args->len;
+}
+
+static struct mac_ops ops = {
+    .map = fbdev_map,
+    .sync = NULL,
+    .getattr = NULL
 };
 
-#endif  /* !_NEED_UNIX_SCTAB */
-#endif  /* !_UNIX_SYSCALL_H_ */
+struct mac_border g_fbdev_border = {
+    .level = MAC_RESTRICTED,
+    .ops = &ops
+};

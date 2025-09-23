@@ -27,46 +27,80 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _UNIX_SYSCALL_H_
-#define _UNIX_SYSCALL_H_ 1
-
 #include <sys/proc.h>
+#include <sys/errno.h>
+#include <sys/types.h>
 #include <sys/param.h>
-#include <sys/syscall.h>
+#include <io/video/fbdev.h>
+#include <os/mac.h>
 
-/*
- * Default syscall numbers
- *
- * Defines marked as (mandatory) must be implemented
- * between latches.
- */
-#define SYS_none    0x00
-#define SYS_exit    0x01
-#define SYS_write   0x02
-#define SYS_cross   0x03    /* cross a border (mandatory) */
-
-/*
- * Exit the current process - exit(2) syscall
- */
-scret_t sys_exit(struct syscall_args *scargs);
-
-/*
- * Write to a file descriptor - write(2) syscall
- */
-scret_t sys_write(struct syscall_args *scargs);
-
-/*
- * Cross a resource border - L5 mandatory
- */
-scret_t sys_cross(struct syscall_args *scargs);
-
-#ifdef _NEED_UNIX_SCTAB
-scret_t(*g_unix_sctab[])(struct syscall_args *) = {
-    [SYS_none]   = NULL,
-    [SYS_exit]   = sys_exit,
-    [SYS_write]  = sys_write,
-    [SYS_cross]  = sys_cross
+static struct mac_border *bortab[__BORDER_MAX] = {
+    [BORDER_NONE] = NULL,
+    [BORDER_FBDEV] = &g_fbdev_border
 };
 
-#endif  /* !_NEED_UNIX_SCTAB */
-#endif  /* !_UNIX_SYSCALL_H_ */
+/*
+ * Check process creds against border
+ */
+int
+mac_check_creds(struct proc *procp, struct mac_border *mbp)
+{
+    if (procp == NULL || mbp == NULL) {
+        return -EINVAL;
+    }
+
+    if (procp->level < mbp->level) {
+        return -EACCES;
+    }
+
+    return 0;
+}
+
+/*
+ * Map a resource into process address space
+ */
+int
+mac_map(struct mac_border *mbp, off_t off, size_t len, void **res, int flags)
+{
+    struct mac_map_args args;
+    struct proc *procp = proc_self();
+    struct mac_ops *ops;
+    int error;
+
+    if (procp == NULL || mbp == NULL) {
+        return -EINVAL;
+    }
+
+    if (res == NULL) {
+        return -EINVAL;
+    }
+
+    error = mac_check_creds(procp, mbp);
+    if (error < 0) {
+        return error;
+    }
+
+    ops = mbp->ops;
+    if (ops->map == NULL) {
+        return -EIO;
+    }
+
+    args.off = off;
+    args.len = len;
+    args.flags = flags;
+    args.dp_res = res;
+    return ops->map(mbp, &args);
+}
+
+/*
+ * Grab a specific border using an ID
+ */
+struct mac_border *
+mac_get_border(border_id_t id)
+{
+    if (id >= NELEM(bortab)) {
+        return NULL;
+    }
+
+    return bortab[id];
+}

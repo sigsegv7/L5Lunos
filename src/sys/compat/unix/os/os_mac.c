@@ -27,46 +27,41 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _UNIX_SYSCALL_H_
-#define _UNIX_SYSCALL_H_ 1
-
-#include <sys/proc.h>
-#include <sys/param.h>
 #include <sys/syscall.h>
+#include <sys/proc.h>
+#include <sys/errno.h>
+#include <sys/types.h>
+#include <os/mac.h>
+#include <compat/unix/syscall.h>
 
 /*
- * Default syscall numbers
- *
- * Defines marked as (mandatory) must be implemented
- * between latches.
+ * ARG0: Border ID (BORDER_*)
+ * ARG1: Length requested
+ * ARG2: Offset requested
+ * ARG3: Flags
+ * ARG4: Result
  */
-#define SYS_none    0x00
-#define SYS_exit    0x01
-#define SYS_write   0x02
-#define SYS_cross   0x03    /* cross a border (mandatory) */
+scret_t
+sys_cross(struct syscall_args *scargs)
+{
+    border_id_t bd = SCARG(scargs, border_id_t, 0);
+    size_t len = SCARG(scargs, size_t, 1);
+    off_t off = SCARG(scargs, off_t, 2);
+    int flags = SCARG(scargs, int, 3);
+    void **res = SCARG(scargs, void **, 4);
+    struct mac_border *bop;
+    struct proc *self = proc_self();
+    int error;
 
-/*
- * Exit the current process - exit(2) syscall
- */
-scret_t sys_exit(struct syscall_args *scargs);
+    error = proc_check_addr(self, (uintptr_t)res, len);
+    if (error < 0) {
+        return error;
+    }
 
-/*
- * Write to a file descriptor - write(2) syscall
- */
-scret_t sys_write(struct syscall_args *scargs);
+    bop = mac_get_border(bd);
+    if (bop == NULL) {
+        return -EIO;
+    }
 
-/*
- * Cross a resource border - L5 mandatory
- */
-scret_t sys_cross(struct syscall_args *scargs);
-
-#ifdef _NEED_UNIX_SCTAB
-scret_t(*g_unix_sctab[])(struct syscall_args *) = {
-    [SYS_none]   = NULL,
-    [SYS_exit]   = sys_exit,
-    [SYS_write]  = sys_write,
-    [SYS_cross]  = sys_cross
-};
-
-#endif  /* !_NEED_UNIX_SCTAB */
-#endif  /* !_UNIX_SYSCALL_H_ */
+    return mac_map(bop, off, len, res, flags);
+}
