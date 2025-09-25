@@ -11,8 +11,8 @@ target:
 
 .PHONY: sys
 sys:
-	mkdir -p include/sys/
-	rsync -av ../../sys/include/sys/ include/sys/
+	mkdir -p sys/
+	rsync -av ../../sys/include/sys/* include/sys/
 
 # Create build directory
 build:
