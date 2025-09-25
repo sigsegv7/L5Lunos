@@ -59,7 +59,7 @@ mac_check_creds(struct proc *procp, struct mac_border *mbp)
 /*
  * Map a resource into process address space
  */
-int
+ssize_t
 mac_map(struct mac_border *mbp, off_t off, size_t len, void **res, int flags)
 {
     struct mac_map_args args;
