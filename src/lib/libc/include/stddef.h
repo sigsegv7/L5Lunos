@@ -38,4 +38,9 @@
 typedef __size_t size_t;
 #endif  /* _HAVE_SIZE_T */
 
+#ifndef _HAVE_SSIZE_T
+#define _HAVE_SSIZE_T
+typedef __ssize_t ssize_t;
+#endif /* _HAVE_SSIZE_T */
+
 #endif  /* _STDDEF_H */
