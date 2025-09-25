@@ -1,9 +1,14 @@
+CFILES = $(shell find src/ -name "*.c")
 OBJ = $(shell find build/ -name "*.o")
+OBJ += $(CFILES:.c=.o)
 LIBC_OUT = libc.a
 
 .PHONY: all
-all: build sys target
+all: build sys $(OBJ) target
 	ar rcs $(LIBC_OUT) $(OBJ)
+
+%.o: %.c
+	$(CC) -Iinclude/ -I$(TARGET)/include/ -c $< -o $@
 
 .PHONY: target
 target:
