@@ -31,16 +31,11 @@
 #define _OS_MAC_H_ 1
 
 #include <sys/types.h>
+#include <sys/mac.h>
 
 /* Forward declarations */
 struct mac_border;
 struct proc;
-
-typedef enum {
-    BORDER_NONE,
-    BORDER_FBDEV,
-    __BORDER_MAX
-} border_id_t;
 
 /*
  * MAC levels
