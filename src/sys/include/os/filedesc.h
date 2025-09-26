@@ -31,6 +31,33 @@
 #define _OS_FILEDESC_H_ 1
 
 #include <sys/types.h>
+#include <os/vnode.h>
+
+struct proc;
+
+/*
+ * Represents a file descriptor
+ *
+ * @fdno: File descriptor index
+ * @vp: Vnode this fd is linked with
+ * @mode: File attributes
+ */
+struct filedesc {
+    int fdno;
+    struct vnode *vp;
+    mode_t mode;
+};
+
+/*
+ * Initialize a process file descriptor table
+ * and set up standard streams
+ *
+ * @procp: Process of fd table to init
+ *
+ * Returns zero on success, less than zero values
+ * indicate failure.
+ */
+int fdtab_init(struct proc *procp);
 
 /*
  * Write to a file descriptor

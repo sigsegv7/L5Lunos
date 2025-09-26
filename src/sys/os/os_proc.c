@@ -36,6 +36,7 @@
 #include <vm/vm.h>
 #include <vm/physseg.h>
 #include <os/kalloc.h>
+#include <os/filedesc.h>
 #include <string.h>
 
 static pid_t next_pid = 0;
@@ -97,6 +98,11 @@ proc_init(struct proc *procp, int flags)
 
     procp->pid = atomic_inc_int(&next_pid);
     error = md_proc_init(procp, flags);
+    if (error < 0) {
+        return error;
+    }
+
+    error = fdtab_init(procp);
     return error;
 }
 

@@ -36,6 +36,7 @@
 #include <sys/param.h>
 #include <sys/queue.h>
 #include <os/mac.h>
+#include <os/filedesc.h>
 #include <vm/vm.h>
 #include <machine/pcb.h>    /* standard */
 
@@ -63,6 +64,7 @@ struct proc {
     uint32_t flags;
     struct md_pcb pcb;
     struct syscall_domain scdom;
+    struct filedesc *fdtab[FD_MAX];
     mac_level_t level;
     TAILQ_HEAD(, vm_range) maplist;
     TAILQ_ENTRY(proc) link;

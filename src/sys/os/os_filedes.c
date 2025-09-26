@@ -30,12 +30,83 @@
 #include <sys/syscall.h>
 #include <sys/syslog.h>
 #include <sys/errno.h>
+#include <sys/limits.h>
 #include <os/filedesc.h>
+#include <os/kalloc.h>
 #include <io/cons/cons.h>
 #include <sys/proc.h>
 #include <string.h>
 
 #define STDOUT_FILENO 1
+
+/*
+ * Allocate a file descriptor from a specific process's
+ * file descriptor table
+ *
+ * @procp: Process to allocate fd from
+ * @fd_res: Result pointer is written here
+ *
+ * Returns zero on success, otherwise a less than
+ * zero value upon failure
+ */
+static int
+fd_alloc(struct proc *procp, struct filedesc **fd_res)
+{
+    struct filedesc *fd;
+
+    if (procp == NULL) {
+        return -EINVAL;
+    }
+
+    /*
+     * Find an entry that is free and allocate a new
+     * file descriptor for it.
+     */
+    for (int i = 0; i < FD_MAX; ++i) {
+        if (procp->fdtab[i] != NULL) {
+            continue;
+        }
+
+        fd = kalloc(sizeof(*fd));
+        if (fd == NULL) {
+            return -EINVAL;
+        }
+
+        /* Zero and assign */
+        memset(fd, 0, sizeof(*fd));
+        procp->fdtab[i] = fd;
+        fd->fdno = i;
+        if (fd_res != NULL) {
+            *fd_res = fd;
+        }
+
+        return 0;
+    }
+
+    return -EMFILE;
+}
+
+/*
+ * Initialize file descriptor table
+ */
+int
+fdtab_init(struct proc *procp)
+{
+    if (procp == NULL) {
+        return -EINVAL;
+    }
+
+    /* Don't do it twice */
+    if (procp->fdtab[0] != NULL) {
+        printf("fdtab: fd table already initialized\n");
+        return -1;
+    }
+
+    fd_alloc(procp, NULL);  /* stdin */
+    fd_alloc(procp, NULL);  /* stdout */
+    fd_alloc(procp, NULL);  /* stderr */
+    return 0;
+}
 
 /*
  * XXX: STUB

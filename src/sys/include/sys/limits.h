@@ -36,5 +36,6 @@
 #define CPU_MAX 256
 #define SC_MAX 64       /* Max syscalls */
 #define SCWIN_MAX 2    /* Max syscall windows */
+#define FD_MAX 256      /* Max file descriptors */
 
 #endif  /* !_SYS_LIMITS_H_ */
