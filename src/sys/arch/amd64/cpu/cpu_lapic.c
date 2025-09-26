@@ -34,6 +34,7 @@
 
 #include <sys/syslog.h>
 #include <sys/cpuvar.h>
+#include <sys/errno.h>
 #include <sys/panic.h>
 #include <sys/cdefs.h>
 #include <sys/param.h>
@@ -236,6 +237,69 @@ lapic_timer_oneshot(bool mask, uint32_t count)
     }
 
     lapic_timer_start(&core->md, mask, LVT_TMR_ONESHOT, count);
+}
+
+/*
+ * Send off an inter-processor interrupt to the
+ * specified processor(s)
+ */
+int
+lapic_tx_ipi(const struct lapic_ipi *ipip)
+{
+    const uint32_t X2APIC_IPI_SELF = 0x3F0;
+    uint32_t icr_lo, icr_hi;
+    struct pcore *core = this_core();
+    struct mdcore *mdcore;
+
+    if (ipip == NULL) {
+        return -EINVAL;
+    }
+
+    mdcore = &core->md;
+
+    /*
+     * If we are in x2APIC mode and the shorthand is "self", use
+     * the x2APIC SELF IPI register as it is more optimized.
+     */
+    if (ipip->shorthand == IPI_SHAND_SELF && mdcore->x2apic) {
+        lapic_writel(mdcore, X2APIC_IPI_SELF, ipip->vector);
+        return 0;
+    }
+
+    icr_lo = 0;
+    icr_hi = 0;
+
+    /* Encode the low dword */
+    icr_lo |= ipip->vector;
+    icr_lo |= (ipip->delmod & 0x7) << 8;
+    icr_lo |= (ipip->dest_mode & 0x1) << 11;
+    icr_lo |= (ipip->shorthand & 0x3) << 18;
+
+    /*
+     * If we are in x2APIC mode, the LAPIC will queue it so there
+     * is no need to poll the Delivery Status bit as it does not
+     * exist.
+     */
+    if (mdcore->x2apic) {
+        lapic_writel(
+            mdcore, LAPIC_ICRLO,
+            (((uint64_t)ipip->apic_id) << 32) | icr_lo
+        );
+        return 0;
+    }
+
+    /*
+     * In xAPIC mode, we'll need to poll the Delivery
+     * Status bit to manually serialize the operation
+     * until the next IPI is ready.
+     */
+    lapic_writel(mdcore, LAPIC_ICRHI, ((uint32_t)ipip->apic_id << 24));
+    lapic_writel(mdcore, LAPIC_ICRLO, icr_lo);
+    do {
+        __ASMV("pause");
+        icr_lo = lapic_readl(mdcore, LAPIC_ICRLO);
+    } while (ISSET(icr_lo, BIT(12)));
+    return 0;
 }
 
 /*
