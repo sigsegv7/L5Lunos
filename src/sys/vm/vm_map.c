@@ -113,7 +113,6 @@ vm_map(struct vm_vas *vas, struct mmu_map *spec, size_t len, int prot)
         spec_cpy = *spec;
     }
 
-
     /* If this fails, unmap the partial region */
     len = ALIGN_UP(len, PSIZE);
     retval = __vm_map(vas, spec, len, prot);
