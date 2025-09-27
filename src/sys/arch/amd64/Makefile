@@ -5,7 +5,7 @@ override PROMPT := printf "%s\t\t%s\n"
 CONF := $(shell cat conf/GENERIC | $(TOOLS)/kconf/kconf)
 TARGET_BIN = ../../l5
 TARGET_INC = -I../../target/header/
-CFLAGS = -I../../include/ -I../../include/lib/ $(TARGET_INC) $(MI_CFLAGS) $(MD_CFLAGS)
+CFLAGS = -I../../include/ -I../../include/lib/ $(TARGET_INC) $(MI_CFLAGS) $(MD_CFLAGS) $(CONF)
 CFILES = $(shell find . -name "*.c")
 
 ASMFILES = $(shell find . -name "*.S")
