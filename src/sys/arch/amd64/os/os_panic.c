@@ -29,6 +29,7 @@
 
 #include <sys/panic.h>
 #include <sys/syslog.h>
+#include <sys/cpuvar.h>
 #include <machine/mdcpu.h>
 #include <stdarg.h>
 
@@ -37,6 +38,7 @@ void panic(const char *fmt, ...)
 {
     static va_list ap;
 
+    cpu_halt_others();
     va_start(ap, fmt);
 
     printf("lunos panic: ");
