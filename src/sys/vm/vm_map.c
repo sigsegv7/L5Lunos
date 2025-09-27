@@ -126,7 +126,9 @@ vm_map(struct vm_vas *vas, struct mmu_map *spec, size_t len, int prot)
 
     /* Add the range if we can */
     if (self != NULL) {
+        spinlock_acquire(&self->maplist_lock);
         proc_add_range(self, spec->va, spec->pa, len);
+        spinlock_release(&self->maplist_lock);
     }
 
     /* Place a guard page at the end */

@@ -36,6 +36,7 @@
 #include <sys/param.h>
 #include <sys/queue.h>
 #include <os/mac.h>
+#include <os/spinlock.h>
 #include <os/filedesc.h>
 #include <vm/vm.h>
 #include <machine/pcb.h>    /* standard */
@@ -66,6 +67,7 @@ struct proc {
     struct syscall_domain scdom;
     struct filedesc *fdtab[FD_MAX];
     mac_level_t level;
+    struct spinlock maplist_lock;
     TAILQ_HEAD(, vm_range) maplist;
     TAILQ_ENTRY(proc) link;
 };
