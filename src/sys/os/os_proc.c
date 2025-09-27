@@ -35,6 +35,7 @@
 #include <sys/proc.h>
 #include <vm/vm.h>
 #include <vm/physseg.h>
+#include <os/signal.h>
 #include <os/kalloc.h>
 #include <os/filedesc.h>
 #include <string.h>

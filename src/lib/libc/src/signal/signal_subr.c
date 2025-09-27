@@ -27,48 +27,20 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <sys/cdefs.h>
-#include <sys/cpuvar.h>
-#include <sys/syslog.h>
-#include <sys/panic.h>
-#include <os/signal.h>
-#include <io/pci/cam.h>
+#include <sys/syscall.h>
+#include <signal.h>
 
-__weak void
-bsp_ap_startup(void)
-{
-    printf("bsp_ap_startup: unimplemented\n");
-}
+#define ui_cast(...) ((uintptr_t)__VA_ARGS__)
 
-__weak int
-pci_cam_init(struct cam_hook *chp)
+/*
+ * POSIX sigaction
+ *
+ * Update or get the current action associated
+ * with a specific signal
+ */
+int sigaction(
+    int signum, const struct sigaction *__restrict act,
+    struct sigaction *__restrict oldact)
 {
-    (void)chp;
-    printf("pci_cam_init: unimplemented\n");
-    return 0;
-}
-
-/* Default handlers */
-void
-sigfpe_default(int signo)
-{
-    panic("Floating point exception\n");
-}
-
-void
-sigkill_default(int signo)
-{
-    panic("Killed\n");
-}
-
-void
-sigsegv_default(int signo)
-{
-    panic("Segmentation fault\n");
-}
-
-void
-sigterm_default(int signo)
-{
-    panic("Terminated\n");
+    syscall(SYS_sigaction, signum, ui_cast(act), ui_cast(oldact));
 }

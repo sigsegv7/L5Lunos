@@ -27,48 +27,73 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <sys/errno.h>
+#include <sys/signal.h>
 #include <sys/cdefs.h>
-#include <sys/cpuvar.h>
-#include <sys/syslog.h>
-#include <sys/panic.h>
+#include <sys/proc.h>
 #include <os/signal.h>
-#include <io/pci/cam.h>
 
-__weak void
-bsp_ap_startup(void)
+/*
+ * Handle a POSIX sigaction
+ */
+static int
+do_sigaction(int sig, const struct sigaction *act, struct sigaction *oact)
 {
-    printf("bsp_ap_startup: unimplemented\n");
-}
+    struct proc *self;
 
-__weak int
-pci_cam_init(struct cam_hook *chp)
-{
-    (void)chp;
-    printf("pci_cam_init: unimplemented\n");
+    if (act == NULL || oact == NULL) {
+        return -EINVAL;
+    }
+
+    if ((self = proc_self()) == NULL) {
+        return -ESRCH;
+    }
+
+    /* Don't overflow the signal table */
+    if (sig >= NELEM(self->sigtab) || sig < 0) {
+        return -EINVAL;
+    }
+
+    if (oact != NULL) {
+        *oact = self->sigtab[sig];
+    }
+
+    if (act != NULL) {
+        self->sigtab[sig] = *act;
+    }
+
     return 0;
 }
 
-/* Default handlers */
-void
-sigfpe_default(int signo)
+/*
+ * ARG0: Signal number
+ * ARG1: Action to set (act)
+ * ARG2: Old action (old sigaction written here)
+ */
+scret_t
+sys_sigaction(struct syscall_args *scargs)
 {
-    panic("Floating point exception\n");
-}
+    struct proc *self = proc_self();
+    int sig;
+    struct sigaction *sap, *sap_old;
+    int error;
 
-void
-sigkill_default(int signo)
-{
-    panic("Killed\n");
-}
+    sig = SCARG(scargs, int, 0);
+    sap = SCARG(scargs, struct sigaction *, 1);
+    sap_old = SCARG(scargs, struct sigaction *, 2);
 
-void
-sigsegv_default(int signo)
-{
-    panic("Segmentation fault\n");
-}
+    /* Sigactions at a valid address? */
+    error = proc_check_addr(self, (uintptr_t)sap, sizeof(*sap));
+    if (error < 0) {
+        return error;
+    }
 
-void
-sigterm_default(int signo)
-{
-    panic("Terminated\n");
+    /* Old sigactions at a valid address? */
+    error = proc_check_addr(self, (uintptr_t)sap_old, sizeof(sap_old));
+    if (error < 0) {
+        return error;
+    }
+
+    return do_sigaction(sig, sap, sap_old);
+
 }

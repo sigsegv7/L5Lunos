@@ -27,48 +27,28 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <sys/cdefs.h>
-#include <sys/cpuvar.h>
-#include <sys/syslog.h>
-#include <sys/panic.h>
-#include <os/signal.h>
-#include <io/pci/cam.h>
+#ifndef _SIGNAL_H_
+#define _SIGNAL_H_
 
-__weak void
-bsp_ap_startup(void)
-{
-    printf("bsp_ap_startup: unimplemented\n");
-}
+#include <sys/types.h>
 
-__weak int
-pci_cam_init(struct cam_hook *chp)
-{
-    (void)chp;
-    printf("pci_cam_init: unimplemented\n");
-    return 0;
-}
+#define SIGFPE      8   /* Floating point exception */
+#define SIGKILL     9   /* Kill */
+#define SIGSEGV     11  /* Segmentation violation */
+#define SIGTERM     15  /* Terminate gracefully */
 
-/* Default handlers */
-void
-sigfpe_default(int signo)
-{
-    panic("Floating point exception\n");
-}
+typedef __uint32_t sigset_t;
 
-void
-sigkill_default(int signo)
-{
-    panic("Killed\n");
-}
+/*
+ * POSIX sigaction
+ *
+ * Represents the action associated with
+ * a specific signal
+ */
+struct sigaction {
+    void(*sa_handler)(int);
+    sigset_t sa_mask;
+    int sa_flags;
+};
 
-void
-sigsegv_default(int signo)
-{
-    panic("Segmentation fault\n");
-}
-
-void
-sigterm_default(int signo)
-{
-    panic("Terminated\n");
-}
+#endif /* _SIGNAL_H_ */

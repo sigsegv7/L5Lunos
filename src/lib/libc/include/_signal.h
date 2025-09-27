@@ -27,48 +27,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <sys/cdefs.h>
-#include <sys/cpuvar.h>
-#include <sys/syslog.h>
-#include <sys/panic.h>
-#include <os/signal.h>
-#include <io/pci/cam.h>
+#ifndef __SIGNAL_H
+#define __SIGNAL_H 1
 
-__weak void
-bsp_ap_startup(void)
-{
-    printf("bsp_ap_startup: unimplemented\n");
-}
+void sigsegv_stub(int signo);
 
-__weak int
-pci_cam_init(struct cam_hook *chp)
-{
-    (void)chp;
-    printf("pci_cam_init: unimplemented\n");
-    return 0;
-}
-
-/* Default handlers */
-void
-sigfpe_default(int signo)
-{
-    panic("Floating point exception\n");
-}
-
-void
-sigkill_default(int signo)
-{
-    panic("Killed\n");
-}
-
-void
-sigsegv_default(int signo)
-{
-    panic("Segmentation fault\n");
-}
-
-void
-sigterm_default(int signo)
-{
-    panic("Terminated\n");
-}
+#endif  /* __SIGNAL_H */

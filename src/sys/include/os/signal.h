@@ -27,48 +27,29 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <sys/cdefs.h>
-#include <sys/cpuvar.h>
-#include <sys/syslog.h>
-#include <sys/panic.h>
-#include <os/signal.h>
-#include <io/pci/cam.h>
+#ifndef _OS_SIGNAL_H_
+#define _OS_SIGNAL_H_
 
-__weak void
-bsp_ap_startup(void)
-{
-    printf("bsp_ap_startup: unimplemented\n");
-}
+#include <sys/types.h>
+#include <sys/proc.h>
+#include <sys/signal.h>
 
-__weak int
-pci_cam_init(struct cam_hook *chp)
-{
-    (void)chp;
-    printf("pci_cam_init: unimplemented\n");
-    return 0;
-}
+typedef struct sigaction sigtab_t[32];
+
+/*
+ * Initialize the signals framework
+ */
+int signal_init(struct proc *procp);
 
 /* Default handlers */
-void
-sigfpe_default(int signo)
-{
-    panic("Floating point exception\n");
-}
+void sigfpe_default(int signo);
+void sigkill_default(int signo);
+void sigsegv_default(int signo);
+void sigterm_default(int signo);
 
-void
-sigkill_default(int signo)
-{
-    panic("Killed\n");
-}
+/*
+ * POSIX sigaction system call
+ */
+scret_t sys_sigaction(struct syscall_args *scargs);
 
-void
-sigsegv_default(int signo)
-{
-    panic("Segmentation fault\n");
-}
-
-void
-sigterm_default(int signo)
-{
-    panic("Terminated\n");
-}
+#endif  /* !_OS_SIGNAL_H_ */

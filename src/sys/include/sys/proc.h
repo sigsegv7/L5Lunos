@@ -36,6 +36,7 @@
 #include <sys/param.h>
 #include <sys/queue.h>
 #include <os/mac.h>
+#include <os/signal.h>
 #include <os/spinlock.h>
 #include <os/filedesc.h>
 #include <vm/vm.h>
@@ -57,6 +58,8 @@
  * @pcb: Process control block
  * @scdom: Syscall domain
  * @level: Access level
+ * @maplist_lock: Protects the maplist
+ * @sigtab: Signal table
  * @maplist: List of mapped regions
  * @link: TAILQ link
  */
@@ -68,6 +71,7 @@ struct proc {
     struct filedesc *fdtab[FD_MAX];
     mac_level_t level;
     struct spinlock maplist_lock;
+    sigtab_t sigtab;
     TAILQ_HEAD(, vm_range) maplist;
     TAILQ_ENTRY(proc) link;
 };
