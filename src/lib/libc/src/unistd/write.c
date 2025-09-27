@@ -27,23 +27,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _UNISTD_H 1
-#define _UNISTD_H 1
+#include <sys/syscall.h>
+#include <unistd.h>
 
-#include <stddef.h>
-
-/* Standard stream file numbers */
-#define STDIN_FILENO    0
-#define STDOUT_FILENO   1
-#define STDERR_FILENO   2
-
-/*
- * POSIX write system call
- *
- * @fd: File descriptor to write at
- * @buf: Buffer to write
- * @count: Number of bytes within the buffer to write
- */
-ssize_t write(int fd, const void *buf, size_t count);
-
-#endif  /* _UNISTD_H */
+ssize_t
+write(int fd, const void *buf, size_t count)
+{
+    return syscall(SYS_write, fd, (uintptr_t)buf, count);
+}
