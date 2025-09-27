@@ -35,6 +35,8 @@
 #include <machine/tss.h>
 #include <machine/gdt.h>
 
+#define HALT_VECTOR 0x90
+
 #define md_spinwait() __ASMV("pause")
 #define md_intoff()   __ASMV("cli")
 #define md_inton()    __ASMV("sti")

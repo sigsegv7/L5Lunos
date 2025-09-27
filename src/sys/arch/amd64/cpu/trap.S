@@ -113,3 +113,9 @@ INTR_ENTRY(syscall_isr)
     mov %rsp, %rdi
     call trap_syscall
 INTR_EXIT(syscall_isr)
+
+    .globl core_halt_isr
+INTR_ENTRY(core_halt_isr)
+    mov %rsp, %rdi
+    call core_halt_handler
+INTR_EXIT(core_halt_isr)
