@@ -38,3 +38,17 @@ strlen(const char *s)
     while (s[len++] != '\0');
     return len - 1;
 }
+
+size_t
+strnlen(const char *s, size_t maxlen)
+{
+    size_t len = 0;
+
+    while (s[len++] != '\0') {
+        if (len >= maxlen) {
+            return len - 1;
+        }
+    }
+
+    return len - 1;
+}

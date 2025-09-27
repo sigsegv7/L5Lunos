@@ -39,4 +39,13 @@
  */
 size_t strlen(const char *s);
 
+/*
+ * Get the length of a string with a maximum
+ * length
+ *
+ * @s: String to check length of
+ * @maxlen: Max length of string to check
+ */
+size_t strnlen(const char *s, size_t maxlen);
+
 #endif  /* _STRING_H */
