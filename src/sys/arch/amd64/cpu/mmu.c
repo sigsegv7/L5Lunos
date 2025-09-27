@@ -408,7 +408,7 @@ mmu_free_vas(struct vm_vas *vas)
  * Set caching attributes
  */
 int
-pmap_set_cache(struct vm_vas *vas, vaddr_t va, cacheattr_t attr)
+mmu_set_cache(struct vm_vas *vas, vaddr_t va, cacheattr_t attr)
 {
     uintptr_t *pte, pa;
     uint32_t flags;

@@ -148,6 +148,6 @@ int mmu_free_vas(struct vm_vas *vas);
  * Returns zero on success, otherwise a less than
  * zero value to indicate error.
  */
-int pmap_set_cache(struct vm_vas *vas, vaddr_t va, cacheattr_t attr);
+int mmu_set_cache(struct vm_vas *vas, vaddr_t va, cacheattr_t attr);
 
 #endif  /* !_MACHINE_MMU_H_ */
