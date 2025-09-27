@@ -342,7 +342,7 @@ mmu_map_single(struct vm_vas *vas, struct mmu_map *spec, int prot)
      * TLB entry.
      */
     index = mmu_get_level(spec->va, MMU_TBL);
-    pte[index] = pte_flags | spec->pa;
+    pte[index] = (prot == 0) ? 0 : (pte_flags | spec->pa);
     __invlpg((void *)spec->va);
     return 0;
 }
