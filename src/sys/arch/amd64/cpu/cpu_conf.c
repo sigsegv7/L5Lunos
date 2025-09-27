@@ -81,6 +81,7 @@ cpu_conf(struct pcore *pcore)
 
     init_vectors();
     idt_load();
+    __ASMV("sti");
 }
 
 void
