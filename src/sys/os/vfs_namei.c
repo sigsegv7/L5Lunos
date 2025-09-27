@@ -89,7 +89,11 @@ namei(struct nameidata *ndp)
         lookup.name = ndp->path;
         lookup.dirvp = mp->vp;
         lookup.vpp = &vp;
-        return vops->lookup(&lookup);
+
+        /* If it was found, return */
+        error =  vops->lookup(&lookup);
+        if (error == 0)
+            return 0;
     }
 
     printf("namei: f: %s\n", ndp->path);
