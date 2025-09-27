@@ -119,7 +119,8 @@ struct fs_info {
 /*
  * Filesystem attributes mask
  */
-#define FS_ATTR_IMAGE BIT (0)    /* Is an image kind e.g., OSMORA OMAR */
+#define FS_ATTR_IMAGE BIT(0)    /* Is an image kind e.g., OSMORA OMAR */
+
 
 /*
  * VFS operations vector
