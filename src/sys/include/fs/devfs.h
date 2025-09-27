@@ -27,82 +27,79 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef _FS_DEVFS_H_
+#define _FS_DEVFS_H_
+
 #include <sys/types.h>
-#include <sys/errno.h>
-#include <sys/param.h>
-#include <sys/mount.h>
-#include <os/vfs.h>
-#include <string.h>
+#include <sys/queue.h>
+#include <sys/limits.h>
+#include <os/vnode.h>
+
+/* Forward declarations */
+struct devfs_node;
 
 /*
- * The filesystem table
+ * Represents an I/O buffer for device files
+ * on the system
  */
-static struct fs_info fstab[] = {
-    { MOUNT_INITRD, &g_omar_vfsops, 0 },
-    { MOUNT_DEVFS, &g_devfs_vfops, 0 }
+struct dev_iobuf {
+    void *buf;
+    size_t count;
 };
 
 /*
- * Get entry by name
+ * Character device descriptor and hooks
+ *
+ * @read: Read n bytes from the char device
+ * @write: Write n bytes from the char device
  */
-int
-vfs_by_name(const char *name, struct fs_info **resp)
-{
-    size_t nelem;
-    int retval = -ENOENT;
-
-    if (name == NULL || resp == NULL) {
-        return -EINVAL;
-    }
-
-    nelem = NELEM(fstab);
-    for (int i = 0; i < nelem; ++i) {
-        if (strcmp(fstab[i].name, name) == 0) {
-            *resp = &fstab[i];
-            retval = 0;
-            break;
-        }
-    }
-
-    return retval;
-}
+struct cdevsw {
+    ssize_t(*read)(struct devfs_node *dnp, struct dev_iobuf *iob, int flags);
+    ssize_t(*write)(struct devfs_node *dnp, struct dev_iobuf *iob, int flags);
+};
 
 /*
- * Get entry by index
+ * Describes the device node types
+ *
+ * @DEVFS_NONE: No type
+ * @DEVFS_CDEV: Char device
  */
-int
-vfs_by_index(uint16_t index, struct fs_info **resp)
-{
-    if (resp == NULL) {
-        return -EINVAL;
-    }
+typedef enum {
+    DEVFS_NONE,
+    DEVFS_CDEV,
+    __DEVFS_NTYPE
+} dev_type_t;
 
-    if (index >= NELEM(fstab)) {
-        return -ENOENT;
-    }
+/*
+ * Represents a device filesystem node
+ *
+ * @name: Name of device node
+ * @type: Node type
+ * @cdev: Character device (if DEVFS_CDEV)
+ * @link: Queue link
+ */
+struct devfs_node {
+    char name[NAME_MAX];
+    dev_type_t type;
+    union {
+        struct cdevsw *cdev;
+        void *dev;
+    };
 
-    *resp = &fstab[index];
-    return 0;
-}
+    TAILQ_ENTRY(devfs_node) link;
+};
 
-int
-vfs_init(void)
-{
-    const struct vfsops *vfsops;
-    struct fs_info *fip;
-    size_t nelem = NELEM(fstab);
+/*
+ * Register a character device
+ *
+ * @name: Name of character device
+ * @type: Device type to use
+ * @cdev: Character device operations to use
+ * @flags: Optional flags
+ *
+ * Returns zero on success, otherwise a less than zero
+ * value on failure.
+ */
+int devfs_register(const char *name, dev_type_t type, void *devsw, int flags);
 
-    /*
-     * Initialize each filesystem
-     */
-    for (size_t i = 0; i < nelem; ++i) {
-        fip = &fstab[i];
-        vfsops = fip->vfsops;
-        if (vfsops->init != NULL) {
-            vfsops->init(fip);
-        }
-    }
-
-    mountlist_init(NULL);
-    return 0;
-}
+#endif  /* !_FS_DEVFS_H_ */

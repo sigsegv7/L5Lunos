@@ -46,6 +46,7 @@
  * Mount filesystem string names
  */
 #define MOUNT_INITRD "initrd"   /* Initial ramdisk */
+#define MOUNT_DEVFS  "devfs"    /* Device filesystem */
 
 /* Forward declarations */
 struct fs_info;
@@ -54,6 +55,7 @@ struct mount;
 
 /* Filesystem vfsops */
 extern struct vfsops g_omar_vfsops;
+extern struct vfsops g_devfs_vfops;
 
 /*
  * Represents a mountpoint
