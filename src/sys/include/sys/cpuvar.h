@@ -91,6 +91,14 @@ struct core_arbiter {
 struct pcore *cpu_sched(void);
 
 /*
+ * Halt all processor cores on the machine excluding
+ * self
+ *
+ * [MD]
+ */
+void cpu_halt_others(void);
+
+/*
  * Configure a processor core on the system
  *
  * [MD]
