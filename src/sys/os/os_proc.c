@@ -128,10 +128,7 @@ proc_add_range(struct proc *procp, vaddr_t va, paddr_t pa, size_t len)
     range->pa_base = pa;
     range->va_base = va;
     range->len = ALIGN_UP(len, PSIZE);
-
-    spinlock_acquire(&procp->maplist_lock);
     TAILQ_INSERT_TAIL(&procp->maplist, range, link);
-    spinlock_release(&procp->maplist_lock);
     return 0;
 }
 
