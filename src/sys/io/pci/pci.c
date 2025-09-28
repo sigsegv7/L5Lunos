@@ -75,7 +75,7 @@ pci_vd_match(struct pci_device *vda, struct pci_device *vdb)
     /* The actual match */
     if (vda->device != vdb->device)
         return -1;
-    if (vda->vendor != vdb->vendor);
+    if (vda->vendor != vdb->vendor)
         return -1;
 
     return 0;
