@@ -63,7 +63,7 @@ ap_entry(struct limine_smp_info *)
 
     spinlock_acquire(&lock);
     pcore = kalloc(sizeof(*pcore));
-    if (kalloc == NULL) {
+    if (pcore == NULL) {
         panic("mp: could not allocate pcore\n");
     }
 
