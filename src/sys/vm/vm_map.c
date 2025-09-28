@@ -44,6 +44,7 @@ static int
 __vm_map(struct vm_vas *vas, struct mmu_map *spec, size_t len, int prot)
 {
     const size_t PSIZE = DEFAULT_PAGESIZE;
+    struct mmu_map tmp_spec;
     vaddr_t va_cur, va_end;
     vaddr_t va_start;
     int error;
@@ -74,8 +75,8 @@ __vm_map(struct vm_vas *vas, struct mmu_map *spec, size_t len, int prot)
     }
 
     /* Must be on a 4K boundary */
-    spec->va = ALIGN_DOWN(spec->va, PSIZE);
-    spec->pa = ALIGN_DOWN(spec->pa, PSIZE);
+    tmp_spec.va = ALIGN_DOWN(spec->va, PSIZE);
+    tmp_spec.pa = ALIGN_DOWN(spec->pa, PSIZE);
 
     /*
      * start: always the mapping base
@@ -87,14 +88,14 @@ __vm_map(struct vm_vas *vas, struct mmu_map *spec, size_t len, int prot)
     va_end = spec->va + len;
 
     while (va_cur < va_end) {
-        error = mmu_map_single(vas, spec, prot);
+        error = mmu_map_single(vas, &tmp_spec, prot);
         if (error < 0) {
             return spec->va;
         }
 
         va_cur += PSIZE;
-        spec->va += PSIZE;
-        spec->pa += PSIZE;
+        tmp_spec.va += PSIZE;
+        tmp_spec.pa += PSIZE;
     }
 
     return 0;
