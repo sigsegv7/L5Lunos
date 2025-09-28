@@ -10,9 +10,10 @@ ISO = lunos.iso
 
 # Build tools
 BINUTILS_DIR := $(shell pwd)/cc/toolchain/build-binutils
-CC := $(shell pwd)/cc/gcc/bin/x86_64-pc-ethos-gcc
-LD := $(BINUTILS_DIR)/bin/x86_64-pc-ethos-ld
-AS := $(BINUTILS_DIR)/bin/x86_64-pc-ethos-as
+CC := clang
+LD := ld
+AS := as
+SYS_LD_FLAGS := -Tsys/arch/$(TARGET)/conf/sys.ld
 
 # QEMU emulator flags
 QEMU_FLAGS = --enable-kvm -serial stdio -cdrom $(ISO) \
@@ -24,7 +25,6 @@ all: root lib user sys image
 .PHONY: sys
 sys:
 	cd sys/; make CC=$(CC) AS=$(AS) LD=$(LD) TARGET=$(TARGET) TOOLS=$(shell pwd)/tools
-	cp $(KBIN) root/boot/
 
 .PHONY: user
 user:
@@ -46,6 +46,9 @@ root:
 
 .PHONY: sysroot
 image:
+	$(LD) $(shell find sys/ -name "*.o")  \
+		-o $(KBIN) $(SYS_LD_FLAGS)
+	cp $(KBIN) root/boot/
 	mkdir -p iso_root/boot/
 	cp data/boot/limine.conf $(SHIMDIR)/limine/limine-bios.sys \
         $(SHIMDIR)/limine/limine-bios-cd.bin $(SHIMDIR)/limine/limine-uefi-cd.bin iso_root/

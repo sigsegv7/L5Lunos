@@ -4,8 +4,8 @@ include ../conf/sys.mk
 override PROMPT := printf "%s\t\t%s\n"
 
 CONF := $(shell cat ../conf/GENERIC | $(TOOLS)/kconf/kconf)
-TARGET_LIB = ../target/libkern.a
-CFLAGS = -I../include/ -I../include/lib/ -I../target/header/ $(MI_CFLAGS) -O0 $(CONF)
+CFLAGS = -I../include/ -I../include/lib/ -I../target/header/ $(MI_CFLAGS) -O0 $(CONF) \
+		 -target x86_64-elf
 CFILES = $(shell find . -name "*.c")
 CFILES += $(shell find ../vm -name "*.c")
 CFILES += $(shell find ../lib -name "*.c")
@@ -20,7 +20,6 @@ OBJECTS = $(CFILES:%.c=%.o)
 .PHONY: all
 all: $(OBJECTS)
 	$(PROMPT) " MI.AR " $<
-	ar rcs $(TARGET_LIB) $(OBJECTS)
 
 -include $(DEPS)
 %.o: %.c

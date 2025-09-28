@@ -12,4 +12,5 @@ override MI_CFLAGS = -fexceptions --std=gnu11 -ffreestanding -fno-stack-protecto
 	-Werror=incompatible-pointer-types -Werror=int-to-pointer-cast \
 	-Werror=return-type -mno-red-zone -mcmodel=kernel \
 	-D_KERNEL -Wno-pointer-sign -MMD -nostdinc \
-    -Wno-format-pedantic -Wno-attributes -D_KERNEL $(MD_CFLAGS)
+    -Wno-format-pedantic -Wno-attributes -D_KERNEL $(MD_CFLAGS) -O0 \
+	-Wno-switch -Wno-c23-extensions
