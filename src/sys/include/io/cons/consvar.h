@@ -27,7 +27,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _CONS_CONVAR_H_
+#ifndef _CONS_CONSVAR_H_
 #define _CONS_CONSVAR_H_
 
 #include <sys/types.h>
