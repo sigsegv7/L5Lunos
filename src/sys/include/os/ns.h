@@ -31,8 +31,8 @@
 #define _OS_NS_H_
 
 #include <sys/types.h>
+#include <os/nsvar.h>
 
-struct ns_obj;
 typedef uint8_t ns_t;
 
 /*
