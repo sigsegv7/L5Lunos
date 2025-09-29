@@ -27,36 +27,15 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STRING_H
-#define _STRING_H 1
-
+#include <string.h>
 #include <stddef.h>
 
-/*
- * Get the length of a string
- *
- * @s: String to get length of
- */
-size_t strlen(const char *s);
+void *
+memcpy(void *dest, const void *src, size_t n)
+{
+    for (size_t i = 0; i < n; ++i) {
+        ((char *)dest)[i] = ((char *)src)[i];
+    }
 
-/*
- * Get the length of a string with a maximum
- * length
- *
- * @s: String to check length of
- * @maxlen: Max length of string to check
- */
-size_t strnlen(const char *s, size_t maxlen);
-
-/*
- * Copy variable amount of bytes from 'src' to 'dest'
- *
- * @dest: Copy destination
- * @src: Copy source
- * @n: Number of bytes to copy
- *
- * Returns 'dest' on success
- */
-void *memcpy(void *dest, const void *src, size_t n);
-
-#endif  /* _STRING_H */
+    return dest;
+}
