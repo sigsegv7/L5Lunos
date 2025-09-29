@@ -27,54 +27,26 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _LIB_STRING_H
-#define _LIB_STRING_H 1
-
 #include <sys/types.h>
-#include <sys/cdefs.h>
-#include <stdarg.h>
+#include <os/kalloc.h>
+#include <string.h>
 
-#ifndef _HAVE_SIZE_T
-#define _HAVE_SIZE_T
-typedef __size_t size_t;
-#endif  /* _HAVE_SIZE_T */
+char *
+strdup(const char *s)
+{
+    size_t len;
+    char *new_str = NULL;
 
-#ifndef _HAVE_INT64_T
-#define _HAVE_INT64_T
-typedef __int64_t int64_t;
-#endif  /* _HAVE_INT64_T */
+    if (s == NULL) {
+        return NULL;
+    }
 
-__BEGIN_DECLS
-size_t strlen(const char *s);
-void *memset(void *s, int c, size_t n);
-void *memcpy(void *dest, const void *src, size_t n);
-int strncmp(const char *s1, const char *s2, size_t n);
-int memcmp(const void *s1, const void *s2, size_t n);
-int strcmp(const char *s1, const char *s2);
-int atoi(char *s);
+    len = strlen(s);
+    new_str = kalloc(len + 1);
+    if (new_str == NULL) {
+        return NULL;
+    }
 
-/* XXX: Maybe move to stdio.h? */
-int vsnprintf(char *s, size_t size, const char *fmt, va_list ap);
-int snprintf(char *s, size_t size, const char *fmt, ...);
-
-/*
- * E0 specific string routine
- *
- * Convert base<n> value to string
- *
- * @value: Value to convert
- * @buf: Buffer to store string
- * @base: Radix to convert to
- */
-char *itoa(int64_t value, char *buf, int base);
-
-/*
- * Duplicate a string onto heap
- *
- * @s: String to duplicate
- */
-char *strdup(const char *s);
-
-__END_DECLS
-
-#endif  /* !_LIB_STRING_H */
+    memcpy(new_str, s, len + 1);
+    return new_str;
+}
