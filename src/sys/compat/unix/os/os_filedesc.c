@@ -28,7 +28,9 @@
  */
 
 #include <sys/syscall.h>
+#include <sys/errno.h>
 #include <sys/types.h>
+#include <os/systm.h>
 #include <os/filedesc.h>
 #include <compat/unix/syscall.h>
 
@@ -45,8 +47,16 @@ scret_t
 sys_write(struct syscall_args *scargs)
 {
     int fd = SCARG(scargs, int, 0);
+    int error;
     const void *buf = SCARG(scargs, const void *, 1);
     size_t count = SCARG(scargs, size_t, 2);
+    char kbuf[1024];
 
-    return write(fd, buf, count);
+    error = copyin(buf, kbuf, MIN(count, sizeof(kbuf)));
+    if (error < 0) {
+        printf("sys_write: copyin() bad pointer\n");
+        return -EFAULT;
+    }
+
+    return write(fd, kbuf, count);
 }
