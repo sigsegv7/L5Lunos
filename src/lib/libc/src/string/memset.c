@@ -27,47 +27,18 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STRING_H
-#define _STRING_H 1
+#include <string.h>
 
-#include <stddef.h>
+void *
+memset(void *s, int c, size_t n)
+{
+    if (s == NULL) {
+        return NULL;
+    }
 
-/*
- * Get the length of a string
- *
- * @s: String to get length of
- */
-size_t strlen(const char *s);
+    for (size_t i = 0; i < n; ++i) {
+        ((char *)s)[i] = c;
+    }
 
-/*
- * Get the length of a string with a maximum
- * length
- *
- * @s: String to check length of
- * @maxlen: Max length of string to check
- */
-size_t strnlen(const char *s, size_t maxlen);
-
-/*
- * Copy variable amount of bytes from 'src' to 'dest'
- *
- * @dest: Copy destination
- * @src: Copy source
- * @n: Number of bytes to copy
- *
- * Returns 'dest' on success
- */
-void *memcpy(void *dest, const void *src, size_t n);
-
-/*
- * Fill 'n' bytes of memory with 'c'
- *
- * @s: Memory to fill
- * @c: Byte to fill memory with
- * @n: Number of bytes to fill
- *
- * Returns a pointer to 's'
- */
-void *memset(void *s, int c, size_t n);
-
-#endif  /* _STRING_H */
+    return s;
+}
