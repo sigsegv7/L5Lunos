@@ -37,7 +37,6 @@
  *
  * @read: Read callack of this object
  * @data: Data this object references
- * @len: Length of the underlying data
  * @refcount: Reference count to keep track
  *
  * XXX: 'data' is optional and can be NULL. if such is the case,
@@ -46,7 +45,6 @@
 struct ns_obj {
     ssize_t(*read)(struct ns_obj *nsop, void *buf, size_t len);
     void *data;
-    const size_t len;
     int refcount;
 };
 
