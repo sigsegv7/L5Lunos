@@ -160,6 +160,7 @@ ns_obj_lookup(ns_t ns, const char *name, void *res_p)
 {
     uint32_t hash, key;
     struct ns_hashmap *hm;
+    struct ns_obj *obj;
     struct hashmap_entry *entry;
 
     if (name == NULL || res_p == NULL) {
@@ -179,7 +180,12 @@ ns_obj_lookup(ns_t ns, const char *name, void *res_p)
         }
 
         if (strcmp(entry->name, name) == 0) {
-            *((void **)res_p) = entry->data;
+            if ((obj = entry->data) == NULL)
+                continue;
+            if (obj->data == NULL)
+                continue;
+
+            *((void **)res_p) = obj->data;
             return 0;
         }
 
