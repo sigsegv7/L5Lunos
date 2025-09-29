@@ -2,7 +2,9 @@ include ../../data/build/user.mk
 
 CFILES = $(shell find . -name "*.c")
 CFILES = $(shell find . -name "*.c")
-CFLAGS = -L$(LIBC_DIR) -lc $(INTERNAL_CFLAGS)
+CFLAGS = -L$(LIBC_DIR) -lc $(INTERNAL_CFLAGS) \
+		 -L../../lib/libwidget -lwidget -L../../lib/libc/ -lc \
+		 -I../../lib/libwidget/include/
 OBJECTS = $(CFILES:%.c=%.o)
 
 $(SYSROOT)/usr/bin/init: $(OBJECTS)
