@@ -27,71 +27,62 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <sys/cdefs.h>
-#include <sys/panic.h>
-#include <sys/sysvar.h>
-#include <sys/syslog.h>
-#include <sys/proc.h>
-#include <sys/cpuvar.h>
-#include <os/sched.h>
-#include <os/elfload.h>
-#include <os/vfs.h>
-#include <os/nsvar.h>
-#include <os/module.h>
-#include <acpi/acpi.h>
-#include <io/cons/cons.h>
-#include <vm/vm.h>
-#include <logo.h>
+#ifndef _OS_NS_H_
+#define _OS_NS_H_
 
-struct pcore g_bsp;
-struct proc g_rootproc;
+#include <sys/types.h>
 
-static void
-boot_print(void)
-{
-    printf("%s\n", g_LOGO);
-    printf("Copyright (c) 2025 Ian Marco Moffett, et al\n");
-    printf("booting l5 lunos %s...\n", _L5_VERSION);
-}
+struct ns_obj;
+typedef uint8_t ns_t;
 
 /*
- * Kernel entrypoint
+ * Initializes an object into a known state so that
+ * further operations can be performed
+ *
+ * @nsop: Newly created object to be initialized
+ *
+ * Returns a value of zero on success, otherwise a less
+ * than zero value upon failure.
  */
-__dead void
-main(void)
-{
-    struct loaded_elf elf;
-    struct pcore *core;
-    int error;
+int ns_obj_init(struct ns_obj *nsop);
 
-    cons_init();
-    syslog_toggle(true);
-    boot_print();
+/*
+ * Place an object into the namespace
+ *
+ * @ns: ID of the namespace to enter object
+ * @obj: Object that we want to enter
+ * @name: Name of the object
+ *
+ * Returns zero on success, otherwise a less than
+ * zero value on failure
+ */
+int ns_obj_enter(ns_t ns, void *obj, const char *name);
 
-    acpi_early_init();
-    cpu_conf(&g_bsp);
-    vm_init();
+/*
+ * Find an object within a namespace
+ *
+ * @ns: ID of namespace to lookup
+ * @name: Name of object we want to find
+ * @res_p: Pointer of result pointer to store
+ *
+ * Returns zero on success, otherwise a less than
+ * zero value on failure.
+ */
+int ns_obj_lookup(ns_t ns, const char *name, void *res_p);
 
-    cpu_init(&g_bsp);
-    bsp_ap_startup();
-    vfs_init();
+/*
+ * Unifies the buffer / callback interface into a single
+ * function, used to read an object's data into a buffer
+ * by length.
+ *
+ * @nsop: Object to read from
+ * @buf: Buffer to read into
+ * @off: Offset to read at
+ * @len: Length of bytes to read
+ *
+ * Returns the length of the data read on success, otherwise
+ * a less than zero value upon failure.
+ */
+ssize_t ns_obj_read(struct ns_obj *nsop, void *buf, off_t off, size_t len);
 
-    /* Initialize generic modules */
-    __MODULES_INIT(MODTYPE_GENERIC);
-
-    sched_init();
-    core = this_core();
-    proc_init(&g_rootproc, 0);
-    core->curproc = &g_rootproc;
-
-    error = elf_load("/usr/bin/init", &g_rootproc, &elf);
-    if (error < 0) {
-        panic("could not load init\n");
-    }
-
-    ns_init();
-    md_set_ip(&g_rootproc, elf.entrypoint);
-    md_proc_kick(&g_rootproc);
-    panic("end of kernel reached\n");
-    for (;;);
-}
+#endif  /* !_OS_NS_H_ */
