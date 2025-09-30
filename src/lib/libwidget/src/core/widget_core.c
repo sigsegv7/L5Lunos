@@ -99,7 +99,8 @@ widget_init(struct widget *wp, widget_type_t type, struct blueprint *bp)
     /* Get the backend and call init */
     backend = &backends[type];
     ops = backend->ops;
-    return ops->init(wp);
+    wp->ops = ops;
+    return ops->init(&lws, wp);
 }
 
 int
