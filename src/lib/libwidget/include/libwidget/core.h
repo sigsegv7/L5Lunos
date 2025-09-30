@@ -58,11 +58,15 @@ struct bp_color {
  *
  * @x: Cartesian X position
  * @y: Cartesian Y position
+ * @width: Widget width
+ * @height: Widget height
  * @color: Color blueprint
  */
 struct blueprint {
     uint32_t x;
     uint32_t y;
+    uint32_t width;
+    uint32_t height;
     struct bp_color color;
 };
 
@@ -94,6 +98,16 @@ struct widget {
     uint16_t leaf_count;
     void *data;
 };
+
+/*
+ * Initialize the library
+ *
+ * @lwsp: Libwidget state pointer
+ *
+ * Returns zero on success, otherwise a less than zero
+ * value on failure.
+ */
+int libwidget_init(struct libwidget_state *lwsp);
 
 /*
  * Initialize a widget

@@ -64,6 +64,10 @@ widget_init(struct widget *wp, widget_type_t type, struct blueprint *bp)
     color->bg = 0x282828;
     color->fg = 0xA89984;
 
+    /* Default height */
+    bp_dest->width = 50;
+    bp_dest->height = 50;
+
     if (bp != NULL) {
         bp_dest->x = bp->x;
         bp_dest->y = bp->y;
