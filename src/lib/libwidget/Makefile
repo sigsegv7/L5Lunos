@@ -1,6 +1,6 @@
 CFILES = $(shell find src/ -name "*.c")
 OBJECTS = $(CFILES:.c=.o)
-CFLAGS = -pedantic -Iinclude/ -L../libc/ -lc
+CFLAGS = -pedantic -Iinclude/ -I../libc/include/ -L../libc/ -lc
 CC = gcc
 LIB_OUT = libwidget.a
 
