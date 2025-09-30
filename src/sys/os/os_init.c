@@ -75,6 +75,7 @@ main(void)
     cpu_init(&g_bsp);
     bsp_ap_startup();
     vfs_init();
+    ns_init();
 
     /* Initialize generic modules */
     __MODULES_INIT(MODTYPE_GENERIC);
@@ -89,7 +90,6 @@ main(void)
         panic("could not load init\n");
     }
 
-    ns_init();
     md_set_ip(&g_rootproc, elf.entrypoint);
     md_proc_kick(&g_rootproc);
     panic("end of kernel reached\n");
