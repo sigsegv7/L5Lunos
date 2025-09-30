@@ -81,6 +81,9 @@ struct mac_ops {
 /*
  * A MAC border sits inbetween a resource and the user
  * and controls if they can access it or not.
+ *
+ * @level: MAC level of this border
+ * @ops: MAC operations for this border
  */
 struct mac_border {
     mac_level_t level;
