@@ -39,6 +39,7 @@
 #include <io/video/fbdev.h>
 #include <vm/map.h>
 #include <vm/mmu.h>
+#include <string.h>
 
 static struct fb_info info;
 
@@ -88,6 +89,14 @@ fbdev_map(struct mac_border *mbp, struct mac_map_args *args)
 }
 
 static int
+fbdev_getattr(struct mac_border *mbp, void *p, size_t len)
+{
+    len = MIN(len, sizeof(struct fb_info));
+    memcpy(p, &info, len);
+    return 0;
+}
+
+static int
 fbdev_init(struct module *modp)
 {
     struct bootvar_fb *fbvar;
@@ -123,7 +132,7 @@ fbdev_init(struct module *modp)
 static struct mac_ops ops = {
     .map = fbdev_map,
     .sync = NULL,
-    .getattr = NULL
+    .getattr = fbdev_getattr
 };
 
 struct mac_border g_fbdev_border = {

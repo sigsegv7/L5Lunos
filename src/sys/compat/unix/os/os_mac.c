@@ -65,3 +65,47 @@ sys_cross(struct syscall_args *scargs)
 
     return mac_map(bop, off, len, res, flags);
 }
+
+/*
+ * ARG0: Border ID (BORDER_*)
+ * ARG1: Data
+ * ARG2: Data length
+ * ARG3: Optional flags
+ *
+ * Returns int (0 on success)
+ */
+scret_t
+sys_query(struct syscall_args *scargs)
+{
+    border_id_t bd = SCARG(scargs, border_id_t, 0);
+    void *u_data = SCARG(scargs, void *, 1);
+    size_t u_datalen = SCARG(scargs, size_t, 2);
+    int flags = SCARG(scargs, int, 3);
+    struct mac_border *bop;
+    struct mac_ops *ops;
+    struct proc *self = proc_self();
+    int error;
+
+    bop = mac_get_border(bd);
+    if (bop == NULL) {
+        return -EIO;
+    }
+
+    /* Can we even touch this? */
+    error = mac_check_creds(self, bop);
+    if (error < 0) {
+        return error;
+    }
+
+    error = proc_check_addr(self, (uintptr_t)u_data, u_datalen);
+    if (error < 0) {
+        return error;
+    }
+
+    /* We need the operations vector */
+    if ((ops = bop->ops) == NULL) {
+        return -EIO;
+    }
+
+    return ops->getattr(bop, u_data, u_datalen);
+}

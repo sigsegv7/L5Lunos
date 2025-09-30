@@ -61,5 +61,15 @@ ssize_t cross(
     int flags, void *res
 );
 
+/*
+ * Query a resource border
+ *
+ * @id: Border ID
+ * @buf: Buffer to store data
+ * @len: Length of buffer
+ * @flags: Optional flags
+ */
+int query(border_id_t id, void *buf, size_t len, int flags);
+
 #endif  /* _KERNEL */
 #endif  /* !_SYS_MAC_H_ */

@@ -49,12 +49,18 @@ scret_t sys_write(struct syscall_args *scargs);
  */
 scret_t sys_cross(struct syscall_args *scargs);
 
+/*
+ * Query a syscall border - L5 mandatory
+ */
+scret_t sys_query(struct syscall_args *scargs);
+
 #ifdef _NEED_UNIX_SCTAB
 scret_t(*g_unix_sctab[])(struct syscall_args *) = {
     [SYS_none]   = NULL,
     [SYS_exit]   = sys_exit,
     [SYS_write]  = sys_write,
-    [SYS_cross]  = sys_cross
+    [SYS_cross]  = sys_cross,
+    [SYS_query]  = sys_query
 };
 
 #endif  /* !_NEED_UNIX_SCTAB */

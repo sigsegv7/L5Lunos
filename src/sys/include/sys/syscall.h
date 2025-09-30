@@ -47,6 +47,7 @@
 #define SYS_write       0x02
 #define SYS_cross       0x03    /* cross a border (mandatory) */
 #define SYS_sigaction   0x04
+#define SYS_query       0x05    /* query a border (mandatory) */
 
 typedef __ssize_t scret_t;
 typedef __ssize_t scarg_t;
