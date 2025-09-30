@@ -35,6 +35,10 @@
 /* Forward declarations */
 struct widget;
 
+struct libwidget_state {
+    uint32_t *fbdev;
+};
+
 typedef enum {
     WIDGET_WINDOW,
     MAX_WIDGETS

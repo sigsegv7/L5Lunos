@@ -31,10 +31,32 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <string.h>
+#include <sys/mac.h>
 #include <libwidget/window.h>
 #include <libwidget/core.h>
 
 static struct widget backends[];
+
+/*
+ * Initialize lib widget
+ */
+int
+libwidget_init(struct libwidget_state *lwsp)
+{
+    int error;
+
+    if (lwsp == NULL) {
+        return -EINVAL;
+    }
+
+    /* Grab the whole framebuffer, directly mapped */
+    error = cross(BORDER_FBDEV, -1, 0, 0, &lwsp->fbdev);
+    if (error < 0) {
+        return error;
+    }
+
+    return 0;
+}
 
 /*
  * Put the widget into a known state
