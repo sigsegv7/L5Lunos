@@ -28,12 +28,19 @@
  */
 
 #include <sys/bootvars.h>
+#include <sys/errno.h>
 #include <sys/proc.h>
 #include <sys/mman.h>
 #include <sys/types.h>
+#include <sys/fbdev.h>
+#include <os/kalloc.h>
+#include <os/module.h>
+#include <os/ns.h>
 #include <io/video/fbdev.h>
 #include <vm/map.h>
 #include <vm/mmu.h>
+
+static struct fb_info info;
 
 /*
  * Map the framebuffer, we'll decided how many bytes
@@ -80,6 +87,39 @@ fbdev_map(struct mac_border *mbp, struct mac_map_args *args)
     return args->len;
 }
 
+static int
+fbdev_init(struct module *modp)
+{
+    struct bootvar_fb *fbvar;
+    struct bootvars bv;
+    struct ns_obj *obj;
+    int error;
+
+    obj = kalloc(sizeof(*obj));
+    if (obj == NULL) {
+        return -EINVAL;
+    }
+
+    /* Grab the bootvars */
+    error = bootvars_read(&bv, 0);
+    if (error < 0) {
+        return error;
+    }
+
+    fbvar = &bv.fbvars;
+    info.width = fbvar->width;
+    info.height = fbvar->height;
+    info.pitch = fbvar->pitch;
+
+    /* Initialize the object */
+    if ((error = ns_obj_init(obj)) < 0) {
+        return error;
+    }
+
+    obj->data = &info;
+    return ns_obj_enter(0, obj, FBDEV_NSO);
+}
+
 static struct mac_ops ops = {
     .map = fbdev_map,
     .sync = NULL,
@@ -90,3 +130,5 @@ struct mac_border g_fbdev_border = {
     .level = MAC_RESTRICTED,
     .ops = &ops
 };
+
+MODULE_EXPORT("fbdev", MODTYPE_GENERIC, fbdev_init);
