@@ -32,25 +32,29 @@
 #include <stddef.h>
 #include <string.h>
 #include <sys/mac.h>
+#include <sys/fbdev.h>
 #include <libwidget/window.h>
 #include <libwidget/core.h>
 
 static struct widget backends[];
+static struct libwidget_state lws;
 
 /*
  * Initialize lib widget
  */
 int
-libwidget_init(struct libwidget_state *lwsp)
+libwidget_init(void)
 {
     int error;
 
-    if (lwsp == NULL) {
-        return -EINVAL;
+    /* Grab framebuffer information */
+    error = query(BORDER_FBDEV, &lws.fbinfo, sizeof(lws.fbinfo), 0);
+    if (error < 0) {
+        return error;
     }
 
     /* Grab the whole framebuffer, directly mapped */
-    error = cross(BORDER_FBDEV, -1, 0, 0, &lwsp->fbdev);
+    error = cross(BORDER_FBDEV, -1, 0, 0, &lws.fbdev);
     if (error < 0) {
         return error;
     }
@@ -109,7 +113,7 @@ widget_update(struct widget *wp)
     struct widget_ops *ops;
 
     ops = wp->ops;
-    return ops->draw(wp);
+    return ops->draw(&lws, wp);
 }
 
 static struct widget backends[] = {

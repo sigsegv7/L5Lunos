@@ -30,12 +30,14 @@
 #ifndef LIBWIDGET_CORE_H
 #define LIBWIDGET_CORE_H 1
 
+#include <sys/fbdev.h>
 #include <stdint.h>
 
 /* Forward declarations */
 struct widget;
 
 struct libwidget_state {
+    struct fb_info fbinfo;
     uint32_t *fbdev;
 };
 
@@ -82,8 +84,8 @@ struct blueprint {
  * @draw: Draw the widget
  */
 struct widget_ops {
-    int(*init)(struct widget *wp);
-    int(*draw)(struct widget *wp);
+    int(*init)(struct libwidget_state *lws, struct widget *wp);
+    int(*draw)(struct libwidget_state *lws, struct widget *wp);
 };
 
 /*
@@ -106,12 +108,10 @@ struct widget {
 /*
  * Initialize the library
  *
- * @lwsp: Libwidget state pointer
- *
  * Returns zero on success, otherwise a less than zero
  * value on failure.
  */
-int libwidget_init(struct libwidget_state *lwsp);
+int libwidget_init(void);
 
 /*
  * Initialize a widget

@@ -45,7 +45,7 @@ static uint8_t next_window = 0;
  *       and using a window array, change this when we can
  */
 static int
-window_init(struct widget *wp)
+window_init(struct libwidget_state *lws, struct widget *wp)
 {
     struct window *win;
 
@@ -59,10 +59,29 @@ window_init(struct widget *wp)
 }
 
 static int
-window_draw(struct widget *wp)
+window_draw(struct libwidget_state *lws, struct widget *wp)
 {
-    if (wp == NULL) {
+    struct fb_info *fbinfo;
+    struct blueprint *bp;
+    const struct bp_color *color;
+    uint32_t x, y, idx;
+
+    if (lws == NULL || wp == NULL) {
         return -EINVAL;
+    }
+
+    bp = &wp->bp;
+    color = &bp->color;
+    fbinfo = &lws->fbinfo;
+
+    /* Draw a square */
+    for (uint32_t cy = 0; cy < bp->height; ++cy) {
+        for (uint32_t cx = 0; cx < bp->width; ++cx) {
+            x = bp->x + cx;
+            y = bp->y + cy;
+            idx = get_pix_index(&lws->fbinfo, x, y);
+            lws->fbdev[idx] = color->bg;
+        }
     }
 
     return 0;

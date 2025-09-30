@@ -30,6 +30,7 @@
 #ifndef LIBWIDGET_WINDOW_H
 #define LIBWIDGET_WINDOW_H
 
+#include <sys/cdefs.h>
 #include <libwidget/core.h>
 
 /*
@@ -40,6 +41,12 @@
 struct window {
     struct widget *wp;
 };
+
+__always_inline static inline size_t
+get_pix_index(struct fb_info *info, uint32_t x, uint32_t y)
+{
+    return x + y * (info->pitch / 4);
+}
 
 extern struct widget_ops g_winops;
 
