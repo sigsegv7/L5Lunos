@@ -143,6 +143,7 @@ ns_obj_enter(ns_t ns, void *obj, const char *name)
         if (entry->data == NULL) {
             entry->data = obj;
             entry->name = strdup(name);
+            ++hm->entry_count;
             return 0;
         }
 
