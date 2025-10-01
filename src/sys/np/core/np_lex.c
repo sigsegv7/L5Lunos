@@ -281,6 +281,12 @@ lex_nom(struct np_work *work, struct lex_token *res)
     case '=':
         res->token = TT_EQUALS;
         break;
+    case '[':
+        res->token = TT_LBRACK;
+        break;
+    case ']':
+        res->token = TT_RBRACK;
+        break;
     default:
         if (is_num(c)) {
             lex_nomnum(work, c, res);

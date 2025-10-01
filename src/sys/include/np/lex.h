@@ -59,6 +59,8 @@ typedef enum {
     TT_EQUALS,          /* '=' */
     TT_GT,              /* '>' */
     TT_LT,              /* '<' */
+    TT_LBRACK,          /* '[' */
+    TT_RBRACK,          /* ']' */
 
     /* Types */
     TT_U8,              /* 'u8' */
