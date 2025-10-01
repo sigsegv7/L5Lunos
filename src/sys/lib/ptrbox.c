@@ -116,3 +116,27 @@ ptrbox_init(struct ptrbox **box_res)
     *box_res = box;
     return 0;
 }
+
+/*
+ * String duplication
+ */
+char *
+ptrbox_strdup(const char *s, struct ptrbox *box)
+{
+    size_t len;
+    char *s_new;
+
+    if (s == NULL || box == NULL) {
+        return NULL;
+    }
+
+    len = strlen(s);
+    s_new = ptrbox_alloc(len + 1, box);
+    if (s_new == NULL) {
+        return NULL;
+    }
+
+    memcpy(s_new, s, len);
+    s_new[len] = '\0';
+    return s_new;
+}

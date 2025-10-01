@@ -96,4 +96,16 @@ int ptrbox_terminate(struct ptrbox *box);
  */
 void *ptrbox_alloc(size_t len, struct ptrbox *box);
 
+/*
+ * Duplicate a string and store it in a
+ * pointer box
+ *
+ * @s: String to duplicate
+ * @box: Box to do tracking
+ *
+ * Returns new heap string on success, otherwise NULL
+ * on failure
+ */
+char *ptrbox_strdup(const char *s, struct ptrbox *box);
+
 #endif  /* !_PTRBOX_H_ */
