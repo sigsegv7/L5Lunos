@@ -62,6 +62,9 @@ static const char *stoktab[] = {
 
     /* Types */
     [TT_U8]     = "<TT_U8>",
+    [TT_U16]    = "<TT_U16>",
+    [TT_U32]    = "<TT_U32>",
+    [TT_U64]    = "<TT_U64>",
 
     /* Values */
     [TT_NUMBER] = "<TT_NUMBER>",

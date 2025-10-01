@@ -81,6 +81,37 @@ lex_pop(struct np_work *work)
 }
 
 /*
+ * Compare a token with existing integer types (used internally)
+ */
+static void
+lex_cmp_itype(const char *tokstr, struct lex_token *res)
+{
+    switch (*tokstr) {
+    case 'u':
+        if (strcmp(tokstr, TOKEN_U8) == 0) {
+            res->token = TT_U8;
+            break;
+        }
+
+        if (strcmp(tokstr, TOKEN_U16) == 0) {
+            res->token = TT_U16;
+            break;
+        }
+
+        if (strcmp(tokstr, TOKEN_U32) == 0) {
+            res->token = TT_U32;
+            break;
+        }
+
+        if (strcmp(tokstr, TOKEN_U64) == 0) {
+            res->token = TT_U64;
+            break;
+        }
+        break;
+    }
+}
+
+/*
  * Compare a token with existing tokens (used internally)
  */
 static int
@@ -103,9 +134,8 @@ lex_cmptok(char *tokstr, struct lex_token *res)
         }
         return 0;
     case 'u':
-        if (strcmp(tokstr, TOKEN_U8) == 0) {
-            res->token = TT_U8;
-        }
+    case 'i':
+        lex_cmp_itype(tokstr, res);
         return 0;
     }
 
