@@ -56,6 +56,9 @@ static const char *stoktab[] = {
     /* Types */
     [TT_U8]     = "<TT_U8>",
 
+    /* Values */
+    [TT_NUMBER] = "<TT_NUMBER>",
+
     /* Keywords */
     [TT_BEGIN]  = "<TT_BEGIN>",
     [TT_PROC]   = "<TT_PROC>",
@@ -79,11 +82,17 @@ parse_work(struct np_work *work)
             return error;
         }
 
+        /* Don't overflow the table */
         if (tok.token > NELEM(stoktab)) {
             pr_error("bad token %d\n", tok.token);
             return -1;
         }
+
+        /* Log the token */
         printf("tok.type: %s\n", stoktab[tok.token]);
+        if (tok.token == TT_NUMBER) {
+            printf("tok.val: %d\n", tok.val);
+        }
     }
 
     return 0;

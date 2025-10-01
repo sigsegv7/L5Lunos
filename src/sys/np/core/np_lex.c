@@ -215,6 +215,32 @@ lex_cmpop(struct np_work *work, char c, struct lex_token *res)
 }
 
 /*
+ * Parse a number and get a token value
+ *
+ * @work: Input work
+ * @c: First character [digit]
+ * @res: Result
+ */
+static int
+lex_nomnum(struct np_work *work, char c, struct lex_token *res)
+{
+    uint64_t num = 0;
+
+    if (work == NULL || res == NULL) {
+        return -EINVAL;
+    }
+
+    while (is_num(c)) {
+        num = num * 10 + (c - '0');
+        c = lex_pop(work);
+    }
+
+    res->token = TT_NUMBER;
+    res->val = num;
+    return 0;
+}
+
+/*
  * Nom a token
  */
 int
@@ -256,6 +282,11 @@ lex_nom(struct np_work *work, struct lex_token *res)
         res->token = TT_EQUALS;
         break;
     default:
+        if (is_num(c)) {
+            lex_nomnum(work, c, res);
+            break;
+        }
+
         if (lex_arithop(work, c, res) >= 0)
             break;
         if (lex_cmpop(work, c, res) >= 0)

@@ -63,19 +63,26 @@ typedef enum {
     /* Types */
     TT_U8,              /* 'u8' */
 
+    /* Values */
+    TT_NUMBER,          /* <numbers> */
+
     /* Keywords */
     TT_BEGIN,           /* 'begin' */
     TT_PROC,            /* 'proc' */
     TT_END,             /* 'end' */
 } tt_t;
 
+typedef uint64_t tokval_t;
+
 /*
  * Represents a lexer token
  *
  * @token: Token type
+ * @val: Integer value
  */
 struct lex_token {
     tt_t token;
+    tokval_t val;
 };
 
 /*
