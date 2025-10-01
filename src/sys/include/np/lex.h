@@ -31,7 +31,8 @@
 #define _NP_LEX_H_ 1
 
 #include <sys/types.h>
-#include <os/np.h>
+
+struct np_work;
 
 #define TOKEN_BEGIN "begin"
 #define TOKEN_PROC "proc"
