@@ -39,10 +39,12 @@ lib:
 root:
 	mkdir -p $(SYSROOT)/
 	mkdir -p $(SYSROOT)/boot/
+	mkdir -p $(SYSROOT)/boot/np/
 	mkdir -p $(SYSROOT)/usr/include/
 	mkdir -p $(SYSROOT)/usr/bin/
 	mkdir -p sys/target/header/
 	rsync -av sys/include/arch/$(TARGET)/ sys/target/header/machine/
+	rsync -av sys/np/sample/*.np $(SYSROOT)/boot/np/
 
 .PHONY: sysroot
 image:

@@ -27,26 +27,49 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _SYS_NAMEI_H_
-#define _SYS_NAMEI_H_ 1
+#include <sys/errno.h>
+#include <sys/namei.h>
+#include <sys/syslog.h>
+#include <os/omar.h>
+#include <os/np.h>
 
-#include <os/vnode.h>
+#define pr_trace(fmt, ...) printf("pirho: " fmt, ##__VA_ARGS__)
 
-/*
- * Represents namei data that can be used for
- * looking up files
- *
- * @path: Full path to lookup
- * @flags: Flags to use
- * @vp_res: Vnode result is written here
- */
-struct nameidata {
-    const char *path;
-    uint32_t flags;
-    struct vnode **vp_res;
-};
+int
+np_init(const char *in_path, struct np_work *workp)
+{
+    int error;
+    struct nameidata nd;
+    struct lex_token tok;
 
-#if defined(_KERNEL)
-int namei(struct nameidata *ndp);
-#endif  /* _KERNEL */
-#endif  /* !_SYS_NAMEI_H_ */
+    if (in_path == NULL || workp == NULL) {
+        return -EINVAL;
+    }
+
+    workp->line_no = 1;
+    workp->source_size = initrd_open(in_path, &workp->source);
+
+    if (workp->source_size < 0) {
+        pr_trace("failed to open '%s'\n", in_path);
+        return workp->source_size;
+    }
+
+    /* Initialize the lexer */
+    error = lex_init(&workp->lex_st, workp);
+    if (error < 0) {
+        pr_trace("failed to initialize lexer\n");
+        return error;
+    }
+
+    return 0;
+}
+
+int
+np_compile(struct np_work *work)
+{
+    if (work == NULL) {
+        return -EINVAL;
+    }
+
+    return 0;
+}

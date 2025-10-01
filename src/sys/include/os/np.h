@@ -27,26 +27,52 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _SYS_NAMEI_H_
-#define _SYS_NAMEI_H_ 1
+/*
+ * Description: Pirho compiler interface
+ * Author: Ian Marco Moffett
+ */
 
+#ifndef _OS_NP_H_
+#define _OS_NP_H_ 1
+
+#include <sys/types.h>
 #include <os/vnode.h>
+#include <np/lex.h>
 
 /*
- * Represents namei data that can be used for
- * looking up files
+ * Compiler work
  *
- * @path: Full path to lookup
- * @flags: Flags to use
- * @vp_res: Vnode result is written here
+ * @source: Source input file
+ * @source_size: Source size in bytes
+ * @line_no: Current line number
+ * @lex_st: Lexer state
  */
-struct nameidata {
-    const char *path;
-    uint32_t flags;
-    struct vnode **vp_res;
+struct np_work {
+    char *source;
+    size_t source_size;
+    size_t line_no;
+    struct lexer_state lex_st;
 };
 
-#if defined(_KERNEL)
-int namei(struct nameidata *ndp);
-#endif  /* _KERNEL */
-#endif  /* !_SYS_NAMEI_H_ */
+/*
+ * Initializes the compiler state into known values
+ *
+ * @in_path: Input file path of sources to be compiled
+ * @workp: Resulting work data is written here
+ *
+ * Returns zero on success, otherwise a less than zero
+ * value on failure.
+ */
+int np_init(const char *in_path, struct np_work *workp);
+
+/*
+ * Complete work by compiling the input file
+ *
+ * @work: Work that will be compiled
+ *
+ * Returns zero on success, otherwise a less than
+ * zero value on failure
+ */
+int np_compile(struct np_work *work);
+
+#endif /* _OS_NP_H_ */

@@ -27,26 +27,75 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _SYS_NAMEI_H_
-#define _SYS_NAMEI_H_ 1
+#ifndef _NP_LEX_H_
+#define _NP_LEX_H_ 1
 
-#include <os/vnode.h>
+#include <sys/types.h>
+#include <os/np.h>
+
+#define TOKEN_BEGIN "begin"
+#define TOKEN_PROC "proc"
+#define TOKEN_END "end"
 
 /*
- * Represents namei data that can be used for
- * looking up files
- *
- * @path: Full path to lookup
- * @flags: Flags to use
- * @vp_res: Vnode result is written here
+ * Represents the various token types that are
+ * possible
  */
-struct nameidata {
-    const char *path;
-    uint32_t flags;
-    struct vnode **vp_res;
+typedef enum {
+    /* Symbols */
+    TT_LPAREN,
+    TT_RPAREN,
+
+    /* Keywords */
+    TT_BEGIN,
+    TT_PROC,
+    TT_END,
+} tt_t;
+
+/*
+ * Represents a lexer token
+ *
+ * @token: Token type
+ */
+struct lex_token {
+    tt_t token;
 };
 
-#if defined(_KERNEL)
-int namei(struct nameidata *ndp);
-#endif  /* _KERNEL */
-#endif  /* !_SYS_NAMEI_H_ */
+/*
+ * Represents the lexer state machine
+ *
+ * @work: Current compiler work unit
+ * @tok: Current token
+ * @source_idx: Byte index into source stream
+ */
+struct lexer_state {
+    struct np_work *work;
+    struct lex_token tok;
+    size_t source_idx;
+};
+
+/*
+ * Initialize the lexer state machine into
+ * a known state
+ *
+ * @state: Lexer state machine to initialize
+ * @work: Work to initialize state machine with
+ *
+ * Returns zero on success, otherwise a less than
+ * zero value on failure
+ */
+int lex_init(struct lexer_state *state, struct np_work *work);
+
+/*
+ * "Nom" a token from the source input and advance
+ * to the next.
+ *
+ * @work: Current work
+ * @res: Result is written here
+ *
+ * Returns zero on success, otherwise a less than
+ * zero value on failure
+ */
+int lex_nom(struct np_work *work, struct lex_token *res);
+
+#endif  /* !_NP_LEX_H_ */

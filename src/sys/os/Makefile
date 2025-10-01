@@ -13,6 +13,7 @@ CFILES += $(shell find ../io -name "*.c")
 CFILES += $(shell find ../acpi -name "*.c")
 CFILES += $(shell find ../compat -name "*.c")
 CFILES += $(shell find ../fs -name "*.c")
+CFILES += $(shell find ../np -name "*.c")
 
 DEPS = $(CFILES:.c=.d)
 OBJECTS = $(CFILES:%.c=%.o)
