@@ -61,7 +61,14 @@ np_init(const char *in_path, struct np_work *workp)
         return error;
     }
 
+    error = ptrbox_init(&workp->work_mem);
+    if (error < 0) {
+        pr_trace("could not init ptrbox\n");
+        return error;
+    }
+
     parse_work(workp);
+    ptrbox_terminate(workp->work_mem);
     return 0;
 }
 

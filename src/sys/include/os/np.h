@@ -38,6 +38,7 @@
 #include <sys/types.h>
 #include <os/vnode.h>
 #include <np/lex.h>
+#include <lib/ptrbox.h>
 
 /*
  * Compiler work
@@ -53,6 +54,7 @@ struct np_work {
     size_t source_size;
     size_t line_no;
     struct lexer_state lex_st;
+    struct ptrbox *work_mem;
     char ccache;
 };
 
