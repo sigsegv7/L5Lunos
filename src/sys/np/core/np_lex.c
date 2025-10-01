@@ -35,6 +35,7 @@
 #include <string.h>
 
 #define pr_trace(fmt, ...) printf("pirho.lex: " fmt, ##__VA_ARGS__)
+#define pr_error(fmt, ...) printf("pirho.lex: error: " fmt, ##__VA_ARGS__)
 
 /* Max identifier length */
 #define MAX_ID_LEN 32
@@ -118,7 +119,7 @@ lex_matchstr(struct np_work *work, char c, struct lex_token *res)
     /* Grab the identifier */
     do {
         if (id_idx >= sizeof(id) - 1) {
-            pr_trace("error: identifier too long!\n");
+            pr_error("identifier too long!\n");
             return -1;
         }
         if (!is_alpha(c) && !is_num(c)) {
@@ -132,7 +133,7 @@ lex_matchstr(struct np_work *work, char c, struct lex_token *res)
     /* Match the tokens */
     error = lex_cmptok(id, res);
     if (error < 0) {
-        pr_trace("error: invalid indentifier '%s'\n", id);
+        pr_error("invalid indentifier '%s'\n", id);
     }
     return error;
 }
@@ -173,7 +174,7 @@ lex_nom(struct np_work *work, struct lex_token *res)
     default:
         /* Stuff like '1var_name' is invalid */
         if (!is_alpha(c)) {
-            pr_trace("error: unexpected token '%c'\n", c);
+            pr_error("unexpected token '%c'\n", c);
             return -1;
         }
 
@@ -182,7 +183,7 @@ lex_nom(struct np_work *work, struct lex_token *res)
             break;
         }
 
-        pr_trace("error: got bad token '%c'\n", c);
+        pr_error("got bad token '%c'\n", c);
         error = -1;
         break;
     }
