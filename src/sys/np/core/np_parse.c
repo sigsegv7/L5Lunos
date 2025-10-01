@@ -45,6 +45,7 @@ static const char *stoktab[] = {
     [TT_RPAREN] = "<TT_RPAREN>",
     [TT_IDENT]  = "<IDENTIFIER>",
     [TT_COMMA]  = "<TT_COMMA>",
+    [TT_STAR]   = "<TT_STAR>",
 
     /* Types */
     [TT_U8]     = "<TT_U8>",

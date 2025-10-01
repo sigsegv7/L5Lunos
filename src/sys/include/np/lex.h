@@ -52,6 +52,7 @@ typedef enum {
     TT_RPAREN,          /* ')' */
     TT_IDENT,           /* '<IDENTIFIER>' */
     TT_COMMA,           /* ',' */
+    TT_STAR,            /* '*' */
 
     /* Types */
     TT_U8,              /* 'u8' */

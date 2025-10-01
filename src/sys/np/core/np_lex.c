@@ -194,6 +194,9 @@ lex_nom(struct np_work *work, struct lex_token *res)
     case ',':
         res->token = TT_COMMA;
         break;
+    case '*':
+        res->token = TT_STAR;
+        break;
     default:
         /* Stuff like '1var_name' is invalid */
         if (!is_alpha(c)) {
