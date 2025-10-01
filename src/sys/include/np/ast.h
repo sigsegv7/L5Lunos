@@ -52,16 +52,26 @@ typedef enum {
 } ast_itype_t;
 
 /*
+ * AST node type
+ */
+typedef enum {
+    AT_BAD_OBJTYPE, /* Bad */
+    AST_PROC,       /* Procedure */
+} ast_type_t;
+
+/*
  * Represents an AST node
  *
  * @ident: Identifier
- * @token: Token type
+ * @num_type: Integer type
+ * @type: Object type
  * @left: Left node
  * @right: Right node
  */
 struct ast_node {
     char *ident;
-    tt_t token;
+    ast_itype_t num_type;
+    ast_type_t type;
     struct ast_node *left;
     struct ast_node *right;
 };

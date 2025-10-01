@@ -35,6 +35,9 @@
 #include <np/parse.h>
 #include <np/ast.h>
 #include <os/np.h>
+#include <lib/ptrbox.h>
+
+#define MAX_BEGIN_DEPTH 8
 
 #define pr_trace(fmt, ...) printf("pirho.parse: " fmt, ##__VA_ARGS__)
 #define pr_error(fmt, ...) printf("pirho.parse: error: " fmt, ##__VA_ARGS__)
@@ -168,16 +171,24 @@ parse_type(struct np_work *work, struct lex_token *tok)
  * Parse a procedure / function
  *
  * @work: Input work
+ * @npp: AST node pointer result
  * @tok: Current token
  *
  * Returns zero on success
  */
 static int
-parse_proc(struct np_work *work, struct lex_token *tok)
+parse_proc(struct np_work *work, struct ast_node **npp, struct lex_token *tok)
 {
+    char *ident;
+    struct ast_node *np;
+    ast_itype_t ret_type = AST_BAD_TYPE;
     tt_t tt;
 
     if (work == NULL || tok == NULL) {
+        return -EINVAL;
+    }
+
+    if (npp == NULL) {
         return -EINVAL;
     }
 
@@ -185,6 +196,11 @@ parse_proc(struct np_work *work, struct lex_token *tok)
     tt = parse_expect(work, "proc", TT_IDENT, tok);
     if (tt == TT_NONE) {
         return -1;
+    }
+
+    ident = ptrbox_strdup(tok->val_str, work->work_mem);
+    if (ident == NULL) {
+        return -ENOMEM;
     }
 
     /* Expect the left paren */
@@ -212,7 +228,8 @@ parse_proc(struct np_work *work, struct lex_token *tok)
     }
 
     /* And now the return type */
-    if (parse_type(work, tok) == AST_BAD_TYPE) {
+    ret_type = parse_type(work, tok);
+    if (ret_type == AST_BAD_TYPE) {
         pr_error(
             "line %d: expected valid type, got %s\n",
             work->line_no,
@@ -221,6 +238,24 @@ parse_proc(struct np_work *work, struct lex_token *tok)
         return -1;
     }
 
+    /* Need a 'begin' */
+    tt = parse_expect(work, "<TYPENAME>", TT_BEGIN, tok);
+    if (tt == TT_NONE) {
+        return -1;
+    }
+
+    np = ast_alloc(work);
+    if (np == NULL) {
+        pr_error("could not alloc AST node\n");
+        return -ENOMEM;
+    }
+
+    ++work->begin_depth;
+    work->in_func = 1;
+    np->num_type = ret_type;
+    np->type = AST_PROC;
+    np->ident = ident;
+    *npp = np;
     return 0;
 }
 
@@ -228,24 +263,60 @@ parse_proc(struct np_work *work, struct lex_token *tok)
  * Parse a token
  *
  * @work: Input work
+ * @root: Root AST node
  * @tok: Current token
  */
 static int
-parse_token(struct np_work *work, struct lex_token *tok)
+parse_token(struct np_work *work, struct ast_node *root, struct lex_token *tok)
 {
     tt_t tt;
     int error;
+    struct ast_node *np;
 
     /*
      * XXX: wrapped in "[]" indicates optional
      *
+     * TT_BEGIN => nil
+     * TT_END  => nil
      * TT_PROC => proc <TT_IDENT>(..., ...) [ -> <TYPE> ]
      */
     switch (tok->token) {
-    case TT_PROC:
-        if ((error = parse_proc(work, tok)) != 0) {
+    case TT_BEGIN:
+        /* Don't exceed the max depth */
+        if (work->begin_depth >= MAX_BEGIN_DEPTH) {
+            pr_error("line %d: max depth reached\n", work->line_no);
             return -1;
         }
+
+        ++work->begin_depth;
+    case TT_END:
+        /* Do the begin statements match? */
+        if (work->begin_depth > 0) {
+            --work->begin_depth;
+            break;
+        }
+
+        pr_error(
+            "line %d: got 'end' statement but no equal 'begin' statements\n",
+            work->line_no
+        );
+        return -1;
+    case TT_PROC:
+        /* Can't be nested */
+        if (work->in_func) {
+            pr_error(
+                "line %d: nested functions not supported\n",
+                work->line_no
+            );
+            return -1;
+        }
+
+        if ((error = parse_proc(work, &np, tok)) != 0) {
+            return -1;
+        }
+
+        root->left = NULL;  /* arguments */
+        root->right = np;
         break;
     }
 
@@ -255,6 +326,7 @@ parse_token(struct np_work *work, struct lex_token *tok)
 int
 parse_work(struct np_work *work)
 {
+    struct ast_node *root;
     struct lex_token tok;
     int error = 0;
 
@@ -265,6 +337,7 @@ parse_work(struct np_work *work)
 
     /* Get the AST root node */
     work->ast_root = ast_alloc(work);
+    root = work->ast_root;
     if (work->ast_root == NULL) {
         pr_error("failed to alloc root AST|n");
         return -ENOMEM;
@@ -285,9 +358,18 @@ parse_work(struct np_work *work)
             return -1;
         }
 
-        if (parse_token(work, &tok) < 0) {
+        if (parse_token(work, root, &tok) < 0) {
             return -1;
         }
+    }
+
+    /*
+     * If there are more begin clauses than end
+     * clauses, someone mismatched them.
+     */
+    if (work->begin_depth > 0) {
+        pr_error("line %d: expected 'end' statement\n", work->line_no);
+        return -1;
     }
 
     return 0;

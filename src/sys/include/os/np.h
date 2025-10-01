@@ -49,6 +49,8 @@
  * @lex_st: Lexer state
  * @ast_root: Parse tree
  * @ccache: Character cache (temporary store for lexer)
+ * @in_func: Is set if we are inside a function
+ * @begin_depth: How deep in "begin" we are
  */
 struct np_work {
     char *source;
@@ -58,6 +60,8 @@ struct np_work {
     struct ptrbox *work_mem;
     struct ast_node *ast_root;
     char ccache;
+    uint8_t in_func : 1;
+    uint8_t begin_depth;
 };
 
 /*
