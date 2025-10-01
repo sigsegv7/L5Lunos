@@ -125,6 +125,96 @@ parse_expect(struct np_work *work, char *cur, tt_t what, struct lex_token *tok)
 }
 
 /*
+ * Parse a type token
+ *
+ * @work: Current work
+ * @tok: Token result
+ *
+ * Returns the ast integer type on success, and AST_BAD_TYPE
+ * on failure.
+ */
+static ast_itype_t
+parse_type(struct np_work *work, struct lex_token *tok)
+{
+    tt_t tt;
+
+    if (work == NULL || tok == NULL) {
+        return AST_BAD_TYPE;
+    }
+
+    tt = parse_scan(work, tok);
+    switch (tt) {
+    /* Unsigned types */
+    case TT_U8: return AST_U8;
+    case TT_U16: return AST_U16;
+    case TT_U32: return AST_U32;
+    case TT_U64: return AST_U64;
+    }
+
+    return AST_BAD_TYPE;
+}
+
+/*
+ * Parse a procedure / function
+ *
+ * @work: Input work
+ * @tok: Current token
+ *
+ * Returns zero on success
+ */
+static int
+parse_proc(struct np_work *work, struct lex_token *tok)
+{
+    tt_t tt;
+
+    if (work == NULL || tok == NULL) {
+        return -EINVAL;
+    }
+
+    /* We need the identifier */
+    tt = parse_expect(work, "proc", TT_IDENT, tok);
+    if (tt == TT_NONE) {
+        return -1;
+    }
+
+    /* Expect the left paren */
+    tt = parse_expect(work, "<TT_IDENT>", TT_LPAREN, tok);
+    if (tt == TT_NONE) {
+        return -1;
+    }
+
+    /* TODO: ARGS LATER */
+    tt = parse_expect(work, "<TT_LPAREN>", TT_RPAREN, tok);
+    if (tt == TT_NONE) {
+        return -1;
+    }
+
+    /* We need the first part of '->' */
+    tt = parse_expect(work, "<TT_RPAREN>", TT_MINUS, tok);
+    if (tok == TT_NONE) {
+        return -1;
+    }
+
+    /* Now we need to complete the '->' with '>' */
+    tt = parse_expect(work, "<TT_MINUS>", TT_GT, tok);
+    if (tok == TT_NONE) {
+        return -1;
+    }
+
+    /* And now the return type */
+    if (parse_type(work, tok) == AST_BAD_TYPE) {
+        pr_error(
+            "line %d: expected valid type, got %s\n",
+            work->line_no,
+            stoktab[tok->token]
+        );
+        return -1;
+    }
+
+    return 0;
+}
+
+/*
  * Parse a token
  *
  * @work: Input work
@@ -143,21 +233,7 @@ parse_token(struct np_work *work, struct lex_token *tok)
      */
     switch (tok->token) {
     case TT_PROC:
-        /* We need the identifier */
-        tt = parse_expect(work, "proc", TT_IDENT, tok);
-        if (tt == TT_NONE) {
-            return -1;
-        }
-
-        /* Expect the left paren */
-        tt = parse_expect(work, "<TT_IDENT>", TT_LPAREN, tok);
-        if (tt == TT_NONE) {
-            return -1;
-        }
-
-        /* TODO: ARGS LATER */
-        tt = parse_expect(work, "<TT_LPAREN>", TT_RPAREN, tok);
-        if (tt == TT_NONE) {
+        if ((error = parse_proc(work, tok)) != 0) {
             return -1;
         }
         break;

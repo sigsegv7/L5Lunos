@@ -37,6 +37,21 @@
 #include <string.h>
 
 /*
+ * Valid program integer types
+ */
+typedef enum {
+    AST_BAD_TYPE,
+    AST_U8,
+    AST_U16,
+    AST_U32,
+    AST_U64,
+    AST_I8,
+    AST_I16,
+    AST_I32,
+    AST_I64
+} ast_itype_t;
+
+/*
  * Represents an AST node
  *
  * @ident: Identifier
