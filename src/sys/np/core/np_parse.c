@@ -339,7 +339,7 @@ parse_work(struct np_work *work)
     work->ast_root = ast_alloc(work);
     root = work->ast_root;
     if (work->ast_root == NULL) {
-        pr_error("failed to alloc root AST|n");
+        pr_error("failed to alloc root AST\n");
         return -ENOMEM;
     }
 
