@@ -46,6 +46,12 @@ static const char *stoktab[] = {
     [TT_IDENT]  = "<IDENTIFIER>",
     [TT_COMMA]  = "<TT_COMMA>",
     [TT_STAR]   = "<TT_STAR>",
+    [TT_MINUS]  = "<TT_MINUS>",
+    [TT_PLUS]   = "<TT_PLUS>",
+    [TT_SLASH]  = "<TT_SLASH>",
+    [TT_EQUALS] = "<TT_EQUALS>",
+    [TT_GT]     = "<TT_GREATER>",
+    [TT_LT]     = "<TT_LESSTHAN>",
 
     /* Types */
     [TT_U8]     = "<TT_U8>",

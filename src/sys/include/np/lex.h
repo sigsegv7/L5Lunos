@@ -53,6 +53,12 @@ typedef enum {
     TT_IDENT,           /* '<IDENTIFIER>' */
     TT_COMMA,           /* ',' */
     TT_STAR,            /* '*' */
+    TT_MINUS,           /* '-' */
+    TT_PLUS,            /* '+' */
+    TT_SLASH,           /* '/' */
+    TT_EQUALS,          /* '=' */
+    TT_GT,              /* '>' */
+    TT_LT,              /* '<' */
 
     /* Types */
     TT_U8,              /* 'u8' */
