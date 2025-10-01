@@ -272,6 +272,9 @@ parse_work(struct np_work *work)
 
     while (error == 0) {
         error = lex_nom(work, &tok);
+        if (error == LEX_EOF) {
+            break;
+        }
         if (error < 0) {
             return error;
         }

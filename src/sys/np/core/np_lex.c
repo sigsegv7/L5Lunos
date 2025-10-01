@@ -323,7 +323,7 @@ lex_nom(struct np_work *work, struct lex_token *res)
     /* Match the token type */
     switch (c) {
     case '\0':
-        return -2;  /* EOF */
+        return LEX_EOF;
     case '(':
         res->token = TT_LPAREN;
         break;

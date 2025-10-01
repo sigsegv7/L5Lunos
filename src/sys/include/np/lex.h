@@ -32,6 +32,9 @@
 
 #include <sys/types.h>
 
+/* End-of-file */
+#define LEX_EOF (-2)
+
 struct np_work;
 
 /* Keywords */
