@@ -46,12 +46,14 @@
  * @source_size: Source size in bytes
  * @line_no: Current line number
  * @lex_st: Lexer state
+ * @ccache: Character cache (temporary store for lexer)
  */
 struct np_work {
     char *source;
     size_t source_size;
     size_t line_no;
     struct lexer_state lex_st;
+    char ccache;
 };
 
 /*

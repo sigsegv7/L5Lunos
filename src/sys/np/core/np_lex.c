@@ -55,9 +55,20 @@ static char
 lex_pop(struct np_work *work)
 {
     struct lexer_state *lex_st;
+    char c;
 
     if (work == NULL) {
         return '\0';
+    }
+
+    /*
+     * First we check the cache, if there is a char,
+     * grab and clear it.
+     */
+    if (work->ccache != '\0') {
+        c = work->ccache;
+        work->ccache = '\0';
+        return c;
     }
 
     /* Don't overflow the source file */
@@ -123,6 +134,7 @@ lex_matchstr(struct np_work *work, char c, struct lex_token *res)
             return -1;
         }
         if (!is_alpha(c) && !is_num(c)) {
+            work->ccache = c;
             break;
         }
         id[id_idx++] = c;
