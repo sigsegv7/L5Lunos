@@ -179,11 +179,10 @@ lex_nom(struct np_work *work, struct lex_token *res)
         }
 
         error = lex_matchstr(work, c, res);
-        if (error == 0 || error < 0) {
+        if (error == 0) {
             break;
         }
 
-        pr_error("got bad token '%c'\n", c);
         error = -1;
         break;
     }
