@@ -48,18 +48,18 @@ struct np_work;
  */
 typedef enum {
     /* Symbols */
-    TT_LPAREN,
-    TT_RPAREN,
-    TT_IDENT,
-    TT_COMMA,
+    TT_LPAREN,          /* '(' */
+    TT_RPAREN,          /* ')' */
+    TT_IDENT,           /* '<IDENTIFIER>' */
+    TT_COMMA,           /* ',' */
 
     /* Types */
-    TT_U8,
+    TT_U8,              /* 'u8' */
 
     /* Keywords */
-    TT_BEGIN,
-    TT_PROC,
-    TT_END,
+    TT_BEGIN,           /* 'begin' */
+    TT_PROC,            /* 'proc' */
+    TT_END,             /* 'end' */
 } tt_t;
 
 /*
