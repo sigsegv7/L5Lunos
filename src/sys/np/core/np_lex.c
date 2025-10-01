@@ -147,6 +147,7 @@ lex_matchstr(struct np_work *work, char c, struct lex_token *res)
     } while ((c = lex_pop(work)) != 0);
 
     id[id_idx] = '\0';
+    res->val_str = ptrbox_strdup(id, work->work_mem);
 
     /* Match the tokens */
     error = lex_cmptok(id, res);

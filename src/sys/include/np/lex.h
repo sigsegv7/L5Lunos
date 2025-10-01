@@ -85,7 +85,10 @@ typedef uint64_t tokval_t;
  */
 struct lex_token {
     tt_t token;
-    tokval_t val;
+    union {
+        tokval_t val;
+        char *val_str;
+    };
 };
 
 /*
