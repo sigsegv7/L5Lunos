@@ -85,7 +85,6 @@ ptrbox_terminate(struct ptrbox *box)
         }
 
         kfree(ent->data);
-        printf("reaped %p\n", ent->data);
         ent->data = NULL;
     }
 
