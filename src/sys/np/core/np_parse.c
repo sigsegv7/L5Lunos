@@ -65,6 +65,10 @@ static const char *stoktab[] = {
     [TT_U16]    = "<TT_U16>",
     [TT_U32]    = "<TT_U32>",
     [TT_U64]    = "<TT_U64>",
+    [TT_I8]     = "<TT_I8>",
+    [TT_I16]    = "<TT_I16>",
+    [TT_I32]    = "<TT_I32>",
+    [TT_I64]    = "<TT_I64>",
 
     /* Values */
     [TT_NUMBER] = "<TT_NUMBER>",
@@ -149,6 +153,12 @@ parse_type(struct np_work *work, struct lex_token *tok)
     case TT_U16: return AST_U16;
     case TT_U32: return AST_U32;
     case TT_U64: return AST_U64;
+
+    /* Signed types */
+    case TT_I8: return AST_I8;
+    case TT_I16: return AST_I16;
+    case TT_I32: return AST_I32;
+    case TT_I64: return AST_I64;
     }
 
     return AST_BAD_TYPE;

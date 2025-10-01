@@ -44,6 +44,10 @@ struct np_work;
 #define TOKEN_U16   "u16"
 #define TOKEN_U32   "u32"
 #define TOKEN_U64   "u64"
+#define TOKEN_I8    "i8"
+#define TOKEN_I16   "i16"
+#define TOKEN_I32   "i32"
+#define TOKEN_I64   "i64"
 
 /*
  * Represents the various token types that are
@@ -74,6 +78,10 @@ typedef enum {
     TT_U16,             /* 'u16' */
     TT_U32,             /* 'u32' */
     TT_U64,             /* 'u64' */
+    TT_I8,              /* 'i8'  */
+    TT_I16,             /* 'i16' */
+    TT_I32,             /* 'i32' */
+    TT_I64,             /* 'i64' */
 
     /* Values */
     TT_NUMBER,          /* <numbers> */

@@ -108,6 +108,27 @@ lex_cmp_itype(const char *tokstr, struct lex_token *res)
             break;
         }
         break;
+    case 'i':
+        if (strcmp(tokstr, TOKEN_I8) == 0) {
+            res->token = TT_I8;
+            break;
+        }
+
+        if (strcmp(tokstr, TOKEN_I16) == 0) {
+            res->token = TT_I16;
+            break;
+        }
+
+        if (strcmp(tokstr, TOKEN_I32) == 0) {
+            res->token = TT_I32;
+            break;
+        }
+
+        if (strcmp(tokstr, TOKEN_I64) == 0) {
+            res->token = TT_I64;
+            break;
+        }
+        break;
     }
 }
 
