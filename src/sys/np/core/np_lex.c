@@ -102,9 +102,15 @@ lex_cmptok(char *tokstr, struct lex_token *res)
             res->token = TT_PROC;
         }
         return 0;
+    case 'u':
+        if (strcmp(tokstr, TOKEN_U8) == 0) {
+            res->token = TT_U8;
+        }
+        return 0;
     }
 
-    return -1;
+    res->token = TT_IDENT;
+    return 0;
 }
 
 /*
@@ -157,7 +163,7 @@ int
 lex_nom(struct np_work *work, struct lex_token *res)
 {
     struct lexer_state *lex_st;
-    int error = -1;
+    int error = 0;
     char c;
 
     if (work == NULL || res == NULL) {
@@ -182,6 +188,9 @@ lex_nom(struct np_work *work, struct lex_token *res)
         break;
     case ')':
         res->token = TT_RPAREN;
+        break;
+    case ',':
+        res->token = TT_COMMA;
         break;
     default:
         /* Stuff like '1var_name' is invalid */

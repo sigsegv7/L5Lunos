@@ -34,9 +34,13 @@
 
 struct np_work;
 
+/* Keywords */
 #define TOKEN_BEGIN "begin"
 #define TOKEN_PROC "proc"
 #define TOKEN_END "end"
+
+/* Types */
+#define TOKEN_U8 "u8"
 
 /*
  * Represents the various token types that are
@@ -46,6 +50,11 @@ typedef enum {
     /* Symbols */
     TT_LPAREN,
     TT_RPAREN,
+    TT_IDENT,
+    TT_COMMA,
+
+    /* Types */
+    TT_U8,
 
     /* Keywords */
     TT_BEGIN,
