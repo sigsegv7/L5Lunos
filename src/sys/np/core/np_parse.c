@@ -54,6 +54,7 @@ static const char *stoktab[] = {
     [TT_LT]     = "<TT_LESSTHAN>",
     [TT_LBRACK] = "<TT_LBRACK>",
     [TT_RBRACK] = "<TT_RBRACK>",
+    [TT_COLON]  = "<TT_COLON>",
 
     /* Types */
     [TT_U8]     = "<TT_U8>",

@@ -61,6 +61,7 @@ typedef enum {
     TT_LT,              /* '<' */
     TT_LBRACK,          /* '[' */
     TT_RBRACK,          /* ']' */
+    TT_COLON,           /* ':' */
 
     /* Types */
     TT_U8,              /* 'u8' */
