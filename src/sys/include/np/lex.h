@@ -47,6 +47,9 @@ struct np_work;
  * possible
  */
 typedef enum {
+    /* Reserved */
+    TT_NONE,            /* Always invalid */
+
     /* Symbols */
     TT_LPAREN,          /* '(' */
     TT_RPAREN,          /* ')' */

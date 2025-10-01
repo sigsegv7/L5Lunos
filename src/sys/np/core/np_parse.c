@@ -40,6 +40,9 @@
 
 /* Token to string conversion table */
 static const char *stoktab[] = {
+    /* Reserved */
+    [TT_NONE]   = "<TT_NONE>",
+
     /* Symbols */
     [TT_LPAREN] = "<TT_LPAREN>",
     [TT_RPAREN] = "<TT_RPAREN>",

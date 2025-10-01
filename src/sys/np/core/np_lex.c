@@ -256,6 +256,7 @@ lex_nom(struct np_work *work, struct lex_token *res)
     }
 
     lex_st = &work->lex_st;
+    res->token = TT_NONE;
 
     /* Skip all whitespace */
     while ((c = lex_pop(work)) != 0) {
