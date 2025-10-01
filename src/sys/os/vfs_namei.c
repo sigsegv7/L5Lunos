@@ -94,6 +94,10 @@ namei(struct nameidata *ndp)
         error =  vops->lookup(&lookup);
         if (error == 0)
             return 0;
+
+        /* Return the result */
+        if (ndp->vp_res != NULL)
+            *ndp->vp_res = vp;
     }
 
     printf("namei: f: %s\n", ndp->path);
