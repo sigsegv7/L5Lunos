@@ -157,6 +157,64 @@ lex_matchstr(struct np_work *work, char c, struct lex_token *res)
 }
 
 /*
+ * Scan arithmetic operators and return the token type
+ * (tt_t) on success
+ *
+ * @work: Input work
+ * @c: Character to check
+ *
+ * Returns a less than zero value on failure
+ */
+static int
+lex_arithop(struct np_work *work, char c, struct lex_token *res)
+{
+    switch (c) {
+    case '*':
+        res->token = TT_STAR;
+        break;
+    case '-':
+        res->token = TT_MINUS;
+        break;
+    case '+':
+        res->token = TT_PLUS;
+        break;
+    case '/':
+        res->token = TT_SLASH;
+        break;
+    default:
+        return -1;
+    }
+
+    return res->token;
+}
+
+/*
+ * Scan compare operators and return the token type
+ * (tt_t) on success
+ *
+ * @work: Input work
+ * @c: Character to check
+ *
+ * Returns a less than zero value on failure
+ */
+static int
+lex_cmpop(struct np_work *work, char c, struct lex_token *res)
+{
+    switch (c) {
+    case '>':
+        res->token = TT_GT;
+        break;
+    case '<':
+        res->token = TT_LT;
+        break;
+    default:
+        return -1;
+    }
+
+    return res->token;
+}
+
+/*
  * Nom a token
  */
 int
@@ -194,28 +252,15 @@ lex_nom(struct np_work *work, struct lex_token *res)
     case ',':
         res->token = TT_COMMA;
         break;
-    case '*':
-        res->token = TT_STAR;
-        break;
-    case '-':
-        res->token = TT_MINUS;
-        break;
-    case '+':
-        res->token = TT_PLUS;
-        break;
-    case '/':
-        res->token = TT_SLASH;
-        break;
     case '=':
         res->token = TT_EQUALS;
         break;
-    case '>':
-        res->token = TT_GT;
-        break;
-    case '<':
-        res->token = TT_LT;
-        break;
     default:
+        if (lex_arithop(work, c, res) >= 0)
+            break;
+        if (lex_cmpop(work, c, res) >= 0)
+            break;
+
         /* Stuff like '1var_name' is invalid */
         if (!is_alpha(c)) {
             pr_error("unexpected token '%c'\n", c);
