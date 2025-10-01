@@ -27,58 +27,40 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * Description: Pirho compiler interface
- * Author: Ian Marco Moffett
- */
+#ifndef _NP_AST_H_
+#define _NP_AST_H_ 1
 
-#ifndef _OS_NP_H_
-#define _OS_NP_H_ 1
-
-#include <sys/types.h>
-#include <os/vnode.h>
+#include <sys/cdefs.h>
 #include <np/lex.h>
+#include <os/np.h>
 #include <lib/ptrbox.h>
+#include <string.h>
 
 /*
- * Compiler work
+ * Represents an AST node
  *
- * @source: Source input file
- * @source_size: Source size in bytes
- * @line_no: Current line number
- * @lex_st: Lexer state
- * @ast_root: Parse tree
- * @ccache: Character cache (temporary store for lexer)
+ * @ident: Identifier
+ * @token: Token type
+ * @left: Left node
+ * @right: Right node
  */
-struct np_work {
-    char *source;
-    size_t source_size;
-    size_t line_no;
-    struct lexer_state lex_st;
-    struct ptrbox *work_mem;
-    struct ast_node *ast_root;
-    char ccache;
+struct ast_node {
+    char *ident;
+    tt_t token;
+    struct ast_node *left;
+    struct ast_node *right;
 };
 
-/*
- * Initializes the compiler state into known values
- *
- * @in_path: Input file path of sources to be compiled
- * @workp: Resulting work data is written here
- *
- * Returns zero on success, otherwise a less than zero
- * value on failure.
- */
-int np_init(const char *in_path, struct np_work *workp);
+__always_inline static inline void *
+ast_alloc(struct np_work *work)
+{
+    struct ast_node *np;
 
-/*
- * Complete work by compiling the input file
- *
- * @work: Work that will be compiled
- *
- * Returns zero on success, otherwise a less than
- * zero value on failure
- */
-int np_compile(struct np_work *work);
+    np = ptrbox_alloc(sizeof(*np), work->work_mem);
+    if (np != NULL) {
+        memset(np, 0, sizeof(*np));
+    }
+    return np;
+}
 
-#endif /* _OS_NP_H_ */
+#endif  /* !_NP_AST_H_ */

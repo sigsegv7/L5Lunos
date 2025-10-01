@@ -33,6 +33,7 @@
 #include <sys/param.h>
 #include <np/lex.h>
 #include <np/parse.h>
+#include <np/ast.h>
 #include <os/np.h>
 
 #define pr_trace(fmt, ...) printf("pirho.parse: " fmt, ##__VA_ARGS__)
@@ -171,6 +172,13 @@ parse_work(struct np_work *work)
     if (work == NULL) {
         pr_error("bad work argument\n");
         return -EINVAL;
+    }
+
+    /* Get the AST root node */
+    work->ast_root = ast_alloc(work);
+    if (work->ast_root == NULL) {
+        pr_error("failed to alloc root AST|n");
+        return -ENOMEM;
     }
 
     while (error == 0) {
