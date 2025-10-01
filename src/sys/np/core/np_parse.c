@@ -71,6 +71,97 @@ static const char *stoktab[] = {
     [TT_END]    = "<TT_END>"
 };
 
+/*
+ * Scan the next token
+ *
+ * @work: Work input
+ * @token: Last token
+ *
+ * Returns the token type on success (TT_NONE on error)
+ */
+static inline tt_t
+parse_scan(struct np_work *work, struct lex_token *tok)
+{
+    if (lex_nom(work, tok) < 0) {
+        return TT_NONE;
+    }
+
+    return tok->token;
+}
+
+/*
+ * Scan and expect the next token to be a specific
+ * value
+ *
+ * @work: Work input
+ * @cur: The value before the value we expect
+ * @what: What we expect
+ * @tok: Last token
+ *
+ * Returns the token type on success (TT_NONE on error)
+ */
+static inline tt_t
+parse_expect(struct np_work *work, char *cur, tt_t what, struct lex_token *tok)
+{
+    tt_t tt = parse_scan(work, tok);
+
+    if (tt != what) {
+        pr_error(
+            "line %d: expected %s after '%s', got %s\n",
+            work->line_no,
+            stoktab[what],
+            cur,
+            stoktab[tok->token]
+        );
+
+        return TT_NONE;
+    }
+
+    return tt;
+}
+
+/*
+ * Parse a token
+ *
+ * @work: Input work
+ * @tok: Current token
+ */
+static int
+parse_token(struct np_work *work, struct lex_token *tok)
+{
+    tt_t tt;
+    int error;
+
+    /*
+     * XXX: wrapped in "[]" indicates optional
+     *
+     * TT_PROC => proc <TT_IDENT>(..., ...) [ -> <TYPE> ]
+     */
+    switch (tok->token) {
+    case TT_PROC:
+        /* We need the identifier */
+        tt = parse_expect(work, "proc", TT_IDENT, tok);
+        if (tt == TT_NONE) {
+            return -1;
+        }
+
+        /* Expect the left paren */
+        tt = parse_expect(work, "<TT_IDENT>", TT_LPAREN, tok);
+        if (tt == TT_NONE) {
+            return -1;
+        }
+
+        /* TODO: ARGS LATER */
+        tt = parse_expect(work, "<TT_LPAREN>", TT_RPAREN, tok);
+        if (tt == TT_NONE) {
+            return -1;
+        }
+        break;
+    }
+
+    return 0;
+}
+
 int
 parse_work(struct np_work *work)
 {
@@ -94,10 +185,8 @@ parse_work(struct np_work *work)
             return -1;
         }
 
-        /* Log the token */
-        printf("tok.type: %s\n", stoktab[tok.token]);
-        if (tok.token == TT_NUMBER) {
-            printf("tok.val: %d\n", tok.val);
+        if (parse_token(work, &tok) < 0) {
+            return -1;
         }
     }
 
