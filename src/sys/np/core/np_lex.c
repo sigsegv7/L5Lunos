@@ -174,10 +174,12 @@ lex_nom(struct np_work *work, struct lex_token *res)
 
     /* Skip all whitespace */
     while ((c = lex_pop(work)) != 0) {
+        if (c == '\n') {
+            ++work->line_no;
+        }
         if (is_space(c)) {
             continue;
         }
-
         break;
     }
 
