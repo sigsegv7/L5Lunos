@@ -27,50 +27,21 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <sys/errno.h>
-#include <sys/namei.h>
-#include <sys/syslog.h>
-#include <os/omar.h>
-#include <os/np.h>
-#include <np/parse.h>
+#ifndef _NP_PARSE_H_
+#define _NP_PARSE_H_ 1
 
-#define pr_trace(fmt, ...) printf("pirho: " fmt, ##__VA_ARGS__)
+#include <sys/types.h>
 
-int
-np_init(const char *in_path, struct np_work *workp)
-{
-    int error;
-    struct nameidata nd;
+struct np_work;
 
-    if (in_path == NULL || workp == NULL) {
-        return -EINVAL;
-    }
+/*
+ * Begin parsing work
+ *
+ * @work: Work to parse
+ *
+ * Returns zero on success, otherwise a less than
+ * zero value on failure.
+ */
+int parse_work(struct np_work *work);
 
-    workp->line_no = 1;
-    workp->source_size = initrd_open(in_path, &workp->source);
-
-    if (workp->source_size < 0) {
-        pr_trace("failed to open '%s'\n", in_path);
-        return workp->source_size;
-    }
-
-    /* Initialize the lexer */
-    error = lex_init(&workp->lex_st, workp);
-    if (error < 0) {
-        pr_trace("failed to initialize lexer\n");
-        return error;
-    }
-
-    parse_work(workp);
-    return 0;
-}
-
-int
-np_compile(struct np_work *work)
-{
-    if (work == NULL) {
-        return -EINVAL;
-    }
-
-    return 0;
-}
+#endif  /* !_NP_PARSE_H_ */

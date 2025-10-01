@@ -27,49 +27,56 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <sys/types.h>
 #include <sys/errno.h>
-#include <sys/namei.h>
 #include <sys/syslog.h>
-#include <os/omar.h>
-#include <os/np.h>
+#include <sys/param.h>
+#include <np/lex.h>
 #include <np/parse.h>
+#include <os/np.h>
 
-#define pr_trace(fmt, ...) printf("pirho: " fmt, ##__VA_ARGS__)
+#define pr_trace(fmt, ...) printf("pirho.parse: " fmt, ##__VA_ARGS__)
+#define pr_error(fmt, ...) printf("pirho.parse: error: " fmt, ##__VA_ARGS__)
 
-int
-np_init(const char *in_path, struct np_work *workp)
-{
-    int error;
-    struct nameidata nd;
+/* Token to string conversion table */
+static const char *stoktab[] = {
+    /* Symbols */
+    [TT_LPAREN] = "<TT_LPAREN>",
+    [TT_RPAREN] = "<TT_RPAREN>",
+    [TT_IDENT]  = "<IDENTIFIER>",
+    [TT_COMMA]  = "<TT_COMMA>",
 
-    if (in_path == NULL || workp == NULL) {
-        return -EINVAL;
-    }
+    /* Types */
+    [TT_U8]     = "<TT_U8>",
 
-    workp->line_no = 1;
-    workp->source_size = initrd_open(in_path, &workp->source);
-
-    if (workp->source_size < 0) {
-        pr_trace("failed to open '%s'\n", in_path);
-        return workp->source_size;
-    }
-
-    /* Initialize the lexer */
-    error = lex_init(&workp->lex_st, workp);
-    if (error < 0) {
-        pr_trace("failed to initialize lexer\n");
-        return error;
-    }
-
-    parse_work(workp);
-    return 0;
-}
+    /* Keywords */
+    [TT_BEGIN]  = "<TT_BEGIN>",
+    [TT_PROC]   = "<TT_PROC>",
+    [TT_END]    = "<TT_END>"
+};
 
 int
-np_compile(struct np_work *work)
+parse_work(struct np_work *work)
 {
+    struct lex_token tok;
+    int error = 0;
+
     if (work == NULL) {
+        pr_error("bad work argument\n");
         return -EINVAL;
+    }
+
+    while (error == 0) {
+        error = lex_nom(work, &tok);
+        if (error < 0) {
+            return error;
+        }
+
+        if (tok.token > NELEM(stoktab)) {
+            pr_error("bad token %d\n", tok.token);
+            return -1;
+        }
+        printf("tok.type: %s\n", stoktab[tok.token]);
     }
 
     return 0;
