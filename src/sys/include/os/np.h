@@ -42,6 +42,21 @@
 #include <lib/ptrbox.h>
 
 /*
+ * Valid program integer types
+ */
+typedef enum {
+    NP_BAD_TYPE,
+    NP_U8,
+    NP_U16,
+    NP_U32,
+    NP_U64,
+    NP_I8,
+    NP_I16,
+    NP_I32,
+    NP_I64
+} np_itype_t;
+
+/*
  * Compiler work
  *
  * @source: Source input file

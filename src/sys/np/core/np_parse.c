@@ -39,7 +39,6 @@
 #include <np/lex.h>
 #include <np/parse.h>
 #include <np/piir.h>
-#include <np/ast.h>
 #include <os/np.h>
 #include <lib/ptrbox.h>
 
@@ -143,58 +142,52 @@ parse_expect(struct np_work *work, char *cur, tt_t what, struct lex_token *tok)
  * @work: Current work
  * @tok: Token result
  *
- * Returns the ast integer type on success, and AST_BAD_TYPE
+ * Returns the ast integer type on success, and NP_BAD_TYPE
  * on failure.
  */
-static ast_itype_t
+static np_itype_t
 parse_type(struct np_work *work, struct lex_token *tok)
 {
     tt_t tt;
 
     if (work == NULL || tok == NULL) {
-        return AST_BAD_TYPE;
+        return NP_BAD_TYPE;
     }
 
     tt = parse_scan(work, tok);
     switch (tt) {
     /* Unsigned types */
-    case TT_U8: return AST_U8;
-    case TT_U16: return AST_U16;
-    case TT_U32: return AST_U32;
-    case TT_U64: return AST_U64;
+    case TT_U8: return NP_U8;
+    case TT_U16: return NP_U16;
+    case TT_U32: return NP_U32;
+    case TT_U64: return NP_U64;
 
     /* Signed types */
-    case TT_I8: return AST_I8;
-    case TT_I16: return AST_I16;
-    case TT_I32: return AST_I32;
-    case TT_I64: return AST_I64;
+    case TT_I8: return NP_I8;
+    case TT_I16: return NP_I16;
+    case TT_I32: return NP_I32;
+    case TT_I64: return NP_I64;
     }
 
-    return AST_BAD_TYPE;
+    return NP_BAD_TYPE;
 }
 
 /*
  * Parse a procedure / function
  *
  * @work: Input work
- * @npp: AST node pointer result
  * @tok: Current token
  *
  * Returns zero on success
  */
 static int
-parse_proc(struct np_work *work, struct ast_node **npp, struct lex_token *tok)
+parse_proc(struct np_work *work, struct lex_token *tok)
 {
     char *ident;
-    struct ast_node *np;
-    ast_itype_t ret_type = AST_BAD_TYPE;
+    np_itype_t ret_type = NP_BAD_TYPE;
     tt_t tt;
 
     if (work == NULL || tok == NULL) {
-        return -EINVAL;
-    }
-
-    if (npp == NULL) {
         return -EINVAL;
     }
 
@@ -235,7 +228,7 @@ parse_proc(struct np_work *work, struct ast_node **npp, struct lex_token *tok)
 
     /* And now the return type */
     ret_type = parse_type(work, tok);
-    if (ret_type == AST_BAD_TYPE) {
+    if (ret_type == NP_BAD_TYPE) {
         pr_error(
             "line %d: expected valid type, got %s\n",
             work->line_no,
@@ -250,18 +243,8 @@ parse_proc(struct np_work *work, struct ast_node **npp, struct lex_token *tok)
         return -1;
     }
 
-    np = ast_alloc(work);
-    if (np == NULL) {
-        pr_error("could not alloc AST node\n");
-        return -ENOMEM;
-    }
-
     ++work->begin_depth;
     work->in_func = 1;
-    np->num_type = ret_type;
-    np->type = AST_PROC;
-    np->ident = ident;
-    *npp = np;
     return 0;
 }
 
@@ -276,8 +259,6 @@ parse_token(struct np_work *work, struct lex_token *tok)
 {
     tt_t tt;
     int error;
-    struct ast_node *np;
-
 #define PIIR_PUSH(BYTE) piir_push(work->piir_stack, (BYTE))
     /*
      * XXX: wrapped in "[]" indicates optional
@@ -323,7 +304,7 @@ parse_token(struct np_work *work, struct lex_token *tok)
             return -1;
         }
 
-        if ((error = parse_proc(work, &np, tok)) != 0) {
+        if ((error = parse_proc(work, tok)) != 0) {
             return -1;
         }
 
