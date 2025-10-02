@@ -66,12 +66,12 @@ piir_push(struct piir_stack *stack, ir_byte_t byte)
         return -EINVAL;
     }
 
-    if (stack->op_i >= PIIR_STACK_SIZE - 1) {
+    if (stack->op_head >= PIIR_STACK_SIZE - 1) {
         return -1;
     }
 
     spinlock_acquire(&stack->lock);
-    stack->opstore[stack->op_i++] = byte;
+    stack->opstore[stack->op_head++] = byte;
     spinlock_release(&stack->lock);
     return 0;
 }
@@ -88,12 +88,22 @@ piir_pop(struct piir_stack *stack)
         return -EINVAL;
     }
 
-    if (stack->op_i == 0) {
+    /* Don't read past what we can */
+    if (stack->op_tail == stack->op_head) {
+        stack->op_tail = 0;
+        stack->op_head = 0;
         return -1;
     }
 
     spinlock_acquire(&stack->lock);
-    byte = stack->opstore[--stack->op_i];
+
+    /* Grab a byte, reset pointers if empty */
+    byte = stack->opstore[stack->op_tail++];
+    if (stack->op_tail == stack->op_head) {
+        stack->op_tail = 0;
+        stack->op_head = 0;
+    }
+
     spinlock_release(&stack->lock);
     return byte;
 }

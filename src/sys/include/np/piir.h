@@ -35,7 +35,13 @@
 #include <os/spinlock.h>
 #include <os/np.h>
 
-typedef uint8_t ir_byte_t;
+/*
+ * Represents two different kinds of bytes, MI IR
+ * bytes and MD opcode / instruction bytes, less than
+ * zero values are reserved for error indication.
+ */
+typedef int8_t ir_byte_t;
+typedef int8_t md_byte_t;
 
 /*
  * The maxiumum size of the bytecode stack per
@@ -49,16 +55,33 @@ typedef uint8_t ir_byte_t;
 #define PIIR_LOAD_R16 0x02
 #define PIIR_LOAD_R32 0x03
 #define PIIR_LOAD_R64 0x04
+#define PIIR_RET_NIL  0x05  /* Return nothing */
+
+/*
+ * Represents the PIIR virtual machine for storing
+ * state while converting IR to instruction bytes
+ *
+ * @code: Generated machine code
+ * @last_ir: Last IR byte used
+ * @code_i: Current index into code buffer
+ */
+struct piir_vm {
+    md_byte_t code[4096];
+    ir_byte_t last_ir;
+    uint32_t code_i;
+};
 
 /*
  * Represents the Pi-IR (PIIR) bytecode stack
  *
  * @opstore: The actual stack
- * @op_i: Index into the stack
+ * @op_head: Where new ops are written
+ * @op_tail: Where new ops are read
  */
 struct piir_stack {
     ir_byte_t opstore[PIIR_STACK_SIZE];
-    uint16_t op_i;
+    uint16_t op_head;
+    uint16_t op_tail;
     struct spinlock lock;
 };
 
@@ -93,5 +116,15 @@ int piir_push(struct piir_stack *stack, ir_byte_t byte);
  * zero value if the stack is empty
  */
 int piir_pop(struct piir_stack *stack);
+
+/*
+ * Inject control flow via stack machine
+ *
+ * @work: Current work
+ *
+ * Returns zero on success, otherwise a less than
+ * zero value on failure.
+ */
+int piir_inject(struct np_work *work);
 
 #endif  /* !_NP_PIIR_H_ */

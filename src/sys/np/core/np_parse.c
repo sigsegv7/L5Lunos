@@ -269,16 +269,16 @@ parse_proc(struct np_work *work, struct ast_node **npp, struct lex_token *tok)
  * Parse a token
  *
  * @work: Input work
- * @root: Root AST node
  * @tok: Current token
  */
 static int
-parse_token(struct np_work *work, struct ast_node *root, struct lex_token *tok)
+parse_token(struct np_work *work, struct lex_token *tok)
 {
     tt_t tt;
     int error;
     struct ast_node *np;
 
+#define PIIR_PUSH(BYTE) piir_push(work->piir_stack, (BYTE))
     /*
      * XXX: wrapped in "[]" indicates optional
      *
@@ -296,9 +296,15 @@ parse_token(struct np_work *work, struct ast_node *root, struct lex_token *tok)
 
         ++work->begin_depth;
     case TT_END:
-        /* Do the begin statements match? */
+        /*
+         * Check if the 'begin' statements match, if they do
+         * we'll decrease the depth and push a NIL return
+         *
+         * TODO: We'll need to handle returns better
+         */
         if (work->begin_depth > 0) {
             --work->begin_depth;
+            PIIR_PUSH(PIIR_RET_NIL);
             break;
         }
 
@@ -321,32 +327,23 @@ parse_token(struct np_work *work, struct ast_node *root, struct lex_token *tok)
             return -1;
         }
 
-        root->left = NULL;  /* arguments */
-        root->right = np;
+        /* XXX: NOP for testing */
+        PIIR_PUSH(PIIR_NOP);
         break;
     }
-
+#undef PIIR_PUSH
     return 0;
 }
 
 int
 parse_work(struct np_work *work)
 {
-    struct ast_node *root;
     struct lex_token tok;
     int error = 0;
 
     if (work == NULL) {
         pr_error("bad work argument\n");
         return -EINVAL;
-    }
-
-    /* Get the AST root node */
-    work->ast_root = ast_alloc(work);
-    root = work->ast_root;
-    if (work->ast_root == NULL) {
-        pr_error("failed to alloc root AST\n");
-        return -ENOMEM;
     }
 
     /* Initialize PIIR */
@@ -371,10 +368,12 @@ parse_work(struct np_work *work)
             return -1;
         }
 
-        if (parse_token(work, root, &tok) < 0) {
+        if (parse_token(work, &tok) < 0) {
             return -1;
         }
     }
+
+    piir_inject(work);
 
     /*
      * If there are more begin clauses than end
