@@ -38,6 +38,7 @@
 #include <sys/param.h>
 #include <np/lex.h>
 #include <np/parse.h>
+#include <np/piir.h>
 #include <np/ast.h>
 #include <os/np.h>
 #include <lib/ptrbox.h>
@@ -346,6 +347,13 @@ parse_work(struct np_work *work)
     if (work->ast_root == NULL) {
         pr_error("failed to alloc root AST\n");
         return -ENOMEM;
+    }
+
+    /* Initialize PIIR */
+    error = piir_stack_new(work, &work->piir_stack);
+    if (error < 0) {
+        pr_error("failed to alloc PIIR stack\n");
+        return error;
     }
 
     while (error == 0) {

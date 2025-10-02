@@ -38,6 +38,7 @@
 #include <sys/types.h>
 #include <os/vnode.h>
 #include <np/lex.h>
+#include <np/piir.h>
 #include <lib/ptrbox.h>
 
 /*
@@ -46,6 +47,7 @@
  * @source: Source input file
  * @source_size: Source size in bytes
  * @line_no: Current line number
+ * @piir_stack: Bytecode stack
  * @lex_st: Lexer state
  * @ast_root: Parse tree
  * @ccache: Character cache (temporary store for lexer)
@@ -56,6 +58,7 @@ struct np_work {
     char *source;
     size_t source_size;
     size_t line_no;
+    struct piir_stack *piir_stack;
     struct lexer_state lex_st;
     struct ptrbox *work_mem;
     struct ast_node *ast_root;
