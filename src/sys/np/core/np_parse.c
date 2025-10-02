@@ -297,7 +297,7 @@ parse_token(struct np_work *work, struct ast_node *root, struct lex_token *tok)
         }
 
         pr_error(
-            "line %d: got 'end' statement but no equal 'begin' statements\n",
+            "line %d: got 'end' statement but no matching 'begin' statements\n",
             work->line_no
         );
         return -1;
