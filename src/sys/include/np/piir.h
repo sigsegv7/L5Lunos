@@ -50,11 +50,11 @@ typedef int8_t md_byte_t;
 #define PIIR_STACK_SIZE 4096
 
 /* PIIR opcodes */
-#define PIIR_NOP      0x00
-#define PIIR_LOAD_R8  0x01
-#define PIIR_LOAD_R16 0x02
-#define PIIR_LOAD_R32 0x03
-#define PIIR_LOAD_R64 0x04
+#define PIIR_NOP      0x00  /* Do nothing */
+#define PIIR_LOAD_R8  0x01  /* Load 8-bit register */
+#define PIIR_LOAD_R16 0x02  /* Load 16-bit register */
+#define PIIR_LOAD_R32 0x03  /* Load 32-bit register */
+#define PIIR_LOAD_R64 0x04  /* Load 64-bit register */
 #define PIIR_RET_NIL  0x05  /* Return nothing */
 
 /*
