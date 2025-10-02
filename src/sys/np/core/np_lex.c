@@ -27,6 +27,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Description: Pirho compiler lexer
+ * Author: Ian Marco Moffett
+ */
+
 #include <sys/types.h>
 #include <sys/errno.h>
 #include <sys/syslog.h>
