@@ -35,6 +35,9 @@
 /* End-of-file */
 #define LEX_EOF (-2)
 
+/* Max string length */
+#define LEX_MAX_STRLEN 4096
+
 struct np_work;
 
 /* Keywords */
@@ -86,6 +89,7 @@ typedef enum {
     TT_I16,             /* 'i16' */
     TT_I32,             /* 'i32' */
     TT_I64,             /* 'i64' */
+    TT_STR,             /* <string> */
 
     /* Values */
     TT_NUMBER,          /* <numbers> */

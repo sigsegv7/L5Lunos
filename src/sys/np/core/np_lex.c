@@ -36,6 +36,7 @@
 #include <sys/errno.h>
 #include <sys/syslog.h>
 #include <os/np.h>
+#include <os/kalloc.h>
 #include <np/lex.h>
 #include <string.h>
 
@@ -303,6 +304,73 @@ lex_nomnum(struct np_work *work, char c, struct lex_token *res)
 }
 
 /*
+ * Parse a string and return the result as token
+ *
+ * @work: Current work
+ * @c: Current character
+ * @res: Result is written here
+ *
+ * Returns zero on success, otherwise a less than zero
+ * value to indicate failure
+ */
+static int
+lex_nomstr(struct np_work *work, char c, struct lex_token *res)
+{
+    char *strbuf;
+    size_t strbuf_i = 0, start_line;
+    bool have_term = false;
+    int retval = 0;
+
+    if (work == NULL || res == NULL) {
+        return -EINVAL;
+    }
+
+    start_line = work->line_no;
+
+    /*
+     * Create a string buffer. This might be configured to
+     * be a rather large number so we allocate on the heap
+     * to not overflow the stack.
+     */
+    if ((strbuf = kalloc(LEX_MAX_STRLEN)) == NULL) {
+        pr_error("failed to allocate string buffer\n");
+        return -1;
+    }
+
+    while ((c = lex_pop(work)) != 0) {
+        if (strbuf_i >= (LEX_MAX_STRLEN - 1)) {
+            pr_error("line %d: string too long!\n", start_line);
+            retval = -1;
+            break;
+        }
+
+        /* End our scanning once we have an end quote */
+        if (c == '"') {
+            strbuf[strbuf_i] = '\0';
+            have_term = true;
+            break;
+        }
+
+        strbuf[strbuf_i++] = c;
+    }
+
+    /*
+     * If everything went well, copy the string into the
+     * token store.
+     */
+    if (have_term) {
+        res->val_str = ptrbox_strdup(strbuf, work->work_mem);
+    } else {
+        pr_error("line %d: Unterminated string\n", start_line);
+        retval = -1;
+    }
+
+    res->token = TT_STR;
+    kfree(strbuf);
+    return retval;
+}
+
+/*
  * Nom a token
  */
 int
@@ -354,6 +422,12 @@ lex_nom(struct np_work *work, struct lex_token *res)
         break;
     case ':':
         res->token = TT_COLON;
+        break;
+    case '"':
+        /* Handle a string */
+        if ((error = lex_nomstr(work, c, res)) < 0) {
+            return error;
+        }
         break;
     default:
         if (is_num(c)) {
