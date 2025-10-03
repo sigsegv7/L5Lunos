@@ -42,6 +42,7 @@
  */
 typedef int8_t ir_byte_t;
 typedef int8_t md_byte_t;
+typedef int8_t reg_t;
 
 /*
  * The maxiumum size of the bytecode stack per
@@ -65,11 +66,13 @@ typedef int8_t md_byte_t;
  * @code: Generated machine code
  * @last_ir: Last IR byte used
  * @code_i: Current index into code buffer
+ * @regset: Register set bitmap
  */
 struct piir_vm {
     md_byte_t code[4096];
     ir_byte_t last_ir;
     uint32_t code_i;
+    uint8_t regset;
 };
 
 /*

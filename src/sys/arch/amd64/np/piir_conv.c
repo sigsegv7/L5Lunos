@@ -55,8 +55,24 @@ typedef enum {
     R32_ESP,
     R32_EBP,
     R32_ESI,
-    R32_RDI
+    R32_RDI,
+    __R32_MAX
 } r32_t;
+
+/*
+ * Valid 64-bit register IDs
+ */
+typedef enum {
+    R64_RAX,
+    R64_RCX,
+    R64_RDX,
+    R64_RBX,
+    R64_RSP,
+    R64_RBP,
+    R64_RSI,
+    R64_RDI,
+    __R64_MAX
+} r64_t;
 
 /* SYS-V ABI specific */
 #define R32_RETVAL R32_EAX
@@ -127,4 +143,32 @@ md_piir_decode(struct np_work *work, struct piir_vm *vm, ir_byte_t input)
         return vm_push(vm, OP_NRET, OP_NRET_LEN);
     }
     return 0;
+}
+
+reg_t
+md_alloc_reg(struct np_work *work, struct piir_vm *vm, int flags)
+{
+    if (work == NULL || vm == NULL) {
+        return -EINVAL;
+    }
+
+    /* If a bit is unset, it is free */
+    for (int i = 0; i < __R32_MAX; ++i) {
+        if (!ISSET(vm->regset, BIT(i))) {
+            vm->regset |= BIT(i);
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+void
+md_free_reg(struct np_work *work, struct piir_vm *vm, reg_t reg)
+{
+    if (work == NULL || vm == NULL) {
+        return;
+    }
+
+    vm->regset &= ~BIT(reg);
 }

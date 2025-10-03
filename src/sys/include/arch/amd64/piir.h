@@ -54,4 +54,25 @@ ssize_t md_piir_decode(
     ir_byte_t input
 );
 
+/*
+ * Allocate a register ID for use in the IR
+ *
+ * @work: Current work
+ * @vm: Virtual machine state
+ * @flags: Optional flags
+ *
+ * Returns the allocated register ID on success, otherwise
+ * a less than zero value on failure
+ */
+reg_t md_alloc_reg(struct np_work *work, struct piir_vm *vm, int flags);
+
+/*
+ * Free one or more registers
+ *
+ * @work: Current work
+ * @vm: Virtual machine state
+ * @reg: Register to free
+ */
+void md_free_reg(struct np_work *work, struct piir_vm *vm, reg_t reg);
+
 #endif  /* !_MACHINE_PIIR_H_ */
