@@ -44,6 +44,23 @@
 
 typedef md_byte_t inst_t[8];
 
+/*
+ * Valid 32-bit register IDs
+ */
+typedef enum {
+    R32_EAX,
+    R32_ECX,
+    R32_EDX,
+    R32_EBX,
+    R32_ESP,
+    R32_EBP,
+    R32_ESI,
+    R32_RDI
+} r32_t;
+
+/* SYS-V ABI specific */
+#define R32_RETVAL R32_EAX
+
 /* Declare an instruction array */
 #define INST_DECL(...) ((inst_t)__VA_ARGS__)
 
@@ -56,7 +73,7 @@ typedef md_byte_t inst_t[8];
 #define OP_NOP_LEN 1
 
 /* MOV R32, IMM32 (B8 + rd) */
-#define OP_LOAD32_R32(IMM32) INST_DECL({0xB8, (IMM32)})
+#define OP_LOAD32_R32(IMM32, RD) INST_DECL({0xB8 + (RD), (IMM32)})
 #define OP_LOAD32_R32_LEN 5
 
 /*
@@ -101,7 +118,7 @@ md_piir_decode(struct np_work *work, struct piir_vm *vm, ir_byte_t input)
         }
 
         return vm_push(
-            vm, OP_LOAD32_R32(input),
+            vm, OP_LOAD32_R32(input, R32_RETVAL),
             OP_LOAD32_R32_LEN
         );
     case PIIR_NOP:
