@@ -184,20 +184,36 @@ parse_type(struct np_work *work, struct lex_token *tok)
 static int
 parse_return(struct np_work *work, struct lex_token *tok)
 {
+    struct symbol *sym = NULL;
+    int error;
     tt_t tt;
 
-    /*
-     * For now we'll only accept numbers as return values
-     * so we must see one after the return statement
-     */
-    tt = parse_expect(work, "return", TT_NUMBER, tok);
-    if (tt == TT_NONE) {
-        return -1;
+    if ((error = lex_nom(work, tok)) < 0) {
+        return error;
     }
 
 #define PIIR_PUSH(BYTE) piir_push(work->piir_stack, (BYTE))
-    PIIR_PUSH(PIIR_RET_NUM);
-    PIIR_PUSH(tok->val);
+    switch (tok->token) {
+    case TT_NUMBER:
+        PIIR_PUSH(PIIR_RET_NUM);
+        PIIR_PUSH(tok->val);
+        break;
+    case TT_STR:
+        sym = symbol_alloc(&work->symlist, NULL, tok->val_str);
+        if (sym == NULL) {
+            pr_error("internal error, failed to alloc symbol\n");
+            return -1;
+        }
+        PIIR_PUSH(PIIR_RET_SYMBOL);
+        PIIR_PUSH(sym->id);
+        break;
+    default:
+        pr_error(
+            "line %d: unexpected token %s after 'return'\n",
+            work->line_no, stoktab[tok->token]
+        );
+        return -1;
+    }
 #undef PIIR_PUSH
     return 0;
 }

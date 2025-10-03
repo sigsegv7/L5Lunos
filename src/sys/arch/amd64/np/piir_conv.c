@@ -76,6 +76,7 @@ typedef enum {
 
 /* SYS-V ABI specific */
 #define R32_RETVAL R32_EAX
+#define R64_RETVAL R64_RAX
 
 /* Declare an instruction array */
 #define INST_DECL(...) ((inst_t)__VA_ARGS__)
@@ -91,6 +92,10 @@ typedef enum {
 /* MOV R32, IMM32 (B8 + rd) */
 #define OP_LOAD32_R32(IMM32, RD) INST_DECL({0xB8 + (RD), (IMM32)})
 #define OP_LOAD32_R32_LEN 5
+
+/* MOV R64, IMM64 (REX.W | 0xB8 + rd) */
+#define OP_LOAD64_R64(IMM64, RD) INST_DECL({0x48, 0xB8 + (RD), (IMM64)})
+#define OP_LOAD64_R64_LEN 10
 
 /*
  * Push an instruction byte into the virtual
@@ -109,11 +114,32 @@ vm_push(struct piir_vm *vm, inst_t inst, size_t len)
     return len;
 }
 
+/*
+ * Push a 64-bit value
+ */
+static void
+vm_push64(struct piir_vm *vm, uint64_t v)
+{
+    size_t max_len;
+    uint64_t *p;
+
+    max_len = (vm->code_i + sizeof(v));
+    if (max_len >= sizeof(vm->code) - 1) {
+        return;
+    }
+
+    p = (uint64_t *)&vm->code[vm->code_i];
+    *p = v;
+    vm->code_i += sizeof(v);
+}
+
 ssize_t
 md_piir_decode(struct np_work *work, struct piir_vm *vm, ir_byte_t input)
 {
+    struct symbol *sym;
     struct piir_stack *stack;
     ssize_t len;
+    int error;
 
     if (vm == NULL) {
         return -EINVAL;
@@ -137,6 +163,34 @@ md_piir_decode(struct np_work *work, struct piir_vm *vm, ir_byte_t input)
             vm, OP_LOAD32_R32(input, R32_RETVAL),
             OP_LOAD32_R32_LEN
         );
+    case PIIR_RET_SYMBOL:
+        /* Get the symbol ID */
+        if ((input = piir_pop(stack)) < 0) {
+            pr_error("failed to pop element from stack\n");
+            return input;
+        }
+
+        /* Lookup the symbol */
+        error = symbol_lookup_id(&work->symlist, input, &sym);
+        if (error < 0) {
+            pr_error("failed to lookup symbol %d\n", input);
+            return error;
+        }
+
+        /* Load some padding into our register */
+        error = vm_push(vm, OP_LOAD64_R64(0, R64_RETVAL), OP_LOAD64_R64_LEN);
+        if (error < 0) {
+            pr_error("failed to push load op\n");
+            return error;
+        }
+
+        /*
+         * Move back 8 bytes, load the symbol address
+         * and overwrite the padding
+         */
+        vm->code_i -= sizeof(sym->addr);
+        vm_push64(vm, (uintptr_t)sym->addr);
+        break;
     case PIIR_NOP:
         return vm_push(vm, OP_NOP, OP_NOP_LEN);
     case PIIR_RET_NIL:
