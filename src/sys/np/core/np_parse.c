@@ -38,8 +38,8 @@
 #include <sys/param.h>
 #include <np/lex.h>
 #include <np/parse.h>
-#include <np/piir.h>
 #include <os/np.h>
+#include <np/piir.h>
 #include <lib/ptrbox.h>
 
 #define MAX_BEGIN_DEPTH 8
@@ -366,6 +366,13 @@ parse_work(struct np_work *work)
     error = piir_stack_new(work, &work->piir_stack);
     if (error < 0) {
         pr_error("failed to alloc PIIR stack\n");
+        return error;
+    }
+
+    /* Initialize the symbol list */
+    error = symlist_init(work, &work->symlist);
+    if (error < 0) {
+        pr_error("failed to alloc symlist\n");
         return error;
     }
 

@@ -39,6 +39,7 @@
 #include <os/vnode.h>
 #include <np/lex.h>
 #include <np/piir.h>
+#include <np/symbol.h>
 #include <lib/ptrbox.h>
 
 /*
@@ -64,6 +65,7 @@ typedef enum {
  * @line_no: Current line number
  * @piir_stack: Bytecode stack
  * @lex_st: Lexer state
+ * @symlist: List of symbols
  * @ccache: Character cache (temporary store for lexer)
  * @in_func: Is set if we are inside a function
  * @begin_depth: How deep in "begin" we are
@@ -74,6 +76,7 @@ struct np_work {
     size_t line_no;
     struct piir_stack *piir_stack;
     struct lexer_state lex_st;
+    struct symlist symlist;
     struct ptrbox *work_mem;
     char ccache;
     uint8_t in_func : 1;
