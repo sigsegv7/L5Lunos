@@ -56,6 +56,7 @@ typedef int8_t md_byte_t;
 #define PIIR_LOAD_R32 0x03  /* Load 32-bit register */
 #define PIIR_LOAD_R64 0x04  /* Load 64-bit register */
 #define PIIR_RET_NIL  0x05  /* Return nothing */
+#define PIIR_RET_NUM  0x06  /* Return a number */
 
 /*
  * Represents the PIIR virtual machine for storing

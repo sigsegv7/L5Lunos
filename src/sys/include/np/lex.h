@@ -41,6 +41,7 @@ struct np_work;
 #define TOKEN_BEGIN "begin"
 #define TOKEN_PROC "proc"
 #define TOKEN_END "end"
+#define TOKEN_RETURN "return"
 
 /* Types */
 #define TOKEN_U8    "u8"
@@ -93,6 +94,7 @@ typedef enum {
     TT_BEGIN,           /* 'begin' */
     TT_PROC,            /* 'proc' */
     TT_END,             /* 'end' */
+    TT_RETURN,          /* 'return' */
 } tt_t;
 
 typedef uint64_t tokval_t;

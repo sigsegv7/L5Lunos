@@ -84,7 +84,8 @@ static const char *stoktab[] = {
     /* Keywords */
     [TT_BEGIN]  = "<TT_BEGIN>",
     [TT_PROC]   = "<TT_PROC>",
-    [TT_END]    = "<TT_END>"
+    [TT_END]    = "<TT_END>",
+    [TT_RETURN] = "<TT_RETURN>"
 };
 
 /*
@@ -170,6 +171,35 @@ parse_type(struct np_work *work, struct lex_token *tok)
     }
 
     return NP_BAD_TYPE;
+}
+
+/*
+ * Parse a return statement
+ *
+ * @work: Input work
+ * @tok: Current token
+ *
+ * Returns zero on success
+ */
+static int
+parse_return(struct np_work *work, struct lex_token *tok)
+{
+    tt_t tt;
+
+    /*
+     * For now we'll only accept numbers as return values
+     * so we must see one after the return statement
+     */
+    tt = parse_expect(work, "return", TT_NUMBER, tok);
+    if (tt == TT_NONE) {
+        return -1;
+    }
+
+#define PIIR_PUSH(BYTE) piir_push(work->piir_stack, (BYTE))
+    PIIR_PUSH(PIIR_RET_NUM);
+    PIIR_PUSH(tok->val);
+#undef PIIR_PUSH
+    return 0;
 }
 
 /*
@@ -310,6 +340,11 @@ parse_token(struct np_work *work, struct lex_token *tok)
 
         /* XXX: NOP for testing */
         PIIR_PUSH(PIIR_NOP);
+        break;
+    case TT_RETURN:
+        if ((error = parse_return(work, tok)) != 0) {
+            return -1;
+        }
         break;
     }
 #undef PIIR_PUSH

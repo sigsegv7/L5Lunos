@@ -144,6 +144,11 @@ static int
 lex_cmptok(char *tokstr, struct lex_token *res)
 {
     switch (*tokstr) {
+    case 'r':
+        if (strcmp(tokstr, TOKEN_RETURN) == 0) {
+            res->token = TT_RETURN;
+        }
+        return 0;
     case 'b':
         if (strcmp(tokstr, TOKEN_BEGIN) == 0) {
             res->token = TT_BEGIN;
