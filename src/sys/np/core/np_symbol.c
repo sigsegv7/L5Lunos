@@ -91,25 +91,55 @@ symbol_lookup(struct symlist *slp, char *name, struct symbol **res_p)
 
         if (strcmp(sym->name, name) == 0) {
             symbol_cache(slp, sym);
-            break;
+            *res_p = sym;
+            return 0;
         }
     }
 
-    *res_p = sym;
-    return (sym == NULL) ? -1 : 0;
+    return -1;
+}
+
+int
+symbol_lookup_id(struct symlist *slp, size_t id, struct symbol **res_p)
+{
+    struct symbol *sym = NULL;
+
+    if (slp == NULL || res_p == NULL) {
+        return -EINVAL;
+    }
+
+    /* Is it in the cache? */
+    for (uint16_t i = 0; i < slp->cache_i; ++i) {
+        sym = slp->cache[i];
+        if (sym->id == id) {
+            *res_p = sym;
+            return 0;
+        }
+    }
+
+    /* Go through each entry to find it */
+    TAILQ_FOREACH(sym, &slp->symq, link) {
+        if (sym == NULL)
+            continue;
+
+        if (sym->id == id) {
+            symbol_cache(slp, sym);
+            *res_p = sym;
+            return 0;
+        }
+    }
+
+    return -1;
 }
 
 struct symbol *
 symbol_alloc(struct symlist *slp, char *name, void *addr)
 {
-    struct symbol *sym;
+    char namebuf[64];
+    struct symbol *sym = NULL;
     struct np_work *work;
 
-    if (slp == NULL || name == NULL) {
-        return NULL;
-    }
-
-    if (addr == NULL) {
+    if (slp == NULL || addr == NULL) {
         return NULL;
     }
 
@@ -125,9 +155,19 @@ symbol_alloc(struct symlist *slp, char *name, void *addr)
         return NULL;
     }
 
-    /* Initialize the symbol */
-    sym->name = ptrbox_strdup(name, work->work_mem);
     sym->addr = addr;
+    sym->id = slp->nsym;
+
+    /*
+     * If there is no name to use, we'll make one up for
+     * ourselves.
+     */
+    if (name == NULL) {
+        sym->name = ptrbox_strdup(name, work->work_mem);
+    } else {
+        snprintf(namebuf, sizeof(namebuf), "__internal.%d", sym->id);
+        sym->name = ptrbox_strdup(namebuf, work->work_mem);
+    }
 
     TAILQ_INSERT_TAIL(&slp->symq, sym, link);
     ++slp->nsym;

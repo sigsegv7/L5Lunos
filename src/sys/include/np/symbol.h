@@ -43,11 +43,13 @@
  *
  * @name: Name of the symbol
  * @addr: Data the symbol holds
+ * @id: Symbol ID
  * @link: Queue link
  */
 struct symbol {
     char *name;
     void *addr;
+    size_t id;
     TAILQ_ENTRY(symbol) link;
 };
 
@@ -104,4 +106,18 @@ struct symbol *symbol_alloc(struct symlist *slp, char *name, void *addr);
  * value on failure.
  */
 int symbol_lookup(struct symlist *slp, char *name, struct symbol **res_p);
+
+/*
+ * Lookup a specific symbol from a symbol
+ * table using its ID
+ *
+ * @slp: Symbol list pointer
+ * @name: Symbol name
+ * @res_p: Result pointer is written here
+ *
+ * Returns zero on success, otherwise a less than zero
+ * value on failure.
+ */
+int symbol_lookup_id(struct symlist *slp, size_t id, struct symbol **res_p);
+
 #endif  /* !_NP_SYMBOL_H_ */
