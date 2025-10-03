@@ -64,7 +64,6 @@ typedef enum {
  * @line_no: Current line number
  * @piir_stack: Bytecode stack
  * @lex_st: Lexer state
- * @ast_root: Parse tree
  * @ccache: Character cache (temporary store for lexer)
  * @in_func: Is set if we are inside a function
  * @begin_depth: How deep in "begin" we are
@@ -76,7 +75,6 @@ struct np_work {
     struct piir_stack *piir_stack;
     struct lexer_state lex_st;
     struct ptrbox *work_mem;
-    struct ast_node *ast_root;
     char ccache;
     uint8_t in_func : 1;
     uint8_t begin_depth;
