@@ -49,6 +49,17 @@
 #define STACK_LEN   4096
 
 #if defined(_KERNEL)
+
+/*
+ * Process environment block, used to store arguments
+ * and other information.
+ *
+ * @pid: PID of the process that owns this block
+ */
+struct penv_blk {
+    pid_t pid;
+};
+
 /*
  * A process describes a running program image
  * on the system.
@@ -57,6 +68,7 @@
  * @flags: State flags (see PROC_*)
  * @pcb: Process control block
  * @scdom: Syscall domain
+ * @envblk: Environment block
  * @level: Access level
  * @maplist_lock: Protects the maplist
  * @sigtab: Signal table
@@ -69,6 +81,7 @@ struct proc {
     struct md_pcb pcb;
     struct syscall_domain scdom;
     struct filedesc *fdtab[FD_MAX];
+    struct penv_blk envblk;
     mac_level_t level;
     struct spinlock maplist_lock;
     sigtab_t sigtab;
