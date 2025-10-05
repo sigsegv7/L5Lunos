@@ -69,6 +69,7 @@ ap_entry(struct limine_smp_info *)
 
     /* Initialize the core */
     memset(pcore, 0, sizeof(*pcore));
+    TAILQ_INIT(&pcore->scq.q);
     pcore->id = ncores_up;
     cpu_conf(pcore);
     cpu_init(pcore);
