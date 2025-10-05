@@ -32,9 +32,13 @@
 #include <sys/errno.h>
 #include <sys/cdefs.h>
 #include <sys/queue.h>
+#include <sys/panic.h>
 #include <sys/proc.h>
+#include <sys/cpuvar.h>
+#include <os/systm.h>
 #include <vm/vm.h>
 #include <vm/physseg.h>
+#include <os/elfload.h>
 #include <os/signal.h>
 #include <os/kalloc.h>
 #include <os/filedesc.h>
@@ -168,4 +172,43 @@ proc_check_addr(struct proc *proc, uintptr_t addr, size_t len)
     }
 
     return -EFAULT;
+}
+
+int
+proc_spawn(const char *path, struct penv_blk *envbp)
+{
+    struct pcore *core;
+    struct loaded_elf elf;
+    struct proc *proc;
+    int error;
+
+    if (path == NULL) {
+        return -EINVAL;
+    }
+
+    /* Allocate a new process */
+    proc = kalloc(sizeof(*proc));
+    if (proc == NULL) {
+        return -ENOMEM;
+    }
+
+    proc_init(proc, 0);
+    error = elf_load(path, proc, &elf);
+    if (error < 0) {
+        kfree(proc);
+        return error;
+    }
+
+    core = cpu_sched();
+    if (__unlikely(core == NULL)) {
+        panic("spawn: failed to arbitrate core\n");
+    }
+
+    if (envbp != NULL) {
+        memcpy(&proc->envblk, envbp, sizeof(proc->envblk));
+    }
+
+    md_set_ip(proc, elf.entrypoint);
+    sched_enq(&core->scq, proc);
+    return proc->pid;
 }

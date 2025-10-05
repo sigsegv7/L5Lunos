@@ -136,6 +136,17 @@ int proc_add_range(struct proc *procp, vaddr_t va, paddr_t pa, size_t len);
 int proc_kill(struct proc *procp, int status);
 
 /*
+ * Spawn a process from a binary
+ *
+ * @path: Path to binary
+ * @envp: Environment block pointer
+ *
+ * Returns the PID of the new process on success,
+ * otherwise a less than zero value on error
+ */
+int proc_spawn(const char *path, struct penv_blk *envbp);
+
+/*
  * Initialize machine dependent state of a process
  *
  * @procp: New process data is written here
