@@ -212,3 +212,18 @@ proc_spawn(const char *path, struct penv_blk *envbp)
     sched_enq(&core->scq, proc);
     return proc->pid;
 }
+
+scret_t
+sys_spawn(struct syscall_args *scargs)
+{
+    const char *u_path = SCARG(scargs, const char *, 0);
+    char buf[PATH_MAX];
+    int error;
+
+    error = copyinstr(u_path, buf, sizeof(buf));
+    if (error < 0) {
+        return error;
+    }
+
+    return proc_spawn(buf, NULL);
+}

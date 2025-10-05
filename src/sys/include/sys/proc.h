@@ -207,5 +207,10 @@ __dead void md_proc_yield(void);
  */
 __dead void md_proc_kick(struct proc *procp);
 
+/*
+ * Spawn a new process
+ */
+scret_t sys_spawn(struct syscall_args *scargs);
+
 #endif  /* !_KERNEL */
 #endif  /* !_SYS_PROC_H_ */

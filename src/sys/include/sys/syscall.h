@@ -48,6 +48,7 @@
 #define SYS_cross       0x03    /* cross a border (mandatory) */
 #define SYS_sigaction   0x04
 #define SYS_query       0x05    /* query a border (mandatory) */
+#define SYS_spawn       0x06    /* spawn a process */
 
 typedef __ssize_t scret_t;
 typedef __ssize_t scarg_t;
