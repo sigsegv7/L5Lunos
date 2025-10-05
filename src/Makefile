@@ -10,6 +10,7 @@ ISO = lunos.iso
 
 # Build tools
 BINUTILS_DIR := $(shell pwd)/cc/toolchain/build-binutils
+USER_CC = $(shell pwd)/cc/gcc/bin/x86_64-pc-ethos-gcc
 CC := clang
 LD := ld
 AS := as
@@ -28,12 +29,12 @@ sys:
 
 .PHONY: user
 user:
-	cd cmd/; make CC=$(CC) AS=$(AS) LD=$(LD) TARGET=$(TARGET) \
+	cd cmd/; make CC=$(USER_CC) AS=$(AS) LD=$(LD) TARGET=$(TARGET) \
 		SYSROOT=$(SYSROOT)
 
 .PHONY: lib
 lib:
-	cd lib/; make CC=$(CC) AS=$(AS) LD=$(LD) TARGET=$(TARGET) \
+	cd lib/; make CC=$(USER_CC) AS=$(AS) LD=$(LD) TARGET=$(TARGET) \
 				  SYSROOT=$(SYSROOT)
 
 root:

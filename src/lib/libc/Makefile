@@ -8,7 +8,7 @@ all: build sys $(OBJ) target
 	ar rcs $(LIBC_OUT) $(OBJ)
 
 %.o: %.c
-	$(CC) -Iinclude/ -I$(TARGET)/include/ -c $< -o $@
+	$(CC) -ffreestanding -nostdlib -Iinclude/ -I$(TARGET)/include/ -c $< -o $@
 
 .PHONY: target
 target:
