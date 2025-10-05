@@ -33,6 +33,18 @@
 #include <sys/types.h>
 
 /*
+ * Copy userland string to kernel space safely
+ *
+ * @uaddr: Userspace source address to copy from
+ * @kaddr: Kernel address dest address to copy to
+ * @len: Length of buffer
+ *
+ * Returns 0 on success, otherwise a less than zero value
+ * on failure.
+ */
+int copyinstr(const void *uaddr, char *kaddr, size_t len);
+
+/*
  * Copy userland data to kernel space safely
  *
  * @uaddr: Userspace source address to copy from

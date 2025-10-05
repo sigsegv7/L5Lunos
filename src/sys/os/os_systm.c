@@ -91,3 +91,29 @@ copyout(const void *kaddr, void *uaddr, size_t len)
     memcpy(uaddr, kaddr, len);
     return 0;
 }
+
+int
+copyinstr(const void *uaddr, char *kaddr, size_t len)
+{
+    char *dest = (char *)kaddr;
+    const char *src = (char *)uaddr;
+    char dmmy;
+
+    if (copyin(uaddr, &dmmy, 1) != 0) {
+        return -EFAULT;
+    }
+
+    for (size_t i = 0; i < len; ++i) {
+        if (copyin(uaddr + i, &dmmy, 1) != 0) {
+            return -EFAULT;
+        }
+
+        dest[i] = src[i];
+
+        if (src[i] == '\0') {
+            break;
+        }
+    }
+
+    return 0;
+}
