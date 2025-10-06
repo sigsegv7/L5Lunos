@@ -32,6 +32,7 @@
 
 #include <sys/proc.h>
 #include <sys/param.h>
+#include <sys/mount.h>
 #include <sys/syscall.h>
 
 /*
@@ -61,7 +62,8 @@ scret_t(*g_unix_sctab[])(struct syscall_args *) = {
     [SYS_write]  = sys_write,
     [SYS_cross]  = sys_cross,
     [SYS_query]  = sys_query,
-    [SYS_spawn]  = sys_spawn
+    [SYS_spawn]  = sys_spawn,
+    [SYS_mount]  = sys_mount
 };
 
 #endif  /* !_NEED_UNIX_SCTAB */

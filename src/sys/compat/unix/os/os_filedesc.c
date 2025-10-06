@@ -28,13 +28,14 @@
  */
 
 #include <sys/syscall.h>
+#include <sys/limits.h>
+#include <sys/syslog.h>
+#include <sys/mount.h>
 #include <sys/errno.h>
 #include <sys/types.h>
 #include <os/systm.h>
 #include <os/filedesc.h>
 #include <compat/unix/syscall.h>
-
-#include <sys/syslog.h>
 
 /*
  * Write syscall
@@ -59,4 +60,48 @@ sys_write(struct syscall_args *scargs)
     }
 
     return write(fd, kbuf, count);
+}
+
+/*
+ * ARG0: Source
+ * ARG1: Target
+ * ARG2: Filesystem type
+ * ARG3: Mountflags
+ * ARG4: Data
+ */
+scret_t
+sys_mount(struct syscall_args *scargs)
+{
+    struct mount_args args;
+    char source[NAME_MAX];
+    char target[NAME_MAX];
+    char fstype[FSNAME_MAX];
+    const char *u_source = SCARG(scargs, const char *, 0);
+    const char *u_target = SCARG(scargs, const char *, 1);
+    const char *u_fstype = SCARG(scargs, const char *, 2);
+    unsigned long u_mountflags = SCARG(scargs, unsigned long, 3);
+    int error;
+
+    /* Get the filesystem source */
+    error = copyinstr(u_source, source, sizeof(source));
+    if (error < 0) {
+        source[0] = '\0';
+    }
+
+    /* Get the filesystem target */
+    error = copyinstr(u_target, target, sizeof(target));
+    if (error < 0) {
+        return error;
+    }
+
+    /* Get the filesystem type */
+    error = copyinstr(u_fstype, fstype, sizeof(u_fstype));
+    if (error < 0) {
+        return error;
+    }
+
+    args.source = source;
+    args.target = target;
+    args.fstype = fstype;
+    return kmount(&args, u_mountflags);
 }

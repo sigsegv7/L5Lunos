@@ -31,22 +31,32 @@
 #define _SYS_MOUNT_H_
 
 #include <sys/queue.h>
+#include <sys/syscall.h>
 #include <sys/types.h>
-#include <os/vnode.h>
-
 #if defined(_KERNEL)
-
-/*
- * Number of bytes allowed in a filesystem
- * name including the null termination
- */
-#define FSNAME_MAX 16
+#include <os/vnode.h>
+#endif /* defined(_KERNEL) */
 
 /*
  * Mount filesystem string names
  */
 #define MOUNT_INITRD "initrd"   /* Initial ramdisk */
 #define MOUNT_DEVFS  "devfs"    /* Device filesystem */
+
+/*
+ * The mount system call
+ */
+int mount(
+    const char *source, const char *target, const char *fstype,
+    unsigned long mountflags, void *data
+);
+
+#if defined(_KERNEL)
+/*
+ * Number of bytes allowed in a filesystem
+ * name including the null termination
+ */
+#define FSNAME_MAX 16
 
 /* Forward declarations */
 struct fs_info;
@@ -155,7 +165,7 @@ int mount_lookup(const char *name, struct mount **mp_res);
  * Returns zero on success, otherwise a less than zero
  * failure upon failure.
  */
-int mount(struct mount_args *margs, uint32_t flags);
+int kmount(struct mount_args *margs, uint32_t flags);
 
 /*
  * Initialize a mountpoint to a known state
@@ -177,6 +187,11 @@ int mountlist_init(struct mountlist *mlp);
  * zero value to indicate failure.
  */
 int mount_alloc(const char *name, struct mount **mp_res);
+
+/*
+ * Mount system call
+ */
+scret_t sys_mount(struct syscall_args *scargs);
 
 #endif  /* !_KERNEL */
 #endif  /* !_SYS_MOUNT_H_ */

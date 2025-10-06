@@ -165,7 +165,7 @@ mount_alloc(const char *name, struct mount **mp_res)
  * Mount a filesystem
  */
 int
-mount(struct mount_args *margs, uint32_t flags)
+kmount(struct mount_args *margs, uint32_t flags)
 {
     const struct vfsops *vfsops;
     struct mount *mpp;
@@ -256,6 +256,6 @@ mountlist_init(struct mountlist *mlp)
 
     TAILQ_INIT(&mlp->list);
     mlp->i = 1;
-    mount(&margs, 0);
+    kmount(&margs, 0);
     return 0;
 }
