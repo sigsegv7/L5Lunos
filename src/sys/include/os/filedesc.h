@@ -60,6 +60,17 @@ struct filedesc {
 int fdtab_init(struct proc *procp);
 
 /*
+ * Open a file
+ *
+ * @path: Path to file in which we wish to open
+ * @mode: Mode of our desired file
+ *
+ * Returns the file descriptor on success,
+ * otherwise a less than zero value on failure.
+ */
+int fd_open(const char *path, mode_t mode);
+
+/*
  * Write to a file descriptor
  *
  * @fd: File descriptor to write to

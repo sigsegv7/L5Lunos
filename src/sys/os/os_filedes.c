@@ -31,10 +31,12 @@
 #include <sys/syslog.h>
 #include <sys/errno.h>
 #include <sys/limits.h>
+#include <sys/proc.h>
+#include <sys/namei.h>
 #include <os/filedesc.h>
 #include <os/kalloc.h>
 #include <io/cons/cons.h>
-#include <sys/proc.h>
+#include <compat/unix/syscall.h>
 #include <string.h>
 
 #define STDOUT_FILENO 1
@@ -84,6 +86,47 @@ fd_alloc(struct proc *procp, struct filedesc **fd_res)
     }
 
     return -EMFILE;
+}
+
+int
+fd_open(const char *path, mode_t mode)
+{
+    struct filedesc *fd;
+    struct nameidata nd;
+    struct proc *self = proc_self();
+    struct vnode *vp;
+    int error;
+
+    /* We need the current proc */
+    if (self == NULL) {
+        return -ESRCH;
+    }
+
+    if (path == NULL) {
+        return -ESRCH;
+    }
+
+    /* Allocate a new file descriptor */
+    error = fd_alloc(self, &fd);
+    if (error < 0) {
+        return error;
+    }
+
+    /*
+     * Now we try to do the lookup, we'll need
+     * the vnode for file references to be
+     * useful
+     */
+    nd.path = path;
+    nd.flags = 0;
+    nd.vp_res = &vp;
+    error = namei(&nd);
+    if (error < 0) {
+        return error;
+    }
+
+    fd->vp = vp;
+    return fd->fdno;
 }
 
 /*
