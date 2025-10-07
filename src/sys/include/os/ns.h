@@ -33,6 +33,11 @@
 #include <sys/types.h>
 #include <os/nsvar.h>
 
+#define NSMAX 8     /* Max number of namespaces */
+
+/* Namespace lists */
+#define NS_IOTAP 0      /* I/O tap interface */
+
 typedef uint8_t ns_t;
 
 /*

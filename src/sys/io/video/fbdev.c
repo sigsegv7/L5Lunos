@@ -126,7 +126,7 @@ fbdev_init(struct module *modp)
     }
 
     obj->data = &info;
-    return ns_obj_enter(0, obj, FBDEV_NSO);
+    return ns_obj_enter(NS_IOTAP, obj, FBDEV_NSO);
 }
 
 static struct mac_ops ops = {

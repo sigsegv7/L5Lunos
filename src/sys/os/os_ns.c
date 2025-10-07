@@ -55,7 +55,7 @@ struct ns_hashmap {
 };
 
 /* Global namespace */
-static struct ns_hashmap namespace;
+static struct ns_hashmap namespace[NSMAX];
 
 /*
  * Fowler–Noll–Vo hash function
@@ -131,12 +131,17 @@ ns_obj_enter(ns_t ns, void *obj, const char *name)
         return -EINVAL;
     }
 
+    /* Don't overflow */
+    if (ns >= NSMAX) {
+        return -EINVAL;
+    }
+
     /* Get the index */
     hash = fnv1_hash(name);
     key = hash % NS_HM_ENTRIES;
 
     /* Find a free slot */
-    hm = &namespace;
+    hm = &namespace[ns];
     while (hm != NULL) {
         entry = &hm->entries[key];
 
@@ -168,11 +173,16 @@ ns_obj_lookup(ns_t ns, const char *name, void *res_p)
         return -EINVAL;
     }
 
+    /* Don't overflow */
+    if (ns >= NSMAX) {
+        return -EINVAL;
+    }
+
     /* Get the index */
     hash = fnv1_hash(name);
     key = hash % NS_HM_ENTRIES;
 
-    hm = &namespace;
+    hm = &namespace[ns];
     while (hm != NULL) {
         entry = &hm->entries[key];
         if (entry->name == NULL) {
@@ -202,6 +212,8 @@ ns_obj_lookup(ns_t ns, const char *name, void *res_p)
 int
 ns_init(void)
 {
-    memset(&namespace, 0, sizeof(namespace));
+    for (uint8_t i = 0; i < NSMAX; ++i) {
+        memset(&namespace[i], 0, sizeof(namespace[0]));
+    }
     return 0;
 }
