@@ -135,19 +135,17 @@ fd_dup(struct proc *procp, int fd)
         return NULL;
     }
 
-    /* We need the old vnode too */
-    if (old->vp == NULL) {
-        return NULL;
-    }
-
     /* Allocate an even newer file descriptor */
     error = fd_alloc(procp, &new);
     if (error != 0) {
         return NULL;
     }
 
-    /* Grab a ref and copy */
-    vnode_ref(old->vp);
+    /* Grab a ref if we can */
+    if (old->vp != NULL) {
+        vnode_ref(old->vp);
+    }
+
     new->mode = old->mode;
     new->vp = old->vp;
     return new;
