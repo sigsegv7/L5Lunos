@@ -277,7 +277,7 @@ sys_open(struct syscall_args *scargs)
     char pathbuf[PATH_MAX];
     int error;
 
-    error = copyinstr(u_path, pathbuf, sizeof(PATH_MAX));
+    error = copyinstr(u_path, pathbuf, PATH_MAX);
     if (error < 0) {
         return error;
     }
