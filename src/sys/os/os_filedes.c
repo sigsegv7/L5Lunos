@@ -89,6 +89,69 @@ fd_alloc(struct proc *procp, struct filedesc **fd_res)
     return -EMFILE;
 }
 
+/*
+ * Look up a file descriptor that belongs to a specific
+ * process by using its fd number
+ *
+ * @procp: Process to look up
+ * @fd: File descriptor number
+ *
+ * Returns the file descriptor pointer on success,
+ * otherwise a less than zero value on failure
+ */
+static struct filedesc *
+fd_get(struct proc *procp, int fd)
+{
+    struct filedesc *fdp;
+
+    if (procp == NULL) {
+        return NULL;
+    }
+
+    for (int i = 0; i < FD_MAX; ++i) {
+        if ((fdp = procp->fdtab[i]) == NULL) {
+            continue;
+        }
+
+        break;
+    }
+
+    return fdp;
+}
+
+
+/*
+ * Duplicate a file descriptor
+ */
+struct filedesc *
+fd_dup(struct proc *procp, int fd)
+{
+    struct filedesc *new, *old;
+    int error;
+
+    old = fd_get(procp, fd);
+    if (new == NULL) {
+        return NULL;
+    }
+
+    /* We need the old vnode too */
+    if (old->vp == NULL) {
+        return NULL;
+    }
+
+    /* Allocate an even newer file descriptor */
+    error = fd_alloc(procp, &new);
+    if (error != 0) {
+        return NULL;
+    }
+
+    /* Grab a ref and copy */
+    vnode_ref(old->vp);
+    new->mode = old->mode;
+    new->vp = old->vp;
+    return new;
+}
+
 int
 fd_open(const char *path, mode_t mode)
 {
@@ -137,6 +200,8 @@ fd_open(const char *path, mode_t mode)
 int
 fdtab_init(struct proc *procp)
 {
+    struct filedesc *fd;
+
     if (procp == NULL) {
         return -EINVAL;
     }
@@ -147,9 +212,10 @@ fdtab_init(struct proc *procp)
         return -1;
     }
 
-    fd_alloc(procp, NULL);  /* stdin */
-    fd_alloc(procp, NULL);  /* stdout */
-    fd_alloc(procp, NULL);  /* stderr */
+    fd_alloc(procp, &fd);  /* stdin */
+    fd->mode = O_RDWR;     /* all can read */
+    fd_dup(procp, 0);      /* stdout */
+    fd_dup(procp, 0);      /* stderr */
     return 0;
 }
 
