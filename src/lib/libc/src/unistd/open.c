@@ -27,49 +27,20 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _UNIX_SYSCALL_H_
-#define _UNIX_SYSCALL_H_ 1
-
-#include <sys/proc.h>
-#include <sys/param.h>
-#include <sys/mount.h>
 #include <sys/syscall.h>
+#include <sys/errno.h>
+#include <unistd.h>
 
-/*
- * Exit the current process - exit(2) syscall
- */
-scret_t sys_exit(struct syscall_args *scargs);
+int
+open(const char *path, int flags)
+{
+    if (path == NULL) {
+        return -EINVAL;
+    }
 
-/*
- * Write to a file descriptor - write(2) syscall
- */
-scret_t sys_write(struct syscall_args *scargs);
-
-/*
- * Cross a resource border - L5 mandatory
- */
-scret_t sys_cross(struct syscall_args *scargs);
-
-/*
- * Query a syscall border - L5 mandatory
- */
-scret_t sys_query(struct syscall_args *scargs);
-
-/*
- * Open a file
- */
-scret_t sys_open(struct syscall_args *scargs);
-
-#ifdef _NEED_UNIX_SCTAB
-scret_t(*g_unix_sctab[])(struct syscall_args *) = {
-    [SYS_none]   = NULL,
-    [SYS_exit]   = sys_exit,
-    [SYS_write]  = sys_write,
-    [SYS_cross]  = sys_cross,
-    [SYS_query]  = sys_query,
-    [SYS_spawn]  = sys_spawn,
-    [SYS_mount]  = sys_mount
-};
-
-#endif  /* !_NEED_UNIX_SCTAB */
-#endif  /* !_UNIX_SYSCALL_H_ */
+    return syscall(
+        SYS_open,
+        (uintptr_t)path,
+        flags
+    );
+}

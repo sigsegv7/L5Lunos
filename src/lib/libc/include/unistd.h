@@ -38,6 +38,16 @@
 #define STDERR_FILENO   2
 
 /*
+ * POSIX open system call
+ *
+ * @path: Path to open
+ * @flags: O_ flags
+ *
+ * Returns the file descriptor on success
+ */
+int open(const char *path, int flags);
+
+/*
  * POSIX write system call
  *
  * @fd: File descriptor to write at
