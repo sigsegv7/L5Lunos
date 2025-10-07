@@ -49,6 +49,17 @@ struct filedesc {
 };
 
 /*
+ * Duplicate a file descriptor
+ *
+ * @procp: Process to duplicate from
+ * @fd: File descriptor to duplicate
+ *
+ * Returns the new file descriptor on success, otherwise
+ * a value of NULL on failure
+ */
+struct filedesc *fd_dup(struct proc *procp, int fd);
+
+/*
  * Initialize a process file descriptor table
  * and set up standard streams
  *

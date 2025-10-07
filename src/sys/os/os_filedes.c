@@ -127,6 +127,7 @@ fd_open(const char *path, mode_t mode)
     }
 
     fd->vp = vp;
+    fd->mode = mode;
     return fd->fdno;
 }
 
