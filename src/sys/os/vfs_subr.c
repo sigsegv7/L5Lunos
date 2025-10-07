@@ -143,3 +143,28 @@ vfs_cmp_cnt(const char *path)
 
     return cnt + 1;
 }
+
+ssize_t
+vop_write(struct vnode *vp, char *data, size_t len)
+{
+    struct vop_rw_data rwdata;
+    struct vop *vops;
+
+    if (vp == NULL || data == NULL) {
+        return -EINVAL;
+    }
+
+    if (len == 0) {
+        return -EINVAL;
+    }
+
+    /* Grab the virtual operations */
+    if ((vops = vp->vops) == NULL) {
+        return -EIO;
+    }
+
+    rwdata.data = data;
+    rwdata.len = len;
+    rwdata.vp = vp;
+    return vops->write(&rwdata);
+}

@@ -67,11 +67,26 @@ struct vop_lookup_args {
 };
 
 /*
+ * Represents VOP data that can be used to read
+ * or write a file, etc
+ *
+ * @data: Buffer containing I/O data
+ * @len: Length of buffer
+ * @vp: Current vnode
+ */
+struct vop_rw_data {
+    void *data;
+    size_t len;
+    struct vnode *vp;
+};
+
+/*
  * Represents operations that can be performed on
  * a specific vnode. These are implemented as callbacks
  */
 struct vop {
     int(*lookup)(struct vop_lookup_args *args);
+    ssize_t(*write)(struct vop_rw_data *data);
 };
 
 /*
@@ -119,5 +134,17 @@ int vfs_valloc(struct vnode **resp, vtype_t type, int flags);
  * on failure.
  */
 int vfs_vrel(struct vnode *vp, int flags);
+
+/*
+ * Wrapper for the vnode write callback
+ *
+ * @vp: Vnode to write to
+ * @data: Data to write
+ * @len: Length of bytes to write
+ *
+ * Returns the number of bytes written on success, otherwise
+ * a less than zero value on failure.
+ */
+ssize_t vop_write(struct vnode *vp, char *data, size_t len);
 
 #endif  /* !_OS_VNODE_H_ */
