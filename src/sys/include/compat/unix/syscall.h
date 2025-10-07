@@ -68,7 +68,8 @@ scret_t(*g_unix_sctab[])(struct syscall_args *) = {
     [SYS_cross]  = sys_cross,
     [SYS_query]  = sys_query,
     [SYS_spawn]  = sys_spawn,
-    [SYS_mount]  = sys_mount
+    [SYS_mount]  = sys_mount,
+    [SYS_open]   = sys_open
 };
 
 #endif  /* !_NEED_UNIX_SCTAB */
