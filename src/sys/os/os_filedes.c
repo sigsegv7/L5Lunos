@@ -30,6 +30,7 @@
 #include <sys/syscall.h>
 #include <sys/syslog.h>
 #include <sys/errno.h>
+#include <sys/fcntl.h>
 #include <sys/limits.h>
 #include <sys/proc.h>
 #include <sys/namei.h>
@@ -225,8 +226,14 @@ fdtab_init(struct proc *procp)
 ssize_t
 write(int fd, const void *buf, size_t count)
 {
+    struct proc *self = proc_self();
+    struct filedesc *fdp;
     int error;
     char kbuf[1024];
+
+    if (self == NULL) {
+        return -ESRCH;
+    }
 
     /* Must be valid */
     error = proc_check_addr(proc_self(), (uintptr_t)buf, count);
@@ -234,8 +241,18 @@ write(int fd, const void *buf, size_t count)
         return error;
     }
 
-    memcpy(kbuf, buf, count);
+    /* Get the file descriptor structure */
+    fdp = fd_get(self, fd);
+    if (fdp == NULL) {
+        return -EBADF;
+    }
 
+    /* We need to be able to write it */
+    if ((fdp->mode & (O_WRONLY| O_RDWR)) == 0) {
+        return -EPERM;
+    }
+
+    memcpy(kbuf, buf, count);
     switch (fd) {
     case STDOUT_FILENO:
         cons_putstr(
