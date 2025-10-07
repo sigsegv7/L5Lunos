@@ -31,6 +31,7 @@
 #define _OS_VNODE_H_ 1
 
 #include <sys/types.h>
+#include <sys/atomic.h>
 
 /* Forward declarations */
 struct vnode;
@@ -82,15 +83,19 @@ struct vop {
  * [V]  Set up by VFS
  * [F/V]: Both F and V
  *
+ * @refcount: How many objects have a reference
  * @type: Vnode type  [F/V]
  * @vops:  Vnode operations hooks [F]
  * @data: Filesystem specific data [F]
  */
 struct vnode {
+    int refcount;
     vtype_t type;
     struct vop *vops;
     void *data;
 };
+
+#define vnode_ref(VP) (atomic_inc_int(&(VP)->refcount))
 
 /*
  * Allocate a new vnode

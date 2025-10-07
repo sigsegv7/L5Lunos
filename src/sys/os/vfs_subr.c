@@ -29,6 +29,7 @@
 
 #include <sys/types.h>
 #include <sys/errno.h>
+#include <sys/atomic.h>
 #include <os/vnode.h>
 #include <os/kalloc.h>
 #include <os/vfs.h>
@@ -77,6 +78,7 @@ vfs_valloc(struct vnode **resp, vtype_t type, int flags)
     }
 
     memset(vp, 0, sizeof(*vp));
+    vp->refcount = 1;
     vp->type = type;
     *resp = vp;
     return 0;
@@ -89,6 +91,9 @@ vfs_vrel(struct vnode *vp, int flags)
         return -EINVAL;
     }
 
+    if (atomic_dec_int(&vp->refcount) > 1) {
+        return 0;
+    }
     kfree(vp);
     return 0;
 }
