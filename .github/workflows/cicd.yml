@@ -18,9 +18,9 @@ jobs:
         run:  sudo apt-get install -y flex bison libfl-dev libmpc-dev
       - name: Install tools
         run:  sudo apt-get install -y lld clang xorriso mtools
-      - name: Build toolchain
-        run: cd src/; tools/build-toolchain.sh
       - name: Bootstrap project
         run: cd src/; tools/bootstrap
+      - name: Build toolchain
+        run: cd src/; tools/build-toolchain.sh
       - name: Build system
         run: cd src/; make
