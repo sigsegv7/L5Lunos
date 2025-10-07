@@ -250,6 +250,10 @@ write(int fd, const void *buf, size_t count)
         return -EPERM;
     }
 
+    /*
+     * Handle standard streams separately, otherwise if not a
+     * standard dream, write to it as a normal file
+     */
     memcpy(kbuf, buf, count);
     switch (fd) {
     case STDOUT_FILENO:
@@ -259,7 +263,10 @@ write(int fd, const void *buf, size_t count)
         );
         break;
     default:
-        return -EBADF;
+        if (fdp->vp == NULL) {
+            return -EIO;
+        }
+        return vop_write(fdp->vp, kbuf, count);
     }
 
     return count;
