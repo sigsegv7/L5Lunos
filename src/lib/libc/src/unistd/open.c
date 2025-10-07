@@ -27,33 +27,20 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _UNISTD_H
-#define _UNISTD_H 1
+#include <sys/syscall.h>
+#include <sys/errno.h>
+#include <unistd.h>
 
-#include <stddef.h>
+int
+open(const char *path, int flags)
+{
+    if (path == NULL) {
+        return -EINVAL;
+    }
 
-/* Standard stream file numbers */
-#define STDIN_FILENO    0
-#define STDOUT_FILENO   1
-#define STDERR_FILENO   2
-
-/*
- * POSIX open system call
- *
- * @path: Path to open
- * @flags: O_ flags
- *
- * Returns the file descriptor on success
- */
-int open(const char *path, int flags);
-
-/*
- * POSIX write system call
- *
- * @fd: File descriptor to write at
- * @buf: Buffer to write
- * @count: Number of bytes within the buffer to write
- */
-ssize_t write(int fd, const void *buf, size_t count);
-
-#endif  /* _UNISTD_H */
+    return syscall(
+        SYS_open,
+        (uintptr_t)path,
+        flags
+    );
+}
