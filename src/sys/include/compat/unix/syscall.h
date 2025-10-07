@@ -54,6 +54,11 @@ scret_t sys_cross(struct syscall_args *scargs);
  */
 scret_t sys_query(struct syscall_args *scargs);
 
+/*
+ * Open a file
+ */
+scret_t sys_open(struct syscall_args *scargs);
+
 #ifdef _NEED_UNIX_SCTAB
 scret_t(*g_unix_sctab[])(struct syscall_args *) = {
     [SYS_none]   = NULL,

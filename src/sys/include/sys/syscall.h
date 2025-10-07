@@ -49,6 +49,7 @@
 #define SYS_sigaction   0x04
 #define SYS_query       0x05    /* query a border (mandatory) */
 #define SYS_spawn       0x06    /* spawn a process */
+#define SYS_open        0x07    /* open a file */
 
 typedef __ssize_t scret_t;
 typedef __ssize_t scarg_t;

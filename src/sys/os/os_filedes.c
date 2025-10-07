@@ -35,6 +35,7 @@
 #include <sys/namei.h>
 #include <os/filedesc.h>
 #include <os/kalloc.h>
+#include <os/systm.h>
 #include <io/cons/cons.h>
 #include <compat/unix/syscall.h>
 #include <string.h>
@@ -180,4 +181,24 @@ write(int fd, const void *buf, size_t count)
     }
 
     return count;
+}
+
+/*
+ * ARG0: Path
+ * ARG1: Mode
+ */
+scret_t
+sys_open(struct syscall_args *scargs)
+{
+    const char *u_path = SCARG(scargs, const char *, 0);
+    mode_t mode = SCARG(scargs, mode_t, 1);
+    char pathbuf[PATH_MAX];
+    int error;
+
+    error = copyinstr(u_path, pathbuf, sizeof(PATH_MAX));
+    if (error < 0) {
+        return error;
+    }
+
+    return fd_open(pathbuf, mode);
 }
