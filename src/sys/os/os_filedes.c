@@ -246,7 +246,7 @@ write(int fd, const void *buf, size_t count)
     }
 
     /* We need to be able to write it */
-    if ((fdp->mode & (O_WRONLY| O_RDWR)) == 0) {
+    if ((fdp->mode & (O_WRONLY | O_RDWR)) == 0) {
         return -EPERM;
     }
 
