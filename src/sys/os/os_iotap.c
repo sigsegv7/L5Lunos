@@ -38,8 +38,6 @@
 #include <stdbool.h>
 #include <string.h>
 
-#include <sys/syslog.h>
-
 static size_t next_id = 0;
 
 iotap_t
