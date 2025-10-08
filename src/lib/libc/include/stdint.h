@@ -54,4 +54,24 @@ typedef __uint64_t uint64_t;
 #endif  /* _HAVE_UINT64_T */
 #endif  /* __SIZEOF_SIZE_T__ */
 
+#ifndef _HAVE_INT8_T
+#define _HAVE_INT8_T
+typedef __int8_t int8_t;
+#endif  /* _HAVE_INT8_T */
+
+#ifndef _HAVE_INT16_T
+#define _HAVE_INT16_T
+typedef __int16_t int16_t;
+#endif  /* _HAVE_INT16_T */
+
+#ifndef _HAVE_INT32_T
+#define _HAVE_INT32_T
+typedef __int32_t int32_t;
+#endif  /* !_HAVE_INT32_T */
+
+#ifndef _HAVE_INT64_T
+#define _HAVE_INT64_T
+typedef __int64_t int64_t;
+#endif  /* !_HAVE_INT64_T */
+
 #endif  /* !_STDINT_H */
