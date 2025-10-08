@@ -155,6 +155,23 @@ __irq_to_gsi(struct apic_header *hdr, size_t irq)
 }
 
 /*
+ * Convert an IRQ to a GSI
+ */
+int
+ioapic_get_gsi(uint8_t irq)
+{
+    int gsi;
+
+    gsi = acpi_read_madt(
+        APIC_TYPE_INTERRUPT_OVERRIDE,
+        __irq_to_gsi,
+        irq
+    );
+
+    return (gsi < 0) ? irq : gsi;
+}
+
+/*
  * Mask or unmask a GSI
  */
 void
@@ -168,19 +185,13 @@ ioapic_gsi_mask(uint8_t gsi, uint8_t mask)
 }
 
 /*
- * Map a GSI to a system interrupt vector
+ * Map an IRQ to a system interrupt vector
  */
 void
 ioapic_route_vec(uint8_t irq, uint8_t vector)
 {
     union ioapic_redentry redent;
-    int gsi;
-
-    gsi = acpi_read_madt(
-        APIC_TYPE_INTERRUPT_OVERRIDE,
-        __irq_to_gsi,
-        irq
-    );
+    int gsi = ioapic_get_gsi(irq);
 
     ioapic_read_redentry(&redent, gsi);
     redent.vector = vector;

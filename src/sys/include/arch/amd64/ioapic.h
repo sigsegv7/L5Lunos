@@ -49,6 +49,13 @@ void ioapic_init(void);
 void ioapic_gsi_mask(uint8_t gsi, uint8_t mask);
 
 /*
+ * Convert an ISA IRQ number into a global system
+ * interrupt, returnes a less than zero value on
+ * failure.
+ */
+int ioapic_get_gsi(uint8_t irq);
+
+/*
  * Route an IRQ number to a system interrupt vector
  * via the internal redirection table
  *
