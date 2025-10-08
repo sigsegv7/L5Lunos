@@ -49,6 +49,7 @@ typedef __uint32_t uint32_t;
 
 #if __SIZEOF_SIZE_T__ == 8
 #ifndef _HAVE_UINT64_T
+#define _HAVE_UINT64_T
 typedef __uint64_t uint64_t;
 #endif  /* _HAVE_UINT64_T */
 #endif  /* __SIZEOF_SIZE_T__ */
