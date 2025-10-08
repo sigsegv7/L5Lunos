@@ -39,7 +39,7 @@
 #include <string.h>
 
 /* List of interrupt handlers */
-static struct intr_hand *intrs[256] = {0};
+struct intr_hand *g_intrs[256] = {0};
 
 struct intr_hand *
 intr_register(const struct intr_hand *ih)
@@ -69,7 +69,7 @@ intr_register(const struct intr_hand *ih)
      * priority level as only 4 bits encode the IPL
      */
     for (int i = vec; i < vec + 16; ++i) {
-        if (intrs[i] != NULL) {
+        if (g_intrs[i] != NULL) {
             continue;
         }
 
@@ -78,7 +78,7 @@ intr_register(const struct intr_hand *ih)
         ih_new->irq = ih->irq;
         ih_new->count = ih->count;
         ih_new->vector = i;
-        intrs[i] = ih_new;
+        g_intrs[i] = ih_new;
 
         if (ih->irq >= 0) {
             ioapic_route_vec(ih->irq, ih_new->vector);
