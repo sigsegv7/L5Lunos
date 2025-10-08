@@ -39,6 +39,9 @@
 #include <io/pci/pci.h>
 #include <stdbool.h>
 
+/* From vector.S */
+extern void irq_init_pins(void);
+
 static void
 chipset_init(void)
 {
@@ -83,4 +86,5 @@ platform_boot(void)
 
     init_tss(core);
     chipset_init();
+    irq_init_pins();
 }

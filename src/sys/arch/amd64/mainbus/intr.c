@@ -58,7 +58,11 @@ intr_register(const struct intr_hand *ih)
         return NULL;
     }
 
-    vec = MAX(ih->ipl << IPL_SHIFT, 0x20);
+    /*
+     * The first 0x20 to 0x5F interrupt vectors are
+     * reserved for I/O APIC input pins
+     */
+    vec = MAX(ih->ipl << IPL_SHIFT, 0x60);
 
     /*
      * We can have up to 15 interrupt vectors per
