@@ -27,45 +27,15 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _SYS_IOTAP_H_
-#define _SYS_IOTAP_H_ 1
+#include <sys/syscall.h>
+#include <sys/iotap.h>
 
-#include <sys/types.h>
-#include <sys/cdefs.h>
-#if !defined(_KERNEL)
-#include <stdint.h>
-#include <stddef.h>
-#endif  /* _KERNEL */
-
-/* Valid I/O tap opcodes */
-#define IOTAP_OPC_READ       0x0000
-
-/*
- * An I/O tap message that can be send to
- * the kernel to perform an operation on
- * a tap.
- *
- * @opcode: Operation to be performed
- * @buf: I/O buffer read/write operations
- * @len: Length of I/O buffer
- */
-struct __packed iotap_msg {
-    uint8_t opcode;
-    void *buf;
-    size_t len;
-};
-
-#if !defined(_KERNEL)
-
-/*
- * Perform an operation on a named I/O tap
- *
- * @name: Name of I/O tap
- * @msg: Message to send
- *
- * Returns a less than zero value on error
- */
-ssize_t iotap_mux(const char *name, struct iotap_msg *msg);
-
-#endif  /* !_KERNEL */
-#endif  /* _SYS_IOTAP_H_ */
+ssize_t
+iotap_mux(const char *name, struct iotap_msg *msg)
+{
+    return syscall(
+        SYS_muxtap,
+        (uintptr_t)name,
+        (uintptr_t)msg
+    );
+}
