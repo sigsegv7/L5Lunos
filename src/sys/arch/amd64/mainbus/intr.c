@@ -75,6 +75,7 @@ intr_register(const struct intr_hand *ih)
             continue;
         }
 
+        ih_new->hand = ih->hand;
         ih_new->name = strdup(ih->name);
         ih_new->ipl = ih->ipl;
         ih_new->irq = ih->irq;
