@@ -39,17 +39,14 @@ static struct mac_border *bortab[__BORDER_MAX] = {
     [BORDER_FBDEV] = &g_fbdev_border
 };
 
-/*
- * Check process creds against border
- */
 int
-mac_check_creds(struct proc *procp, struct mac_border *mbp)
+mac_check_lvl(struct proc *procp, mac_level_t lvl)
 {
-    if (procp == NULL || mbp == NULL) {
+    if (procp == NULL) {
         return -EINVAL;
     }
 
-    if (procp->level < mbp->level) {
+    if (procp->level < lvl) {
         return -EACCES;
     }
 
@@ -75,7 +72,7 @@ mac_map(struct mac_border *mbp, off_t off, size_t len, void **res, int flags)
         return -EINVAL;
     }
 
-    error = mac_check_creds(procp, mbp);
+    error = mac_check_lvl(procp, mbp->level);
     if (error < 0) {
         return error;
     }

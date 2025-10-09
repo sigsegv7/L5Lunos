@@ -92,15 +92,16 @@ struct mac_border {
 
 /*
  * Check creds with a specific process and a specific
- * resource border.
+ * MAC level, useful when a resource border is not enough
+ * for a specific application.
  *
- * @procp: Process to check with border
- * @mbp: Border to 'procp' is trying to access
+ * @procp: Process to check with level
+ * @lvl: Level to check
  *
  * Returns zero if the check passed, otherwise a less than
  * zero value if the check failed.
  */
-int mac_check_creds(struct proc *procp, struct mac_border *mbp);
+int mac_check_lvl(struct proc *procp, mac_level_t lvl);
 
 /*
  * Map a resource into process address space by

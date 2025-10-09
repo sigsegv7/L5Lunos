@@ -92,7 +92,7 @@ sys_query(struct syscall_args *scargs)
     }
 
     /* Can we even touch this? */
-    error = mac_check_creds(self, bop);
+    error = mac_check_lvl(self, bop->level);
     if (error < 0) {
         return error;
     }
