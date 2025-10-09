@@ -112,9 +112,32 @@ irq_init_pins:
     IDT_SET_VEC 100, ioapic_edge_63
     retq
 
-/* XXX: STUB */
 ioapic_common:
+    xor %rcx, %rcx                      // Start at zero
+.walk:                                  // Begin the table walk
+    lea g_intrs(%rip), %rbx             // BASE -> RBX
+    lea (%rbx, %rcx, 8), %rbx           // RBX+RCX*8 -> RBX
+    mov (%rbx), %rdx                    // *RBX -> RDX
+    or %rdx, %rdx                       // Is it NULL?
+    jz 1f                               // Yes
+
+    mov (%rdx), %rbx                    // Get the handler
+    or %rbx, %rbx                       // Can we use this handler?
+    jz 1f                               // No, continue on
+    push %rcx                           // Save RCX between CALLs
+    call *%rbx                          // Indirect call
+    pop %rcx                            // We need RCX back now
+
+    cmp $0, %rax                        // Do we continue? (not handled)
+    jg done                             // Nope, handled
+
+1:  inc %rcx                            // Bump up RCX, next idx
+    cmp $256, %rcx                      // Are we through every?
+    jl .walk                            // Nope, continue
+done:                                   // End of loop
+    call lapic_eoi                      // Signal end of interrupt
     retq
+
 
 INTR_ENTRY(ioapic_edge_0)
     call ioapic_common
