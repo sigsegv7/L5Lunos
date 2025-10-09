@@ -58,6 +58,8 @@ intr_register(const struct intr_hand *ih)
         return NULL;
     }
 
+    memset(ih_new, 0, sizeof(*ih_new));
+
     /*
      * The first 0x20 to 0x5F interrupt vectors are
      * reserved for I/O APIC input pins
