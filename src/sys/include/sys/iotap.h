@@ -41,7 +41,7 @@
 #define IOTAP_OPC_READ       0x0000
 
 /*
- * An I/O tap message that can be send to
+ * An I/O tap message that can be sent to
  * the kernel to perform an operation on
  * a tap.
  *
