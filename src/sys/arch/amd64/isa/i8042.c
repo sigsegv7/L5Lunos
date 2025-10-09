@@ -28,17 +28,39 @@
  */
 
 #include <sys/syslog.h>
+#include <sys/proc.h>
+#include <sys/errno.h>
 #include <os/module.h>
 #include <os/clkdev.h>
+#include <os/iotap.h>
 #include <os/spinlock.h>
 #include <machine/intr.h>
 #include <machine/i8042var.h>
 #include <machine/pio.h>
 #include <stdbool.h>
 
+#define RING_NENT 16
+
+/*
+ * Keybuffer - holds keybuffer entries
+ *
+ * @ring: Scancode ring
+ * @head: Data is pushed here
+ * @tail: Data is popped here
+ */
+struct keybuf {
+    uint8_t ring[RING_NENT];
+    uint8_t head;
+    uint8_t tail;
+};
+
+/* I/O tap forward declarations */
+static struct iotap_ops tap_port0_ops;
+static struct iotap_desc tap_port0;
 
 static struct clkdev *clk;
 static struct spinlock lock;
+static struct keybuf buf = {0};
 
 /*
  * Character table for scancode conversion
@@ -50,6 +72,99 @@ static char keytab[] = {
     'j', 'k', 'l', ';', '\'', '`', '\0', '\\', 'z', 'x', 'c', 'v',
     'b', 'n', 'm', ',', '.',  '/', '\0', '\0', '\0', ' '
 };
+
+/*
+ * Compute the length of a kbp ring
+ */
+__always_inline static inline size_t
+keybuf_len(const struct keybuf *kbp)
+{
+    return (kbp->head - kbp->tail);
+}
+
+/*
+ * Enter a scancode into the key buffer
+ *
+ * @kbp: Key buffer to place scancode in
+ * @scancode: Scancode to enter
+ */
+static void
+keybuf_enter(struct keybuf *kbp, uint8_t scancode)
+{
+    if (kbp == NULL) {
+        return;
+    }
+
+    if (kbp->head >= RING_NENT) {
+        return;
+    }
+
+    kbp->ring[kbp->head++] = scancode;
+}
+
+/*
+ * Pop a character from the scancode buffer
+ *
+ * Returns the scancode on success, otherwise
+ * a less than zero errno value.
+ */
+static int8_t
+keybuf_pop(struct keybuf *kbp)
+{
+    uint8_t tail;
+
+    if (kbp == NULL) {
+        return -EINVAL;
+    }
+
+    if (kbp->head == kbp->tail) {
+        return -EAGAIN;
+    }
+
+    tail = kbp->ring[kbp->tail++];
+    if (kbp->tail >= RING_NENT) {
+        kbp->tail = 0;
+        kbp->head = 0;
+    }
+    return tail;
+}
+
+/*
+ * Tap the i8042 using I/O tap
+ */
+static ssize_t
+i8042_read_tap(struct iotap_desc *desc, void *p, size_t len)
+{
+    size_t maxlen, i;
+    char *pbuf = p;
+    int8_t scancode;
+
+    /* Truncate if needed */
+    maxlen = keybuf_len(&buf);
+    if (len == 0) {
+        return -EAGAIN;
+    }
+
+    /*
+     * Pop as many characters as we can, if after reading a few
+     * bytes, return the length. If we fail before we read anything,
+     * return -EAGAIN.
+     */
+    for (i = 0; i < MIN(len, maxlen); ++i) {
+        scancode = keybuf_pop(&buf);
+
+        /* Failed and haven't read anything? */
+        if (scancode < 0) {
+            break;
+        }
+
+        if (i < len) {
+            pbuf[i] = scancode;
+        }
+    }
+
+    return (i == 0) ? -EAGAIN : i;
+}
 
 /*
  * Write a byte to the i8042
@@ -94,12 +209,10 @@ i8042_irq(struct intr_hand *hp)
 {
     uint8_t scancode;
 
-    spinlock_acquire(&lock);
     scancode = i8042_read();
     if (!ISSET(scancode, 0x80)) {
-        printf("%c", keytab[scancode]);
+        keybuf_enter(&buf, scancode);
     }
-    spinlock_release(&lock);
     return 1;
 }
 
@@ -118,10 +231,27 @@ i8042_init_intr(void)
     intr_register(&hand);
 }
 
+/*
+ * Initialize an I/O tap for the
+ * i8042
+ */
+static int
+i8042_init_tap(void)
+{
+    int error;
+
+    /* Register the tap */
+    error = iotap_register(&tap_port0);
+    if (error < 0) {
+        return error;
+    }
+
+    return 0;
+}
+
 static int
 i8042_init(struct module *modp)
 {
-    uint8_t byte;
     int error;
 
     error = clkdev_get(CLKDEV_MSLEEP | CLKDEV_GET_USEC, &clk);
@@ -130,13 +260,27 @@ i8042_init(struct module *modp)
         return error;
     }
 
+    /* Disable both ports */
     i8042_write(true, I8042_DISABLE_PORT0);
     i8042_write(true, I8042_DISABLE_PORT1);
-    i8042_init_intr();
 
+    /* Initialize interrupts and taps */
+    i8042_init_intr();
+    i8042_init_tap();
+
+    /* Enable the keyboard and flush it */
     i8042_write(true, I8042_ENABLE_PORT0);
     i8042_read();
     return 0;
 }
+
+static struct iotap_ops tap_port0_ops = {
+    .read = i8042_read_tap
+};
+
+static struct iotap_desc tap_port0 = {
+    .name = "i8042.port.0",
+    .ops = &tap_port0_ops
+};
 
 MODULE_EXPORT("i8042", MODTYPE_GENERIC, i8042_init);
