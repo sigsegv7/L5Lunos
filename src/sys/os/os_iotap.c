@@ -29,8 +29,11 @@
 
 #include <sys/types.h>
 #include <sys/errno.h>
+#include <sys/syslog.h>
 #include <sys/queue.h>
 #include <sys/atomic.h>
+#include <sys/limits.h>
+#include <os/systm.h>
 #include <os/kalloc.h>
 #include <os/iotap.h>
 #include <os/nsvar.h>
@@ -101,4 +104,102 @@ iotap_lookup(const char *name, struct iotap_desc *dp_res)
     /* Copy it out to the result store */
     *dp_res = *tap;
     return 0;
+}
+
+ssize_t
+iotap_mux(const char *name, struct iotap_msg *msg)
+{
+    struct iotap_ops *ops;
+    struct iotap_desc desc;
+    int error;
+
+    if (msg == NULL) {
+        return -EINVAL;
+    }
+
+    if (msg->buf == NULL || msg->len == 0) {
+        return -EINVAL;
+    }
+
+    /* Lookup the tap */
+    error = iotap_lookup(name, &desc);
+    if (error < 0) {
+        return error;
+    }
+
+    ops = desc.ops;
+    switch (msg->opcode) {
+    case IOTAP_OPC_READ:
+        return ops->read(&desc, msg->buf, msg->len);
+    }
+
+    return -EINVAL;
+}
+
+/*
+ * Get an I/O TAP:
+ *
+ * ARG0: Name
+ * ARG1: Message
+ *
+ * RETURNED IN RAX: TAP ID
+ */
+scret_t
+sys_muxtap(struct syscall_args *scargs)
+{
+    struct iotap_msg msg;
+    struct iotap_desc desc;
+    char *u_databuf;
+    char buf[NAME_MAX], *kbuf;
+    const char *u_name = SCARG(scargs, const char *, 0);
+    struct iotap_msg *u_msg = SCARG(scargs, struct iotap_msg *, 1);
+    int error;
+
+    /* Grab the name */
+    error = copyinstr(u_name, buf, sizeof(buf));
+    if (error < 0) {
+        printf("gettap: bad address for name\n");
+        return error;
+    }
+
+    /* Get the message */
+    error = copyin(u_msg, &msg, sizeof(msg));
+    if (error < 0) {
+        printf("gettap: bad address for message\n");
+        return error;
+    }
+
+    /* Grab the actual tap */
+    error = iotap_lookup(buf, &desc);
+    if (error < 0) {
+        printf("gettap: SYS_gettap lookup failure\n");
+        return error;
+    }
+
+    /* Truncate if needed */
+    if (msg.len >= IOTAP_MSG_MAX) {
+        msg.len = IOTAP_MSG_MAX;
+    }
+
+    /* Allocate a kernel-side buffer */
+    kbuf = kalloc(msg.len);
+    if (kbuf == NULL) {
+        return -ENOMEM;
+    }
+
+    /* Perform the operation */
+    u_databuf = msg.buf;
+    msg.buf = kbuf;
+    error = iotap_mux(buf, &msg);
+
+    /*
+     * If there are no errors, then we are free to
+     * copy the results back
+     */
+    if (error > 0) {
+        copyout(kbuf, u_databuf, msg.len);
+    }
+
+    kfree(kbuf);
+    return error;
 }

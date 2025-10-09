@@ -32,6 +32,11 @@
 
 #include <sys/types.h>
 #include <sys/queue.h>
+#include <sys/iotap.h>
+#include <sys/syscall.h>
+#include <os/mac.h>
+
+#define IOTAP_MSG_MAX 1024
 
 struct iotap_desc;
 typedef int16_t iotap_t;
@@ -78,5 +83,22 @@ iotap_t iotap_register(const struct iotap_desc *iotap);
  * zero value on failure.
  */
 int iotap_lookup(const char *name, struct iotap_desc *dp_res);
+
+/*
+ * Handle an I/O tap message and perform operations
+ * using specific commands.
+ *
+ * @name: Name of tap to operate on
+ * @msg: Message to send
+ *
+ * Returns less than zero values on failure, other
+ * values depend on the input command.
+ */
+ssize_t iotap_mux(const char *name, struct iotap_msg *msg);
+
+/*
+ * Perform an operation on an I/O tap
+ */
+scret_t sys_muxtap(struct syscall_args *scargs);
 
 #endif  /* !_OS_IOTAP_H_ */

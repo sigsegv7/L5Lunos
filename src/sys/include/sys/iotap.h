@@ -27,52 +27,32 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _UNIX_SYSCALL_H_
-#define _UNIX_SYSCALL_H_ 1
+#ifndef _SYS_IOTAP_H_
+#define _SYS_IOTAP_H_ 1
 
-#include <sys/proc.h>
-#include <sys/param.h>
-#include <sys/mount.h>
-#include <sys/syscall.h>
-#include <os/iotap.h>
+#include <sys/types.h>
+#include <sys/cdefs.h>
+#if !defined(_KERNEL)
+#include <stdint.h>
+#include <stddef.h>
+#endif  /* _KERNEL */
 
-/*
- * Exit the current process - exit(2) syscall
- */
-scret_t sys_exit(struct syscall_args *scargs);
-
-/*
- * Write to a file descriptor - write(2) syscall
- */
-scret_t sys_write(struct syscall_args *scargs);
+/* Valid I/O tap opcodes */
+#define IOTAP_OPC_READ       0x0000
 
 /*
- * Cross a resource border - L5 mandatory
+ * An I/O tap message that can be send to
+ * the kernel to perform an operation on
+ * a tap.
+ *
+ * @opcode: Operation to be performed
+ * @buf: I/O buffer read/write operations
+ * @len: Length of I/O buffer
  */
-scret_t sys_cross(struct syscall_args *scargs);
-
-/*
- * Query a syscall border - L5 mandatory
- */
-scret_t sys_query(struct syscall_args *scargs);
-
-/*
- * Open a file
- */
-scret_t sys_open(struct syscall_args *scargs);
-
-#ifdef _NEED_UNIX_SCTAB
-scret_t(*g_unix_sctab[])(struct syscall_args *) = {
-    [SYS_none]   = NULL,
-    [SYS_exit]   = sys_exit,
-    [SYS_write]  = sys_write,
-    [SYS_cross]  = sys_cross,
-    [SYS_query]  = sys_query,
-    [SYS_spawn]  = sys_spawn,
-    [SYS_mount]  = sys_mount,
-    [SYS_open]   = sys_open,
-    [SYS_muxtap] = sys_muxtap
+struct __packed iotap_msg {
+    uint8_t opcode;
+    void *buf;
+    size_t len;
 };
 
-#endif  /* !_NEED_UNIX_SCTAB */
-#endif  /* !_UNIX_SYSCALL_H_ */
+#endif  /* _SYS_IOTAP_H_ */
