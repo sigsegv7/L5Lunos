@@ -1,4 +1,5 @@
 CFILES = $(shell find src/ -name "*.c")
+CFILES += $(shell find/ musl-math -name "*.c")
 OBJ = $(shell find build/ -name "*.o")
 OBJ += $(CFILES:.c=.o)
 LIBC_OUT = libc.a

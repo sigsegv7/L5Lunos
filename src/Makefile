@@ -78,3 +78,4 @@ clean:
 .PHONY: distclean
 distclean:
 	make clean; rm -rf sys/target srv/root
+	cd lib; make clean
