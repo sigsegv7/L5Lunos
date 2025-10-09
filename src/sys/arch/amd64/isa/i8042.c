@@ -99,7 +99,9 @@ keybuf_enter(struct keybuf *kbp, uint8_t scancode)
         return;
     }
 
+    spinlock_acquire(&lock);
     kbp->ring[kbp->head++] = scancode;
+    spinlock_release(&lock);
 }
 
 /*
@@ -135,13 +137,15 @@ keybuf_pop(struct keybuf *kbp)
 static ssize_t
 i8042_read_tap(struct iotap_desc *desc, void *p, size_t len)
 {
-    size_t maxlen, i;
+    size_t maxlen, i = 0;
     char *pbuf = p;
     int8_t scancode;
 
     /* Truncate if needed */
+    spinlock_acquire(&lock);
     maxlen = keybuf_len(&buf);
     if (len == 0) {
+        goto done;
         return -EAGAIN;
     }
 
@@ -152,6 +156,7 @@ i8042_read_tap(struct iotap_desc *desc, void *p, size_t len)
      */
     for (i = 0; i < MIN(len, maxlen); ++i) {
         scancode = keybuf_pop(&buf);
+        spinlock_release(&lock);
 
         /* Failed and haven't read anything? */
         if (scancode < 0) {
@@ -163,6 +168,8 @@ i8042_read_tap(struct iotap_desc *desc, void *p, size_t len)
         }
     }
 
+done:
+    spinlock_release(&lock);
     return (i == 0) ? -EAGAIN : i;
 }
 
@@ -270,7 +277,6 @@ i8042_init(struct module *modp)
 
     /* Enable the keyboard and flush it */
     i8042_write(true, I8042_ENABLE_PORT0);
-    i8042_read();
     return 0;
 }
 
