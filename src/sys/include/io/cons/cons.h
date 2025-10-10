@@ -39,6 +39,8 @@ struct cons_scr {
     struct bootvar_fb fbvars;
     size_t text_x;
     size_t text_y;
+    size_t cursor_x;
+    size_t cursor_y;
     size_t max_col;
     size_t max_row;
     uint32_t scr_bg;

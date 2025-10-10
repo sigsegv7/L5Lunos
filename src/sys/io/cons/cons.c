@@ -42,6 +42,9 @@
 #define FONT_WIDTH 8
 #define FONT_HEIGHT 20
 
+#define CURSOR_WIDTH FONT_WIDTH
+#define CURSOR_HEIGHT 4
+
 struct cons_scr g_root_scr;
 
 /* Forward declarations */
@@ -64,6 +67,53 @@ fb_get_index(uint32_t pitch, uint32_t x, uint32_t y)
 }
 
 /*
+ * Invert an RGB color
+ *
+ * @rgb: Color to invert
+ *
+ * Returns inverted color code (RGB)
+ */
+__always_inline static inline uint32_t
+rgb_invert(uint32_t rgb)
+{
+    return (0xFFFFFF - rgb);
+}
+
+/*
+ * Draw the text cursor onto the screen
+ *
+ * @scr: Screen to draw onto
+ * @hide: True if it should be hidden
+ */
+static void
+cons_draw_cursor(struct cons_scr *scr, bool hide)
+{
+    struct bootvar_fb *fbvars;
+    uint32_t *fbio, idx;
+    uint32_t color;
+
+    if (scr == NULL) {
+        return;
+    }
+
+    fbvars = &scr->fbvars;
+    fbio = fbvars->io;
+
+    for (uint32_t cy = 0; cy < CURSOR_HEIGHT; ++cy) {
+        for (uint32_t cx = 0; cx < CURSOR_WIDTH; ++cx) {
+            idx = fb_get_index(
+                fbvars->pitch,
+                cx + scr->cursor_x,
+                (cy + scr->cursor_y) + FONT_HEIGHT / 2
+            );
+
+            color = (hide) ? scr->scr_bg : rgb_invert(scr->scr_bg);
+            fbio[idx] = color;
+        }
+    }
+}
+
+/*
  * Write a newline onto the console and handle
  * Y overflows
  *
@@ -75,12 +125,22 @@ cons_newline(struct cons_scr *scr)
     scr->text_x = 0;
     scr->text_y += FONT_HEIGHT;
 
+    cons_draw_cursor(scr, true);
+    scr->cursor_y += FONT_HEIGHT;
+    scr->cursor_x = 0;
+
     /* Handle console y overflow */
     if (scr->text_y >= scr->max_row - FONT_HEIGHT) {
         scr->text_x = 0;
         scr->text_y = 0;
+
+        scr->cursor_x = 0;
+        scr->cursor_y = 0;
         fill_screen(scr,  scr->scr_bg);
     }
+
+    /* Redraw the cursor */
+    cons_draw_cursor(scr, false);
 }
 
 /*
@@ -152,6 +212,10 @@ cons_putch(struct cons_scr *scr, struct cons_ch *ch)
     x = ch->x;
     y = ch->y;
 
+    /* Update the cursor */
+    cons_draw_cursor(scr, true);
+    scr->cursor_x += FONT_WIDTH;
+
     /* Begin the plotting */
     for (int cy = 0; cy < hdr->csize; ++cy) {
         for (int cx = 0; cx < 8; ++cx) {
@@ -162,6 +226,8 @@ cons_putch(struct cons_scr *scr, struct cons_ch *ch)
             fbio[idx] = color;
         }
     }
+
+    cons_draw_cursor(scr, false);
 }
 
 /*
