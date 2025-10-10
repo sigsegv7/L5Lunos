@@ -95,6 +95,10 @@ static char keytab_caps[] = {
     'B', 'N', 'M', ',', '.', '/', '\0', '\0', '\0', ' '
 };
 
+static uint8_t i8042_read(void);
+static void i8042_write(bool is_cmd, uint8_t v);
+static int i8042_devsend(bool aux, uint8_t data);
+
 /*
  * Compute the length of a kbp ring
  */
@@ -237,6 +241,37 @@ i8042_read(void)
 }
 
 /*
+ * Send data to an i8042 device
+ *
+ * @aux: If true, send data to the mouse
+ * @data: Byte to send to the bus
+ *
+ * Returns zero on success
+ */
+static int
+i8042_devsend(bool aux, uint8_t data)
+{
+    if (aux) {
+       i8042_write(true, I8042_PORT1_SEND);
+    }
+
+    i8042_write(false, data);
+    return i8042_read();
+}
+
+/*
+ * Send a keyboard LED mask to the controller
+ *
+ * @mask: Keyboard LED mask (I8042_LED_*)
+ */
+static void
+i8042_kbdled(uint8_t mask)
+{
+    i8042_devsend(false, 0xED);
+    i8042_devsend(false, mask);
+}
+
+/*
  * Convert scancode to character
  *
  * @sc: Scancode
@@ -248,6 +283,7 @@ static int
 i8042_getc(uint8_t sc, char *chr)
 {
     bool release = ISSET(sc, BIT(7));
+    uint8_t led_mask;
 
     switch (sc) {
     case 0x76:
@@ -255,8 +291,12 @@ i8042_getc(uint8_t sc, char *chr)
         return 0;
     /* Caps lock [press] */
     case 0x3A:
+        if (!capslock_released) {
+            return -EAGAIN;
+        }
         capslock_released = false;
         capslock = !capslock;
+        i8042_kbdled(capslock << CAPS_LED_SHIFT);
         return -EAGAIN;
     /* Caps lock [release] */
     case 0xBA:
