@@ -38,6 +38,7 @@
 #include <machine/gdt.h>
 #include <machine/frame.h>
 #include <machine/lapic.h>
+#include <os/kalloc.h>
 #include <string.h>
 
 extern struct proc g_rootproc;
@@ -237,6 +238,7 @@ md_proc_kill(struct proc *procp, int flags)
 {
     const size_t PSIZE = DEFAULT_PAGESIZE;
     struct proc *self;
+    struct penv_blk *envblk;
     struct pcore *core = this_core();
     struct md_pcb *pcbp;
     struct vm_range *range;
@@ -257,6 +259,12 @@ md_proc_kill(struct proc *procp, int flags)
         }
 
         vm_free_frame(range->pa_base, range->len / PSIZE);
+    }
+
+    if ((envblk = procp->envblk) != NULL) {
+        ptrbox_terminate(procp->envblk_box);
+        kfree(envblk->argv);
+        procp->envblk = NULL;
     }
 
     /* Release the VAS */

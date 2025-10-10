@@ -34,7 +34,7 @@ void
 main(void)
 {
     char shell_path[] = "/usr/bin/hush";
-    char *argv_dmmy[] = {NULL};
+    char *argv_dmmy[] = { "/usr/bin/hush", NULL };
 
     spawn(shell_path, argv_dmmy);
     for (;;);

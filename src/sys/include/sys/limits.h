@@ -37,5 +37,7 @@
 #define SC_MAX 64       /* Max syscalls */
 #define SCWIN_MAX 2    /* Max syscall windows */
 #define FD_MAX 256      /* Max file descriptors */
+#define NARG_MAX 16     /* Max arguments */
+#define ARG_LEN  64     /* Max length per argument */
 
 #endif  /* !_SYS_LIMITS_H_ */

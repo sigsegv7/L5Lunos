@@ -32,6 +32,7 @@
 #include <sys/errno.h>
 #include <sys/cdefs.h>
 #include <sys/queue.h>
+#include <sys/syslog.h>
 #include <sys/panic.h>
 #include <sys/proc.h>
 #include <sys/cpuvar.h>
@@ -45,6 +46,94 @@
 #include <string.h>
 
 static pid_t next_pid = 0;
+
+/*
+ * Copy a process environment block from userland
+ */
+static struct penv_blk *
+penv_blk_cpy(struct proc *procp, struct penv_blk *u_blk)
+{
+    struct penv_blk *blk;
+    int error;
+    char argbuf[ARG_LEN];
+    char **u_argv;
+    char *arg;
+    uint16_t i;
+
+    if (u_blk == NULL) {
+        return NULL;
+    }
+
+    /* Allocate a kernel copy */
+    blk = kalloc(sizeof(*blk));
+    if (blk == NULL) {
+        return NULL;
+    }
+
+    /* Copy in the user side */
+    memset(blk, 0, sizeof(*blk));
+    error = copyin(u_blk, blk, sizeof(*blk));
+    if (error < 0) {
+        printf("penv_blk_cpy: bad u_blk\n");
+        kfree(blk);
+        return NULL;
+    }
+
+    /* Too many args? */
+    if (blk->argc > NARG_MAX) {
+        printf("penv_blk_cpy: argc > ARG_MAX!!\n");
+        kfree(blk);
+        return NULL;
+    }
+
+    /* Allocate a pointer box for args */
+    if (ptrbox_init(&procp->envblk_box) < 0) {
+        return NULL;
+    }
+
+    /* Allocate a new string store */
+    u_argv = blk->argv;
+    blk->argv = ptrbox_alloc(
+        sizeof(char *) * blk->argc,
+        procp->envblk_box
+    );
+    if (blk->argv == NULL) {
+        kfree(blk);
+        return NULL;
+    }
+
+    /* Dup each arg */
+    for (i = 0; i < blk->argc; ++i) {
+        error = proc_check_addr(
+            procp,
+            (uintptr_t)&u_argv[i],
+            sizeof(char *)
+        );
+
+        /* Is the address valid? */
+        if (error != 0) {
+            printf("penv_blk_cpy: bad arg pointer (%d)\n", i);
+            break;
+        }
+
+        error = copyinstr(u_argv[i], argbuf, ARG_LEN);
+        if (error < 0) {
+            printf("penv_blk_cpy: bad arg pointer (%d)\n", i);
+            break;
+        }
+
+        blk->argv[i] = ptrbox_strdup(argbuf, procp->envblk_box);
+    }
+
+    /* Cleanup on error */
+    if (error != 0) {
+        ptrbox_terminate(procp->envblk_box);
+        kfree(blk);
+        blk = NULL;
+    }
+
+    return blk;
+}
 
 /*
  * Deallocate saved memory ranges
@@ -204,19 +293,22 @@ proc_spawn(const char *path, struct penv_blk *envbp)
         panic("spawn: failed to arbitrate core\n");
     }
 
-    if (envbp != NULL) {
-        memcpy(&proc->envblk, envbp, sizeof(proc->envblk));
-    }
-
+    proc->envblk = envbp;
     md_set_ip(proc, elf.entrypoint);
     sched_enq(&core->scq, proc);
     return proc->pid;
 }
 
+/*
+ * ARG0: Pathname to spawn
+ * ARG1: Process environment block
+ */
 scret_t
 sys_spawn(struct syscall_args *scargs)
 {
     const char *u_path = SCARG(scargs, const char *, 0);
+    struct penv_blk *u_blk = SCARG(scargs, struct penv_blk *, 1);
+    struct penv_blk *envblk;
     char buf[PATH_MAX];
     int error;
 
@@ -225,5 +317,6 @@ sys_spawn(struct syscall_args *scargs)
         return error;
     }
 
-    return proc_spawn(buf, NULL);
+    envblk = penv_blk_cpy(proc_self(), u_blk);
+    return proc_spawn(buf, envblk);
 }

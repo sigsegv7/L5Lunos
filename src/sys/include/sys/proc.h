@@ -35,12 +35,15 @@
 #include <sys/cdefs.h>
 #include <sys/param.h>
 #include <sys/queue.h>
+#if defined(_KERNEL)
+#include <lib/ptrbox.h>
 #include <os/mac.h>
 #include <os/signal.h>
 #include <os/spinlock.h>
 #include <os/filedesc.h>
 #include <vm/vm.h>
 #include <machine/pcb.h>    /* standard */
+#endif  /* _KERNEL */
 
 /*
  * The stack starts here and grows down
@@ -48,17 +51,19 @@
 #define STACK_TOP   0xBFFFFFFF
 #define STACK_LEN   4096
 
-#if defined(_KERNEL)
-
 /*
  * Process environment block, used to store arguments
  * and other information.
  *
- * @pid: PID of the process that owns this block
+ * @argv: Argument vector
+ * @argc: Argument count
  */
 struct penv_blk {
-    pid_t pid;
+    char **argv;
+    uint16_t argc;
 };
+
+#if defined(_KERNEL)
 
 /*
  * A process describes a running program image
@@ -81,7 +86,8 @@ struct proc {
     struct md_pcb pcb;
     struct syscall_domain scdom;
     struct filedesc *fdtab[FD_MAX];
-    struct penv_blk envblk;
+    struct penv_blk *envblk;
+    struct ptrbox *envblk_box;
     mac_level_t level;
     struct spinlock maplist_lock;
     sigtab_t sigtab;

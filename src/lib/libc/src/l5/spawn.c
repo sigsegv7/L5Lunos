@@ -28,6 +28,7 @@
  */
 
 #include <sys/spawn.h>
+#include <sys/proc.h>
 #include <sys/syscall.h>
 #include <stddef.h>
 #include <errno.h>
@@ -35,14 +36,24 @@
 int
 spawn(const char *path, char **argv)
 {
+    struct penv_blk blk;
+    size_t argc = 0;
+
     if (path == NULL || argv == NULL) {
         return -EINVAL;
     }
 
-    /* TODO: We must handle the penv_blk */
+    /* Get the argument count */
+    while (argv[argc++] != NULL);
+    --argc;
+
+    /* Setup the penv block */
+    blk.argv = argv;
+    blk.argc = argc;
+
     return syscall(
         SYS_spawn,
         (uintptr_t)path,
-        0
+        (uintptr_t)&blk
     );
 }
