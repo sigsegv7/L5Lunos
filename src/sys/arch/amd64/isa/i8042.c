@@ -30,6 +30,7 @@
 #include <sys/syslog.h>
 #include <sys/proc.h>
 #include <sys/errno.h>
+#include <sys/ascii.h>
 #include <os/module.h>
 #include <os/clkdev.h>
 #include <os/iotap.h>
@@ -58,6 +59,11 @@ struct keybuf {
 static struct iotap_ops tap_port0_ops;
 static struct iotap_desc tap_port0;
 
+/* Key states */
+static bool shift_key = false;
+static bool capslock = false;
+static bool capslock_released = true;
+
 static struct clkdev *clk;
 static struct spinlock lock;
 static struct keybuf buf = {0};
@@ -71,6 +77,22 @@ static char keytab[] = {
     'o', 'p', '[', ']', '\n', '\0', 'a', 's', 'd', 'f', 'g', 'h',
     'j', 'k', 'l', ';', '\'', '`', '\0', '\\', 'z', 'x', 'c', 'v',
     'b', 'n', 'm', ',', '.',  '/', '\0', '\0', '\0', ' '
+};
+
+static char keytab_shift[] = {
+    '\0', '\0', '!', '@', '#',  '$', '%', '^',  '&', '*', '(', ')',
+    '_', '+', '\b', '\t', 'Q',  'W', 'E', 'R',  'T', 'Y', 'U', 'I',
+    'O', 'P', '{', '}', '\n',  '\0', 'A', 'S',  'D', 'F', 'G', 'H',
+    'J', 'K', 'L', ':', '\"', '~', '\0', '|', 'Z', 'X', 'C', 'V',
+    'B', 'N', 'M', '<', '>',  '?', '\0', '\0', '\0', ' '
+};
+
+static char keytab_caps[] = {
+    '\0', '\0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0',
+    '-','=', '\b', '\t', 'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I',
+    'O', 'P', '[', ']', '\n', '\0', 'A', 'S', 'D', 'F', 'G', 'H',
+    'J', 'K', 'L', ';', '\'', '`', '\0', '\\', 'Z', 'X', 'C', 'V',
+    'B', 'N', 'M', ',', '.', '/', '\0', '\0', '\0', ' '
 };
 
 /*
@@ -215,16 +237,75 @@ i8042_read(void)
 }
 
 /*
+ * Convert scancode to character
+ *
+ * @sc: Scancode
+ * @chr: Character output
+ *
+ * Returns 0 when a char is given back.
+ */
+static int
+i8042_getc(uint8_t sc, char *chr)
+{
+    bool release = ISSET(sc, BIT(7));
+
+    switch (sc) {
+    case 0x76:
+        *chr = ASCII_ESC;
+        return 0;
+    /* Caps lock [press] */
+    case 0x3A:
+        capslock_released = false;
+        capslock = !capslock;
+        return -EAGAIN;
+    /* Caps lock [release] */
+    case 0xBA:
+        capslock_released = true;
+        return -EAGAIN;
+    /* Shift */
+    case 0x36:
+    case 0xAA:
+    case 0x2A:
+    case 0xB6:
+        if (!release) {
+            shift_key = true;
+        } else {
+            shift_key = false;
+        }
+        return -EAGAIN;
+    }
+
+    if (release) {
+        return -EAGAIN;
+    }
+
+    if (capslock) {
+        *chr = keytab_caps[sc];
+        return 0;
+    }
+
+    if (shift_key) {
+        *chr = keytab_shift[sc];
+        return 0;
+    }
+
+    *chr = keytab[sc];
+    return 0;
+}
+
+/*
  * IRQ 1 handler
  */
 static int
 i8042_irq(struct intr_hand *hp)
 {
+    char c;
     uint8_t scancode;
+    int error;
 
     scancode = i8042_read();
-    if (!ISSET(scancode, 0x80)) {
-        keybuf_enter(&buf, scancode);
+    if (i8042_getc(scancode, &c) == 0) {
+        keybuf_enter(&buf, c);
     }
     return 1;
 }
