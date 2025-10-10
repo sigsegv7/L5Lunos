@@ -35,7 +35,7 @@
 #include <stdint.h>
 #endif  /* !_KERNEL */
 
-#define FBDEV_NSO "video:attr"
+#define FBDEV_NSO "output.fbdev.attr"
 
 struct fb_info {
     uint32_t width;
