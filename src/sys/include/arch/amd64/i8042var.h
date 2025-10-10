@@ -67,10 +67,15 @@
 #define I8042_AUX_DISABLE  0xF5
 #define I8042_AUX_RESET    0xFF
 
+/* LED shifts */
+#define SCROLL_LED_SHIFT    0
+#define NUM_LED_SHIFT       1
+#define CAPS_LED_SHIFT      2
+
 /* LED bits */
-#define I8042_LED_SCROLL    BIT(0)
-#define I8042_LED_NUM       BIT(1)
-#define I8042_LED_CAPS      BIT(2)
+#define I8042_LED_SCROLL    (1 << SCROLL_LED_SHIFT)
+#define I8042_LED_NUM       (1 << NUM_LED_SHIFT)
+#define I8042_LED_CAPS      (1 << CAPS_LED_SHIFT)
 
 /* Extended scancode types */
 #define I8042_XSC_ENDPR  0      /* End pressed */
