@@ -37,8 +37,20 @@
 #include <stdbool.h>
 #include <string.h>
 
+/* kconf background color config */
+#if defined(__CONS_BG)
+#define DEFAULT_BG __CONS_BG
+#else
 #define DEFAULT_BG 0x000000
+#endif  /* __CONS_BG */
+
+/* kconf foreground color config */
+#if defined(__CONS_FG)
+#define DEFAULT_FG __CONS_FG
+#else
 #define DEFAULT_FG 0xB57614
+#endif  /* !__CONS_FG */
+
 #define FONT_WIDTH 8
 #define FONT_HEIGHT 20
 
