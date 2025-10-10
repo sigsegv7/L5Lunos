@@ -51,7 +51,8 @@
 #define SYS_spawn       0x06    /* spawn a process */
 #define SYS_mount       0x07    /* mount a filesystem */
 #define SYS_open        0x08    /* open a file */
-#define SYS_muxtap      0x09 /* mux an I/O tap */
+#define SYS_muxtap      0x09    /* mux an I/O tap */
+#define SYS_getargv     0x0A    /* get process argv */
 
 typedef __ssize_t scret_t;
 typedef __ssize_t scarg_t;

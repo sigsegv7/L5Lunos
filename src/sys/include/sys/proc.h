@@ -218,5 +218,10 @@ __dead void md_proc_kick(struct proc *procp);
  */
 scret_t sys_spawn(struct syscall_args *scargs);
 
+/*
+ * Get argument number n
+ */
+scret_t sys_getargv(struct syscall_args *scargs);
+
 #endif  /* !_KERNEL */
 #endif  /* !_SYS_PROC_H_ */

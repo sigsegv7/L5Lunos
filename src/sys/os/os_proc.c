@@ -320,3 +320,28 @@ sys_spawn(struct syscall_args *scargs)
     envblk = penv_blk_cpy(proc_self(), u_blk);
     return proc_spawn(buf, envblk);
 }
+
+/*
+ * Get argument number number
+ *
+ * ARG0: Argument number
+ * ARG1: Buffer result
+ * ARG2: Max length
+ */
+scret_t
+sys_getargv(struct syscall_args *scargs)
+{
+    uint16_t argno = SCARG(scargs, uint16_t, 0);
+    char *u_buf = SCARG(scargs, char *, 1);
+    size_t maxlen = SCARG(scargs, size_t, 2);
+    struct proc *self = proc_self();
+    struct penv_blk *envblk = self->envblk;
+    char *arg;
+
+    if (argno >= envblk->argc) {
+        return -EINVAL;
+    }
+
+    arg = envblk->argv[argno];
+    return copyoutstr(arg, u_buf, maxlen);
+}
