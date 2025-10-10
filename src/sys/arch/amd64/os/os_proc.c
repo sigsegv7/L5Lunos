@@ -137,11 +137,24 @@ md_proc_init(struct proc *procp, int flags)
 __dead void
 md_proc_yield(void)
 {
-    /* Clear pending interrupts and oneshot */
-    lapic_eoi();
-    lapic_timer_oneshot_us(9000);
+    struct proc *proc;
+    struct pcore *core = this_core();
+    int error;
 
+    lapic_eoi();
+
+    /*
+     * Set the oneshot timer and check if there is
+     * any procs in our runqueues. If not, wait for
+     * it to fire again.
+     */
     for (;;) {
+        lapic_timer_oneshot_us(9000);
+        error = sched_deq(&core->scq, &proc);
+        if (error == 0) {
+            core->curproc = proc;
+            md_proc_kick(proc);
+        }
         __ASMV("sti; hlt");
     }
 }

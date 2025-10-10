@@ -77,6 +77,9 @@ ap_entry(struct limine_smp_info *)
     corelist[ncores_up - 1] = pcore;
     atomic_inc_64(&ncores_up);
     spinlock_release(&lock);
+
+    md_proc_yield();
+    __builtin_unreachable();
     for (;;);
 }
 
