@@ -28,14 +28,79 @@
  */
 
 #include <sys/spawn.h>
-#include <stddef.h>
+#include <sys/iotap.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <ctype.h>
+#include <string.h>
 
-void
+/* XXX: Hardcoded for now, will change */
+#define PROMPT "[sv@l5]: "
+
+/*
+ * Read input from an input device
+ *
+ * @buf: Buffer to fill with input
+ * @maxlen: Max length of buffer
+ */
+static void
+read_input(char *buf, size_t maxlen)
+{
+    ssize_t retval;
+    size_t i = 0;
+    char c = '\0';
+    struct iotap_msg msg = {
+        .opcode = IOTAP_OPC_READ,
+        .buf = &c,
+        .len = 1
+    };
+
+    if (buf == NULL) {
+        return;
+    }
+
+    /*
+     * Read all the input until we hit a '\n'
+     */
+    do {
+        retval = iotap_mux("input.igkbd", &msg);
+        if (retval < 0) {
+            continue;
+        }
+
+        if (!isascii(c)) {
+            continue;
+        }
+
+        if (c != '\n' && i < maxlen) {
+            buf[i++] = c;
+            write(STDOUT_FILENO, &c, 1);
+        }
+
+    } while (c != '\n');
+}
+
+int
 main(void)
 {
-    char shell_path[] = "/usr/bin/hush";
-    char *argv_dmmy[] = {NULL};
+    char buf[128];
+    ssize_t retval;
 
-    spawn(shell_path, argv_dmmy);
-    for (;;);
+    for (;;) {
+        write(STDOUT_FILENO, PROMPT, sizeof(PROMPT) - 1);
+        read_input(buf, sizeof(buf));
+        write(STDOUT_FILENO, "\n", 1);
+
+        /* XXX: For initial demonstration */
+        if (strcmp(buf, "hello") == 0) {
+            puts("meow!!");
+        } else {
+            puts("mrrp?");
+        }
+
+        buf[0] = '\0';
+        memset(buf, 0, sizeof(buf));
+    }
+
+    return 0;
 }
