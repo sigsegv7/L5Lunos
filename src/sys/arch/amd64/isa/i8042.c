@@ -198,10 +198,16 @@ static uint8_t
 i8042_read(void)
 {
     uint8_t status = 0x00;
+    uint8_t count = 0;
 
     while (!ISSET(status, I8042_OBUFF)) {
         status = inb(I8042_STATUS);
         clk->msleep(5);
+
+        /* Timeout? */
+        if ((count++) >= 20) {
+            return 0xFF;
+        }
     }
 
     clk->msleep(5);
@@ -267,15 +273,16 @@ i8042_init(struct module *modp)
         return error;
     }
 
-    /* Disable both ports */
+    /* Disable both ports and flush any data */
     i8042_write(true, I8042_DISABLE_PORT0);
     i8042_write(true, I8042_DISABLE_PORT1);
+    i8042_read();
 
     /* Initialize interrupts and taps */
     i8042_init_intr();
     i8042_init_tap();
 
-    /* Enable the keyboard and flush it */
+    /* Enable the keyboard */
     i8042_write(true, I8042_ENABLE_PORT0);
     return 0;
 }
