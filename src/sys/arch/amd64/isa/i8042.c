@@ -292,7 +292,7 @@ static struct iotap_ops tap_port0_ops = {
 };
 
 static struct iotap_desc tap_port0 = {
-    .name = "i8042.port.0",
+    .name = "input.igkbd",
     .ops = &tap_port0_ops
 };
 
