@@ -117,3 +117,13 @@ copyinstr(const void *uaddr, char *kaddr, size_t len)
 
     return 0;
 }
+
+int
+copyoutstr(const void *kaddr, void *addr, size_t len)
+{
+    size_t slen;
+
+    slen = strlen(kaddr);
+    len = MIN(slen, len);
+    return copyout(kaddr, addr, len);
+}

@@ -68,4 +68,16 @@ int copyin(const void *uaddr, void *kaddr, size_t len);
  */
 int copyout(const void *kaddr, void *uaddr, size_t len);
 
+/*
+ * Copy kernel string to userland safely
+ *
+ * @kaddr: Kernel space address to copy from
+ * @uaddr: User space address to copy to
+ * @len: Length of bytes to copy
+ *
+ * Returns zero on success, otherwise a less than
+ * zero value.
+ */
+int copyoutstr(const void *kaddr, void *addr, size_t len);
+
 #endif  /* !_OS_SYSTM_H_ */
