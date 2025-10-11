@@ -39,7 +39,9 @@
  * @io: I/O space
  */
 struct xhci_hcd {
-    volatile void *io;
+    struct xhci_capregs *capspace;
 };
+
+#define XHCI_TIMEOUT_MSEC 500
 
 #endif  /* !_USB_XHCIVAR_H_ */

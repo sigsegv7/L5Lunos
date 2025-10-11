@@ -32,6 +32,7 @@
 
 #include <sys/types.h>
 #include <sys/cdefs.h>
+#include <sys/param.h>
 
 /*
  * XHCI capability registers
@@ -68,5 +69,18 @@ struct __packed xhci_opregs {
     volatile uint32_t config;
     volatile uint32_t reserved2;
 };
+
+/*
+ * USB command register bits
+ *
+ * See section 5.4.1 of the xHCI spec
+ */
+#define USBCMD_HCRST BIT(1)
+
+/*
+ * Macros to get various register spaces
+ */
+#define XHCI_OPBASE(CAPBASE) \
+    PTR_OFFSET(CAPBASE, (CAPBASE)->caplength)
 
 #endif  /* !_XHCIREGS_H_ */
