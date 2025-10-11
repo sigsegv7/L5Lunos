@@ -61,6 +61,7 @@ struct cons_scr g_root_scr;
 
 /* Forward declarations */
 static void fill_screen(struct cons_scr *scr, uint32_t bg);
+static void cons_putch(struct cons_scr *scr, struct cons_ch *ch, bool drawcurs);
 
 /*
  * Get the index into the framebuffer with an x and y
@@ -155,6 +156,30 @@ cons_newline(struct cons_scr *scr)
     cons_draw_cursor(scr, false);
 }
 
+static void
+cons_backspace(struct cons_scr *scr)
+{
+    struct cons_ch ch;
+
+    if (scr->text_x == 0 || scr->cursor_x == 0) {
+        return;
+    }
+
+    cons_draw_cursor(scr, true);
+    scr->text_x -= FONT_WIDTH;
+    scr->cursor_x -= CURSOR_WIDTH;
+
+    ch.c = '*';
+    ch.x = scr->text_x;
+    ch.y = scr->text_y;
+    ch.fg = scr->scr_bg;
+    ch.bg = scr->scr_bg;
+
+    /* Draw the char and redraw cursor */
+    cons_putch(scr, &ch, false);
+    cons_draw_cursor(scr, false);
+}
+
 /*
  * Fill a screen with a desired background
  * color
@@ -196,6 +221,9 @@ cons_handle_spec(struct cons_scr *scr, int c)
     case ASCII_LF:
         cons_newline(scr);
         return c;
+    case ASCII_BS:
+        cons_backspace(scr);
+        return c;
     }
 
     return -1;
@@ -206,9 +234,10 @@ cons_handle_spec(struct cons_scr *scr, int c)
  *
  * @scr: Screen to plot onto
  * @ch: Character to plot onto screen
+ * @drawcurs: Update the cursor if true
  */
 static void
-cons_putch(struct cons_scr *scr, struct cons_ch *ch)
+cons_putch(struct cons_scr *scr, struct cons_ch *ch, bool drawcurs)
 {
     struct bootvar_fb *fbvars;
     struct font_header *hdr;
@@ -224,9 +253,11 @@ cons_putch(struct cons_scr *scr, struct cons_ch *ch)
     x = ch->x;
     y = ch->y;
 
-    /* Update the cursor */
-    cons_draw_cursor(scr, true);
-    scr->cursor_x += FONT_WIDTH;
+    /* Update the cursor if we can */
+    if (drawcurs) {
+        cons_draw_cursor(scr, true);
+        scr->cursor_x += FONT_WIDTH;
+    }
 
     /* Begin the plotting */
     for (int cy = 0; cy < hdr->csize; ++cy) {
@@ -239,7 +270,9 @@ cons_putch(struct cons_scr *scr, struct cons_ch *ch)
         }
     }
 
-    cons_draw_cursor(scr, false);
+    if (drawcurs) {
+        cons_draw_cursor(scr, false);
+    }
 }
 
 /*
@@ -268,7 +301,7 @@ cons_putstr(struct cons_scr *scr, const char *str, size_t len)
             continue;
         }
 
-        cons_putch(scr, &ch);
+        cons_putch(scr, &ch, true);
         scr->text_x += FONT_WIDTH;
 
         /* Handle console x overflow */
