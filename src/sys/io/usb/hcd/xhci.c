@@ -116,6 +116,17 @@ xhci_reset_hc(struct xhci_hcd *hcd)
         return error;
     }
 
+    /*
+     * Section 4.2 of the XHCI spec states that we also
+     * need to wait for the controller to be ready via
+     * the USBSTS.CNR (controller not ready) bit
+     */
+    error = xhci_poll32(&opregs->usbcmd, USBSTS_CNR, false);
+    if (error < 0) {
+        pr_trace("hang waiting for controller ready\n");
+        return error;
+    }
+
     return 0;
 }
 
