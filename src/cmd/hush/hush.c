@@ -72,6 +72,18 @@ read_input(char *buf, size_t maxlen)
             continue;
         }
 
+        /* Don't overwrite prompt */
+        if (c == '\b' && i == 0) {
+            continue;
+        }
+
+        /* Is this a backspace? */
+        if (c == '\b' && i > 0) {
+            buf[--i] = '\0';
+            write(STDOUT_FILENO, &c, 1);
+            continue;
+        }
+
         if (c != '\n' && i < maxlen) {
             buf[i++] = c;
             write(STDOUT_FILENO, &c, 1);
