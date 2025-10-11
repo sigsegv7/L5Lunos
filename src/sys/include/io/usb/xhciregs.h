@@ -75,7 +75,8 @@ struct __packed xhci_opregs {
  *
  * See section 5.4.1 of the xHCI spec
  */
-#define USBCMD_HCRST BIT(1)
+#define USBCMD_HCRST BIT(1)     /* Host controller reset */
+
 
 /*
  * Macros to get various register spaces
