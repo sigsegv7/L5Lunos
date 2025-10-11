@@ -105,6 +105,49 @@ pci_cs_match(struct pci_device *csa, struct pci_device *csb)
 }
 
 /*
+ * Lookup hook for matching vendor device IDs and
+ * programming interfaces
+ *
+ * @vda: Vendor device (A)
+ * @vdb: Vendor device (B)
+ *
+ * Returns zero on match
+ */
+static int
+pci_vdi_match(struct pci_device *vda, struct pci_device *vdb)
+{
+    if (vda == NULL || vdb == NULL)
+        return -EINVAL;
+
+    if (vda->prog_if != vdb->prog_if)
+        return -1;
+
+    return pci_vd_match(vda, vdb);
+
+}
+
+/*
+ * Lookup hook for matching class, subclass IDs and
+ * programming interfaces
+ *
+ * @csa: Class / subclass (A)
+ * @csb: Class / subclass (B)
+ *
+ * Returns zero on match
+ */
+static int
+pci_csi_match(struct pci_device *csa, struct pci_device *csb)
+{
+    if (csa == NULL || csb == NULL)
+        return -EINVAL;
+
+    if (csa->prog_if != csb->prog_if)
+        return -1;
+
+    return pci_cs_match(csa, csb);
+}
+
+/*
  * Attempt to register a PCI device and bail
  * if it doesn't exist on the bus.
  */
@@ -240,6 +283,12 @@ pci_bus_lookup(struct pci_device *lookup, lookup_type_t type)
             break;
         case PCI_LU_VENDEV:
             cmp = pci_vd_match(lookup, dp);
+            break;
+        case PCI_LU_ICLASSREV:
+            cmp = pci_csi_match(lookup, dp);
+            break;
+        case PCI_LU_IVENDEV:
+            cmp = pci_vdi_match(lookup, dp);
             break;
         }
 

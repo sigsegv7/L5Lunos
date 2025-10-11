@@ -49,6 +49,24 @@
         .vendor = (VENDOR)          \
     }
 
+/*
+ * Use for making instances of the pci_adv
+ * structure while specifying the programming
+ * interface
+ */
+#define PCI_CSI_ID(CLASS, SUBCLASS, IF)     \
+    {                                       \
+        .class = (CLASS),                   \
+        .subclass = (SUBCLASS),             \
+        .prog_if = (IF)                     \
+    }
+#define PCI_DVI_ID(DEVICE, VENDOR, IF)      \
+    {                                       \
+        .device = (DEVICE),                 \
+        .vendor = (VENDOR),                 \
+        .prog_if = (IF)                     \
+    }
+
 /* PCI specific types */
 typedef uint32_t pcireg_t;
 typedef uint32_t pcival_t;
@@ -81,6 +99,8 @@ struct pci_device {
 typedef enum {
     PCI_LU_VENDEV,      /* Vendor / device */
     PCI_LU_CLASSREV,    /* Class / subclass */
+    PCI_LU_IVENDEV,     /* Interface + vendor / device */
+    PCI_LU_ICLASSREV,   /* Interface + class / revision */
 } lookup_type_t;
 
 /*
