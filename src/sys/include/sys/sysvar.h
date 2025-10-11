@@ -31,6 +31,6 @@
 #define _SYS_SYSVAR_H_
 
 /* Kernel version */
-#define _L5_VERSION "v0.0.3"
+#define _L5_VERSION "v0.0.4"
 
 #endif  /* !_SYS_SYSVAR_H_ */
