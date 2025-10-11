@@ -536,7 +536,7 @@ ahci_attach(struct pci_adv *adv)
 static struct pci_adv driver = {
     .lookup = PCI_CS_ID(0x1, 0x06),
     .attach = ahci_attach,
-    .classrev = 1
+    .idtype = PCI_LU_CLASSREV
 };
 
 MODULE_EXPORT("ahci", MODTYPE_PCI, ahci_init);

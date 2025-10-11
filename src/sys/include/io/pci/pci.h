@@ -76,6 +76,11 @@ struct pci_device {
     TAILQ_ENTRY(pci_device) link;
 };
 
+typedef enum {
+    PCI_LU_VENDEV,      /* Vendor / device */
+    PCI_LU_CLASSREV,    /* Class / subclass */
+} lookup_type_t;
+
 /*
  * Structure that allows a device driver of a PCI
  * bus node to advocate for its workings. In other words,
@@ -83,7 +88,7 @@ struct pci_device {
  *
  * @lookup: Lookup arguments
  * @attach: Attach the driver
- * @classrev: IF 1, identified by class/subclass
+ * @idtype: How the device will be identified
  *
  * XXX: The `lookup` field is used for both input arguments
  *      as well as output results
@@ -91,14 +96,9 @@ struct pci_device {
 struct pci_adv {
     struct pci_device lookup;
     int(*attach)(struct pci_adv *ap);
-    uint8_t classrev : 1;
+    lookup_type_t idtype;
     TAILQ_ENTRY(pci_adv) link;
 };
-
-typedef enum {
-    PCI_LU_VENDEV,      /* Vendor / device */
-    PCI_LU_CLASSREV,    /* Class / subclass */
-} lookup_type_t;
 
 /*
  * Lookup a device on the PCI(e) bus by using the pci_descriptor

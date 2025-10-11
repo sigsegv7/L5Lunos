@@ -327,7 +327,7 @@ pci_init_bus(void)
     /* Now allocate load the drivers */
     TAILQ_FOREACH(advp, &advlist, link) {
         dev = advp->lookup;
-        lup = advp->classrev ? PCI_LU_CLASSREV : PCI_LU_VENDEV;
+        lup = advp->idtype;
 
         error = pci_bus_lookup(&dev, lup);
         if (error == 0) {
