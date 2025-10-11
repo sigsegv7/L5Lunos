@@ -80,4 +80,16 @@ void *memcpy(void *dest, const void *src, size_t n);
  */
 void *memset(void *s, int c, size_t n);
 
+/*
+ * Convert an integer base to string form
+ *
+ * @value: Value to convert to string
+ * @buf: Buffer to use
+ * @base: Radix to use
+ *
+ * Returns 'buf' on success, otherwise a value of
+ * NULL on failure.
+ */
+char *itoa(int64_t value, char *buf, int base);
+
 #endif  /* _STRING_H */
