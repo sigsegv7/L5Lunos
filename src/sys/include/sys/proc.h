@@ -73,7 +73,9 @@ struct penv_blk {
  * @flags: State flags (see PROC_*)
  * @pcb: Process control block
  * @scdom: Syscall domain
+ * @fdtab: File descriptor table
  * @envblk: Environment block
+ * @envblk_box: Pointer box for envblk
  * @level: Access level
  * @maplist_lock: Protects the maplist
  * @sigtab: Signal table
