@@ -60,6 +60,7 @@ typedef uint32_t pcival_t;
  * @bus: Bus number of device
  * @slot: Slot number of device
  * @func: Function number of device
+ * @prog_if: Programming interface
  * @vendor: Vendor ID
  * @device: Device ID
  * @bar: Base address registers
@@ -68,6 +69,7 @@ struct pci_device {
     uint16_t bus;
     uint8_t slot;
     uint8_t func;
+    uint8_t prog_if;
     uint8_t class;
     uint8_t subclass;
     uint16_t vendor;

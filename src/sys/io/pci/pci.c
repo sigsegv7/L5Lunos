@@ -115,6 +115,7 @@ pci_register_dev(struct pci_device *dev)
     pcireg_t vend_dev;
     uint32_t classrev;
     uint8_t class, subclass;
+    uint8_t prog_if;
     uint16_t device_id;
     uint16_t vendor_id;
 
@@ -131,6 +132,7 @@ pci_register_dev(struct pci_device *dev)
     classrev = pci_readl(dev, PCIREG_CLASSREV);
     class = PCIREG_CLASS(classrev);
     subclass = PCIREG_SUBCLASS(classrev);
+    prog_if = PCIREG_PROGIF(classrev);
 
     /* Does this device exist? */
     if (vendor_id == 0xFFFF) {
@@ -141,6 +143,7 @@ pci_register_dev(struct pci_device *dev)
     dev->device = device_id;
     dev->class = class;
     dev->subclass = subclass;
+    dev->prog_if = prog_if;
 
     /* Set up base address registers */
     dev->bar[0] = pci_readl(dev, PCIREG_BAR0);
