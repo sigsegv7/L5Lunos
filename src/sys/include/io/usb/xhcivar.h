@@ -37,9 +37,15 @@
  * Represents the host controller
  *
  * @io: I/O space
+ * @max_slots: Max device slots
+ * @max_intrs: Max interrupters
+ * @max_ports: Max ports
  */
 struct xhci_hcd {
     struct xhci_capregs *capspace;
+    uint8_t max_slots;
+    uint32_t max_intrs;
+    uint32_t max_ports;
 };
 
 #define XHCI_TIMEOUT_MSEC 500

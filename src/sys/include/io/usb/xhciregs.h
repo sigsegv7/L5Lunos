@@ -85,6 +85,15 @@ struct __packed xhci_opregs {
 #define USBSTS_CNR  BIT(11)     /* Controller not ready */
 
 /*
+ * USB structural parameters 1 register bits
+ *
+ * See section 5.3.3 of the xHCI spec
+ */
+#define HCSPARAMS1_MAXSLOTS(HCSPARAMS1) ((HCSPARAMS1) & 0xFF)
+#define HCSPARAMS1_MAXINTRS(HCSPARAMS1) (((HCSPARAMS1) >> 8) & 0x7FF)
+#define HCSPARAMS1_MAXPORTS(HCSPARAMS1) (((HCSPARAMS1) >> 24) & 0xFF)
+
+/*
  * Macros to get various register spaces
  */
 #define XHCI_OPBASE(CAPBASE) \

@@ -137,7 +137,8 @@ static int
 xhci_init_hc(struct xhci_hcd *hcd)
 {
     struct xhci_opregs *opregs;
-    uint32_t usbcmd;
+    struct xhci_capregs *capspace;
+    uint32_t usbcmd, hcsparams1;
     int error;
 
     if (hcd == NULL) {
@@ -147,6 +148,17 @@ xhci_init_hc(struct xhci_hcd *hcd)
     if ((error = xhci_reset_hc(hcd)) < 0) {
         return error;
     }
+
+    if ((capspace = hcd->capspace) == NULL) {
+        return -EIO;
+    }
+
+    /* Get the structural params 1 */
+    opregs = XHCI_OPBASE(capspace);
+    hcsparams1 = mmio_read32(&capspace->hcsparams1);
+    hcd->max_slots = HCSPARAMS1_MAXSLOTS(hcsparams1);
+    hcd->max_intrs = HCSPARAMS1_MAXINTRS(hcsparams1);
+    hcd->max_ports = HCSPARAMS1_MAXPORTS(hcsparams1);
     return 0;
 }
 
