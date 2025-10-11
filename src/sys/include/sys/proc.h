@@ -97,7 +97,7 @@ struct proc {
     TAILQ_ENTRY(proc) link;
 };
 
-#define PROC_EXITING BIT(0)
+#define PROC_EXITING BIT(0)     /* Process is exiting */
 
 /*
  * Initialize a process into a basic minimal
