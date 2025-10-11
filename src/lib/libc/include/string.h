@@ -31,6 +31,7 @@
 #define _STRING_H 1
 
 #include <stddef.h>
+#include <stdint.h>
 
 /*
  * Get the length of a string

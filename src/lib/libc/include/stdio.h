@@ -30,6 +30,9 @@
 #ifndef _STDIO_H
 #define _STDIO_H 1
 
+#include <stdarg.h>
+#include <stddef.h>
+
 #define EOF (-1)
 
 /*
@@ -42,5 +45,15 @@
  * otherwise an EOF on failure
  */
 int puts(const char *s);
+
+/*
+ * Write a formatted string to a buffer
+ */
+int vsnprintf(char *s, size_t size, const char *fmt, va_list ap);
+
+/*
+ * Print a formatted string
+ */
+int printf(const char *__restrict fmt, ...);
 
 #endif  /* _!STDIO_H */
