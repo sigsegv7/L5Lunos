@@ -31,4 +31,7 @@
     .globl _start
 _start:
     call main
-    jmp .
+    mov $0x01, %rax
+    xor %rdi, %rdi
+    int $0x80
+    ud2
