@@ -33,6 +33,7 @@
  */
 
 #include <sys/types.h>
+#include <sys/param.h>
 #include <sys/errno.h>
 #include <sys/panic.h>
 #include <io/pci/bar.h>
@@ -75,6 +76,7 @@ pci_map_bar(struct pci_device *dev, uint8_t bar, struct bus_space *bs_res)
     size_t len;
     bus_addr_t pa;
     uint8_t barreg = pci_get_barreg(bar);
+    uint32_t lo, hi;
     uintptr_t tmp;
 
     if (dev == NULL || bs_res == NULL) {
@@ -91,7 +93,16 @@ pci_map_bar(struct pci_device *dev, uint8_t bar, struct bus_space *bs_res)
         return -EINVAL;
     }
 
-    pa = tmp & ~0x7;
+    /* Is this a 64-bit BAR? */
+    if (PCI_BAR_64(tmp) && bar != 5) {
+        barreg = pci_get_barreg(bar + 1);
+        lo = tmp & ~7;
+        hi = pci_readl(dev, barreg);
+        pa = COMBINE32(hi, lo);
+    } else {
+        pa = tmp & ~0x7;
+    }
+
     len = pci_bar_size(dev, bar);
     return bus_space_map(bs_res, pa, len);
 }
