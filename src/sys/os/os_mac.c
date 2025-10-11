@@ -34,6 +34,11 @@
 #include <io/video/fbdev.h>
 #include <os/mac.h>
 
+/*
+ * The MAC border table is used for mappable resources
+ * under MAC that have common operations associated with
+ * them.
+ */
 static struct mac_border *bortab[__BORDER_MAX] = {
     [BORDER_NONE] = NULL,
     [BORDER_FBDEV] = &g_fbdev_border
