@@ -35,6 +35,7 @@
 #include <sys/syslog.h>
 #include <sys/panic.h>
 #include <sys/proc.h>
+#include <sys/queue.h>
 #include <sys/cpuvar.h>
 #include <os/systm.h>
 #include <vm/vm.h>
@@ -44,7 +45,17 @@
 #include <os/kalloc.h>
 #include <os/filedesc.h>
 #include <string.h>
+#include <stdbool.h>
 
+/*
+ * System-wide process state
+ *
+ * XXX: The process queue here is different from the runqueues,
+ *      these keep track of the processes present whether they
+ *      are running or not (unless terminated)
+ */
+static bool is_procq_init = false;
+static TAILQ_HEAD(, proc) procq;
 static pid_t next_pid = 0;
 
 /*
@@ -171,6 +182,12 @@ proc_init(struct proc *procp, int flags)
         return -EINVAL;
     }
 
+    /* Initialize the process queue once */
+    if (!is_procq_init) {
+        TAILQ_INIT(&procq);
+        is_procq_init = true;
+    }
+
     /* Put the process in a known state */
     scdp = &procp->scdom;
     memset(procp, 0, sizeof(*procp));
@@ -197,7 +214,33 @@ proc_init(struct proc *procp, int flags)
     }
 
     error = fdtab_init(procp);
-    return error;
+    if (error != 0) {
+        return error;
+    }
+
+    TAILQ_INSERT_TAIL(&procq, procp, link);
+    return 0;
+}
+
+/*
+ * Lookup a process by PID
+ */
+struct proc *
+proc_lookup(pid_t pid)
+{
+    struct proc *curproc;
+
+    TAILQ_FOREACH(curproc, &procq, link) {
+        if (curproc == NULL) {
+            continue;
+        }
+
+        if (curproc->pid == pid) {
+            return curproc;
+        }
+    }
+
+    return NULL;
 }
 
 /*
@@ -237,6 +280,7 @@ proc_kill(struct proc *procp, int status)
 
     procp->flags |= PROC_EXITING;
     proc_clear_ranges(procp);
+    TAILQ_REMOVE(&procq, procp, link);
     return md_proc_kill(procp, 0);
 }
 

@@ -203,6 +203,15 @@ int md_set_ip(struct proc *procp, uintptr_t ip);
 int proc_check_addr(struct proc *proc, uintptr_t addr, size_t len);
 
 /*
+ * Lookup a process using its PID
+ *
+ * @pid: PID of process to lookup
+ *
+ * Returns NULL on failure
+ */
+struct proc *proc_lookup(pid_t pid);
+
+/*
  * Put the current process into a halt loop
  * until the next one runs.
  */
