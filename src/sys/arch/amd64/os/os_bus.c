@@ -54,7 +54,7 @@ bus_space_map(struct bus_space *bp, bus_addr_t pa, size_t len)
     }
 
     /* Identity mapped */
-    bp->va_base = (void *)pa;
+    bp->va_base = PHYS_TO_VIRT(pa);
     bp->length = len;
     bp->type = BUS_PCI_PCI;
     return 0;
