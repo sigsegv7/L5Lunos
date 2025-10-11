@@ -252,9 +252,6 @@ md_proc_kill(struct proc *procp, int flags)
         procp = core->curproc;
     }
 
-    /* Show others we are exiting */
-    procp->flags |= PROC_EXITING;
-
     /* Free every range */
     TAILQ_FOREACH(range, &procp->maplist, link) {
         if (range == NULL) {
