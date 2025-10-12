@@ -132,6 +132,35 @@ cpu_vendor(struct mdcore *mdcore)
 }
 
 /*
+ * Acquire the CPU family ID - used by cpu_identify()
+ */
+static void
+cpu_family(struct mdcore *mdcore)
+{
+    uint32_t eax, dmmy;
+    uint32_t family, ext_family;
+
+    if (mdcore == NULL) {
+        return;
+    }
+
+    CPUID(0x01, eax, dmmy, dmmy, dmmy);
+
+    /*
+     * If the family ID is 15 then the actual result
+     * is the sum of the family ID and extended family
+     * ID.
+     */
+    family = (eax >> 8) & 0xF;
+    if (family == 15) {
+        ext_family = (eax >> 20) & 0xFF;
+        family += ext_family;
+    }
+
+    mdcore->family = family;
+}
+
+/*
  * Identify the CPU via a CPUID
  */
 static void
@@ -142,6 +171,7 @@ cpu_identify(struct mdcore *mdcore)
     }
 
     cpu_vendor(mdcore);
+    cpu_family(mdcore);
 }
 
 void
