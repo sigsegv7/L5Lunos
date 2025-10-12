@@ -50,6 +50,7 @@ int puts(const char *s);
  * Write a formatted string to a buffer
  */
 int vsnprintf(char *s, size_t size, const char *fmt, va_list ap);
+int snprintf(char *s, size_t size, const char *fmt, ...);
 
 /*
  * Print a formatted string
