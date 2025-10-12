@@ -42,12 +42,17 @@
 #define md_inton()    __ASMV("sti")
 #define md_halt()     __ASMV("hlt")
 
+#define CPU_VENDOR_OTHER  0x00
+#define CPU_VENDOR_AMD    0x01
+#define CPU_VENDOR_INTEL  0x02
+
 /*
  * Represents the machine dependent information
  * of a processor core on the machine.
  *
  * @apic_id: Local APIC ID
  * @cr3: CR3 register value (PML<n> phys)
+ * @vendor: Processor vendor (CPU_VENDOR_*)
  * @lapic_base: LAPIC register interface base
  * @x2apic: Has the x2APIC? Is 1 if true
  * @tss: Task state segment for this core
@@ -58,6 +63,7 @@
 struct mdcore {
     uint32_t apic_id;
     uint64_t cr3;
+    uint8_t vendor;
     void *lapic_base;
     uint8_t x2apic : 1;
     struct tss_entry tss;

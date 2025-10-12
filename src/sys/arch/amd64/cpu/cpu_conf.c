@@ -35,7 +35,13 @@
 #include <machine/lapic.h>
 #include <machine/gdt.h>
 #include <machine/mdcpu.h>
+#include <machine/cpuid.h>
 #include <string.h>
+
+/* Valid vendor strings */
+#define VENDSTR_INTEL "GenuineIntel"
+#define VENDSTR_INTEL1 "GenuineIotel"
+#define VENDSTR_AMD    "AuthenticAMD"
 
 extern void syscall_isr(void);
 extern void core_halt_isr(void);
@@ -71,6 +77,73 @@ init_vectors(void)
     idt_set_desc(HALT_VECTOR, IDT_USER_GATE, ISR(core_halt_isr), 0);
 }
 
+/*
+ * Identify the CPU vendor - used by cpu_identify()
+ */
+static void
+cpu_vendor(struct mdcore *mdcore)
+{
+    uint32_t ebx, edx, ecx, dmmy;
+    char vendstr[13];
+
+    if (mdcore == NULL) {
+        return;
+    }
+
+    CPUID(0x00, dmmy, ebx, ecx, edx);
+
+    /* DWORD 0 */
+    vendstr[0] = (ebx & 0xFF);
+    vendstr[1] = (ebx >> 8) & 0xFF;
+    vendstr[2] = (ebx >> 16) & 0xFF;
+    vendstr[3] = (ebx >> 24) & 0xFF;
+
+    /* DWORD 1 */
+    vendstr[4] = (edx & 0xFF);
+    vendstr[5] = (edx >> 8) & 0xFF;
+    vendstr[6] = (edx >> 16) & 0xFF;
+    vendstr[7] = (edx >> 24) & 0xFF;
+
+    /* DWORD 2 */
+    vendstr[8] = (ecx & 0xFF);
+    vendstr[9] = (ecx >> 8) & 0xFF;
+    vendstr[10] = (ecx >> 16) & 0xFF;
+    vendstr[11] = (ecx >> 24) & 0xFF;
+    vendstr[12] = '\0';
+
+    if (strcmp(vendstr, VENDSTR_INTEL) == 0) {
+        mdcore->vendor = CPU_VENDOR_INTEL;
+        return;
+    }
+
+    /* Some buggy Intel CPUs have this rare one */
+    if (strcmp(vendstr, VENDSTR_INTEL1) == 0) {
+        mdcore->vendor = CPU_VENDOR_INTEL;
+        return;
+    }
+
+    if (strcmp(vendstr, VENDSTR_AMD) == 0) {
+        mdcore->vendor = CPU_VENDOR_AMD;
+        return;
+    }
+
+    /* Unknown CPU vendor */
+    mdcore->vendor = CPU_VENDOR_OTHER;
+}
+
+/*
+ * Identify the CPU via a CPUID
+ */
+static void
+cpu_identify(struct mdcore *mdcore)
+{
+    if (mdcore == NULL) {
+        return;
+    }
+
+    cpu_vendor(mdcore);
+}
+
 void
 cpu_conf(struct pcore *pcore)
 {
@@ -93,6 +166,7 @@ cpu_conf(struct pcore *pcore)
 
     init_vectors();
     idt_load();
+    cpu_identify(mdcore);
     __ASMV("sti");
 }
 
