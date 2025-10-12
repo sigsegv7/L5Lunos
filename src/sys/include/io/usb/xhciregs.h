@@ -39,7 +39,7 @@
  *
  * See section 5.3 of the xHCI spec
  */
-struct __packed xhci_capregs {
+struct xhci_capregs {
     volatile uint8_t caplength;
     volatile uint8_t reserved;
     volatile uint16_t hciversion;
@@ -57,17 +57,17 @@ struct __packed xhci_capregs {
  *
  * See section 5.4 of the xHCI spec
  */
-struct __packed xhci_opregs {
+struct xhci_opregs {
     volatile uint32_t usbcmd;
     volatile uint32_t usbsts;
     volatile uint32_t pagesize;
     volatile uint32_t reserved;
-    volatile uint32_t dnctrl;
-    volatile uint32_t crcr;
     volatile uint32_t reserved1;
-    volatile uint32_t dcbaap;
+    volatile uint32_t dnctrl;
+    volatile uint64_t cmd_ring;
+    volatile uint32_t reserved2[4];
+    volatile uint64_t dcbaa_ptr;
     volatile uint32_t config;
-    volatile uint32_t reserved2;
 };
 
 /*
