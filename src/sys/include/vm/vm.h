@@ -32,12 +32,15 @@
 
 #include <sys/types.h>
 #include <sys/queue.h>
+#include <sys/param.h>
 #include <sys/bootvars.h>
 
 #define VM_HIGHER_HALF (get_kernel_base())
 #define PHYS_TO_VIRT(PHYS) (void *)((uintptr_t)(PHYS) + VM_HIGHER_HALF)
 #define VIRT_TO_PHYS(VIRT) ((uintptr_t)(VIRT) - VM_HIGHER_HALF)
+
 #define DEFAULT_PAGESIZE 4096
+#define BYTES_TO_PAGES(N) (ALIGN_UP((N), DEFAULT_PAGESIZE) / DEFAULT_PAGESIZE)
 
 /* Physical/virtual address */
 typedef uintptr_t vaddr_t;
