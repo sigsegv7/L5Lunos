@@ -30,6 +30,7 @@
 #include <sys/types.h>
 #include <sys/reboot.h>
 #include <sys/cdefs.h>
+#include <sys/cpuvar.h>
 #include <os/reboot.h>
 #include <machine/pio.h>
 
@@ -39,12 +40,48 @@
 #define I8042_REBOOT 0
 #endif  /* __I8042_REBOOT */
 
+static void
+intel_reset(struct mdcore *mdcore)
+{
+    /*
+     * Some intel platform controller hubs allow a
+     * reset via a special RST_CNT control register,
+     * perform a CPU reset with SYS_RST and RST_CPU.
+     */
+    if (mdcore->family == 0x06) {
+        outb(0xCF9, 3 << 1);
+    }
+}
+
+/*
+ * Perform platform specific reset methods
+ *
+ * @core: Current core for platform identification
+ */
+static void
+platform_reset(struct pcore *core)
+{
+    struct mdcore *mdcore;
+
+    if (core == NULL) {
+        return;
+    }
+
+    mdcore = &core->md;
+    switch (mdcore->vendor) {
+    case CPU_VENDOR_INTEL:
+        intel_reset(mdcore);
+        break;
+    }
+}
+
 /*
  * Actual reboot core
  */
 __dead static void
 __reboot(void)
 {
+    struct pcore *core;
     void *dmmy_null = NULL;
 
     /*
@@ -55,6 +92,11 @@ __reboot(void)
         outb(0x64, 0xFE);
     }
 
+    /* Try platform specific methods */
+    core = this_core();
+    if (core != NULL) {
+        platform_reset(core);
+    }
 
     /*
      * If somehow nothing we've tried worked, be very
