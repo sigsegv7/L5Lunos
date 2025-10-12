@@ -477,6 +477,24 @@ ahci_hba_init(struct ahci_hba *hba)
 }
 
 /*
+ * Initialize bus mastering and MMIO for the host
+ * bus adapter
+ */
+static void
+ahci_pci_init(struct pci_device *devp)
+{
+    uint32_t config;
+
+    if (devp == NULL) {
+        return;
+    }
+
+    config = pci_readl(devp, PCIREG_CMDSTATUS);
+    config |= PCI_BUS_MASTERING | PCI_MEM_SPACE;
+    pci_writel(devp, PCIREG_CMDSTATUS, config);
+}
+
+/*
  * Initialize only the AHCI driver's state rather than
  * the hardware it covers. This is used so we can advertise
  * ourself to the PCI driver.
@@ -529,6 +547,7 @@ ahci_attach(struct pci_adv *adv)
         return error;
     }
 
+    ahci_pci_init(&dev);
     root_hba.io = (void *)bs.va_base;
     return ahci_hba_init(&root_hba);
 }
