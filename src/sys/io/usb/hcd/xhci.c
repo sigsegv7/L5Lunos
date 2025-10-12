@@ -172,6 +172,36 @@ xhci_init_dcbaap(struct xhci_hcd *hcd)
 }
 
 /*
+ * Initialize the command ring
+ */
+static int
+xhci_init_cmdring(struct xhci_hcd *hcd)
+{
+    struct xhci_opregs *opregs;
+    void *va;
+
+    if (hcd == NULL) {
+        return -EINVAL;
+    }
+
+    /* Allocate the actual command ring */
+    hcd->cmd_ring = vm_alloc_frame(1);
+    if (hcd->cmd_ring == 0) {
+        pr_trace("failed to allocate command ring\n");
+        return -ENOMEM;
+    }
+
+    /* Zero it */
+    va = PHYS_TO_VIRT(hcd->cmd_ring);
+    memset(va, 0, DEFAULT_PAGESIZE);
+
+    /* Write CRCR with the physical address */
+    opregs = XHCI_OPBASE(hcd->capspace);
+    mmio_write64(&opregs->cmd_ring, hcd->cmd_ring);
+    return 0;
+}
+
+/*
  * Initialize the host controller
  */
 static int
@@ -211,6 +241,11 @@ xhci_init_hc(struct xhci_hcd *hcd)
     if ((error = xhci_init_dcbaap(hcd)) < 0) {
         return error;
     }
+
+    if ((error = xhci_init_cmdring(hcd)) < 0) {
+        return error;
+    }
+
     return 0;
 }
 

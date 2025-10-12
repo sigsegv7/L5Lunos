@@ -48,6 +48,7 @@ struct xhci_hcd {
     uint32_t max_intrs;
     uint32_t max_ports;
     uintptr_t dcbaap_pa;
+    uintptr_t cmd_ring;
 };
 
 #define XHCI_TIMEOUT_MSEC 500
