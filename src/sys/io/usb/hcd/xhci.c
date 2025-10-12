@@ -150,6 +150,10 @@ xhci_init_dcbaap(struct xhci_hcd *hcd)
     uint32_t npages;
     void *va;
 
+    if (hcd == NULL) {
+        return -EINVAL;
+    }
+
     npages = BYTES_TO_PAGES(hcd->max_slots * XHCI_CTX_SIZE);
     hcd->dcbaap_pa = vm_alloc_frame(npages);
     if (hcd->dcbaap_pa == 0) {
