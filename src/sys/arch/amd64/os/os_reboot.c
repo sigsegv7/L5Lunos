@@ -33,6 +33,12 @@
 #include <os/reboot.h>
 #include <machine/pio.h>
 
+#if defined(__I8042_REBOOT)
+#define I8042_REBOOT __I8042_REBOOT
+#else
+#define I8042_REBOOT 0
+#endif  /* __I8042_REBOOT */
+
 /*
  * Actual reboot core
  */
@@ -42,11 +48,13 @@ __reboot(void)
     void *dmmy_null = NULL;
 
     /*
-     * Try to be gentle and simply put the CPU into a
-     * reboot cycle through the i8042 reset line, though
-     * some chipsets may not like this.
+     * Use the i8042 to reboot the system if we can, this
+     * might be disabled in some L5 kernels.
      */
-    outb(0x64, 0xFE);
+    if (I8042_REBOOT) {
+        outb(0x64, 0xFE);
+    }
+
 
     /*
      * If somehow nothing we've tried worked, be very

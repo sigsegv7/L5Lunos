@@ -1,1 +1,4 @@
-// GENERIC AMD64
+// Controls if an i8042 reboot would be attempted
+// as a method. Some firmware (e.g., on some laptops)
+// may not handle these well and hang.
+option I8042_REBOOT yes
