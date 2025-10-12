@@ -35,6 +35,7 @@
 #include <os/clkdev.h>
 #include <io/usb/xhcivar.h>
 #include <io/usb/xhciregs.h>
+#include <io/pci/cam.h>
 #include <io/pci/bar.h>
 #include <io/pci/pci.h>
 #include <os/module.h>
@@ -162,6 +163,20 @@ xhci_init_hc(struct xhci_hcd *hcd)
     return 0;
 }
 
+static void
+xhci_pci_init(struct pci_device *devp)
+{
+    uint32_t config;
+
+    if (devp == NULL) {
+        return;
+    }
+
+    config = pci_readl(devp, PCIREG_CMDSTATUS);
+    config |= PCI_BUS_MASTERING | PCI_MEM_SPACE;
+    pci_writel(devp, PCIREG_CMDSTATUS, config);
+}
+
 static int
 xhci_init(struct module *modp)
 {
@@ -202,6 +217,7 @@ xhci_attach(struct pci_adv *ap)
         return error;
     }
 
+    xhci_pci_init(&dev);
     hcd.capspace = bs.va_base;
     return xhci_init_hc(&hcd);
 }
