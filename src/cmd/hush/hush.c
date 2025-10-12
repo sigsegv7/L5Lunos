@@ -95,19 +95,22 @@ read_input(char *buf, size_t maxlen)
 int
 main(void)
 {
+    char *argv[2];
     char buf[128];
-    ssize_t retval;
+    char binpath[256];
+    int error;
+
+    argv[0] = binpath;
+    argv[1] = NULL;
 
     for (;;) {
         write(STDOUT_FILENO, PROMPT, sizeof(PROMPT) - 1);
         read_input(buf, sizeof(buf));
         write(STDOUT_FILENO, "\n", 1);
 
-        /* XXX: For initial demonstration */
-        if (strcmp(buf, "hello") == 0) {
-            puts("meow!!");
-        } else {
-            puts("mrrp?");
+        snprintf(binpath, sizeof(binpath), "/usr/bin/%s", buf);
+        if ((error = spawn(argv[0], argv)) < 0) {
+            printf("unknown command \"%s\"\n", buf);
         }
 
         buf[0] = '\0';
