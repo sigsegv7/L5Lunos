@@ -27,6 +27,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Description: USB 3.0 controller driver
+ * Author: Ian Marco Moffett
+ */
+
 #include <sys/types.h>
 #include <sys/syslog.h>
 #include <sys/errno.h>
