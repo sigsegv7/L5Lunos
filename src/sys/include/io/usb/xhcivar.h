@@ -40,14 +40,19 @@
  * @max_slots: Max device slots
  * @max_intrs: Max interrupters
  * @max_ports: Max ports
+ * @dcbaap_pa: DCBAAP physical address
  */
 struct xhci_hcd {
     struct xhci_capregs *capspace;
     uint8_t max_slots;
     uint32_t max_intrs;
     uint32_t max_ports;
+    uintptr_t dcbaap_pa;
 };
 
 #define XHCI_TIMEOUT_MSEC 500
+
+/* Length of device context */
+#define XHCI_CTX_SIZE 32
 
 #endif  /* !_USB_XHCIVAR_H_ */

@@ -39,6 +39,9 @@
 #include <io/pci/bar.h>
 #include <io/pci/pci.h>
 #include <os/module.h>
+#include <vm/vm.h>
+#include <vm/physseg.h>
+#include <string.h>
 
 #define pr_trace(fmt, ...) printf("xhci: " fmt, ##__VA_ARGS__)
 #if defined(XHCI_DEBUG)
@@ -132,6 +135,34 @@ xhci_reset_hc(struct xhci_hcd *hcd)
 }
 
 /*
+ * Initialize the device context base address
+ * array pointer register
+ */
+static int
+xhci_init_dcbaap(struct xhci_hcd *hcd)
+{
+    struct xhci_opregs *opregs;
+    uint32_t npages;
+    void *va;
+
+    npages = BYTES_TO_PAGES(hcd->max_slots * XHCI_CTX_SIZE);
+    hcd->dcbaap_pa = vm_alloc_frame(npages);
+    if (hcd->dcbaap_pa == 0) {
+        pr_trace("failed to allocate dcbaap\n");
+        return -ENOMEM;
+    }
+
+    /* Ensure it is zeroed */
+    va = PHYS_TO_VIRT(hcd->dcbaap_pa);
+    memset(va, 0, npages * DEFAULT_PAGESIZE);
+
+    /* Give it to the controller, fetch! */
+    opregs = XHCI_OPBASE(hcd->capspace);
+    mmio_write32(&opregs->dcbaa_ptr, hcd->dcbaap_pa);
+    return 0;
+}
+
+/*
  * Initialize the host controller
  */
 static int
@@ -139,7 +170,9 @@ xhci_init_hc(struct xhci_hcd *hcd)
 {
     struct xhci_opregs *opregs;
     struct xhci_capregs *capspace;
+    paddr_t pa;
     uint32_t usbcmd, hcsparams1;
+    uint32_t config;
     int error;
 
     if (hcd == NULL) {
@@ -160,6 +193,15 @@ xhci_init_hc(struct xhci_hcd *hcd)
     hcd->max_slots = HCSPARAMS1_MAXSLOTS(hcsparams1);
     hcd->max_intrs = HCSPARAMS1_MAXINTRS(hcsparams1);
     hcd->max_ports = HCSPARAMS1_MAXPORTS(hcsparams1);
+
+    /* Enable all the slots */
+    config = mmio_read32(&opregs->config);
+    config |= hcd->max_slots;
+    mmio_write32(&opregs->config, config);
+
+    if ((error = xhci_init_dcbaap(hcd)) < 0) {
+        return error;
+    }
     return 0;
 }
 
