@@ -53,6 +53,7 @@
 #define SYS_open        0x08    /* open a file */
 #define SYS_muxtap      0x09    /* mux an I/O tap */
 #define SYS_getargv     0x0A    /* get process argv */
+#define SYS_reboot      0x0B    /* reboot the system */
 
 typedef __ssize_t scret_t;
 typedef __ssize_t scarg_t;

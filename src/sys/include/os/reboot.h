@@ -27,55 +27,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _UNIX_SYSCALL_H_
-#define _UNIX_SYSCALL_H_ 1
+#ifndef _OS_REBOOT_H_
+#define _OS_REBOOT_H_
 
-#include <sys/proc.h>
-#include <sys/param.h>
-#include <sys/mount.h>
 #include <sys/syscall.h>
-#include <os/iotap.h>
-#include <os/reboot.h>
 
-/*
- * Exit the current process - exit(2) syscall
- */
-scret_t sys_exit(struct syscall_args *scargs);
+scret_t sys_reboot(struct syscall_args *scargs);
 
-/*
- * Write to a file descriptor - write(2) syscall
- */
-scret_t sys_write(struct syscall_args *scargs);
-
-/*
- * Cross a resource border - L5 mandatory
- */
-scret_t sys_cross(struct syscall_args *scargs);
-
-/*
- * Query a syscall border - L5 mandatory
- */
-scret_t sys_query(struct syscall_args *scargs);
-
-/*
- * Open a file
- */
-scret_t sys_open(struct syscall_args *scargs);
-
-#ifdef _NEED_UNIX_SCTAB
-scret_t(*g_unix_sctab[])(struct syscall_args *) = {
-    [SYS_none]   = NULL,
-    [SYS_exit]   = sys_exit,
-    [SYS_write]  = sys_write,
-    [SYS_cross]  = sys_cross,
-    [SYS_query]  = sys_query,
-    [SYS_spawn]  = sys_spawn,
-    [SYS_mount]  = sys_mount,
-    [SYS_open]   = sys_open,
-    [SYS_muxtap] = sys_muxtap,
-    [SYS_getargv] = sys_getargv,
-    [SYS_reboot]  = sys_reboot
-};
-
-#endif  /* !_NEED_UNIX_SCTAB */
-#endif  /* !_UNIX_SYSCALL_H_ */
+#endif  /* !_OS_REBOOT_H_ */
