@@ -439,3 +439,35 @@ sys_getargv(struct syscall_args *scargs)
     arg = envblk->argv[argno];
     return copyoutstr(arg, u_buf, maxlen);
 }
+
+/*
+ * Wait for a child to complete
+ *
+ * ARG0: PID
+ * ARG1: Status
+ * ARG2: Options
+ */
+scret_t
+sys_waitpid(struct syscall_args *scargs)
+{
+    int pid = SCARG(scargs, int, 0);
+    int *u_status = SCARG(scargs, int *, 1);
+    int status = 0;
+    int error = 0;
+    struct proc *proc, *self;
+
+    if ((proc = proc_lookup(pid)) == NULL) {
+        return -ESRCH;
+    }
+
+    if (u_status != NULL) {
+        error = copyout(&status, u_status, sizeof(*u_status));
+    }
+    if (error < 0) {
+        return error;
+    }
+
+    self = proc_self();
+    proc_sleep(self);
+    return 0;
+}

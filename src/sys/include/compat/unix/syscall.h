@@ -74,7 +74,8 @@ scret_t(*g_unix_sctab[])(struct syscall_args *) = {
     [SYS_open]   = sys_open,
     [SYS_muxtap] = sys_muxtap,
     [SYS_getargv] = sys_getargv,
-    [SYS_reboot]  = sys_reboot
+    [SYS_reboot]  = sys_reboot,
+    [SYS_waitpid] = sys_waitpid
 };
 
 #endif  /* !_NEED_UNIX_SCTAB */
