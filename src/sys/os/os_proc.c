@@ -429,11 +429,15 @@ sys_getargv(struct syscall_args *scargs)
     char *u_buf = SCARG(scargs, char *, 1);
     size_t maxlen = SCARG(scargs, size_t, 2);
     struct proc *self = proc_self();
-    struct penv_blk *envblk = self->envblk;
+    struct penv_blk *envblk;
     char *arg;
 
     if (argno >= envblk->argc) {
         return -EINVAL;
+    }
+
+    if ((envblk = self->envblk) == NULL) {
+        return -EIO;
     }
 
     arg = envblk->argv[argno];
