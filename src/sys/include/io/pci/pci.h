@@ -82,6 +82,9 @@ typedef uint32_t pcival_t;
  * @vendor: Vendor ID
  * @device: Device ID
  * @bar: Base address registers
+ * @caplist: Set if a capability list is implemented
+ * @msix: Device implements MSI-X
+ * @msi: Device implements MSI
  */
 struct pci_device {
     uint16_t bus;
@@ -93,6 +96,9 @@ struct pci_device {
     uint16_t vendor;
     uint16_t device;
     uint32_t bar[6];
+    uint8_t caplist : 1;
+    uint8_t msix : 1;
+    uint8_t msi  : 1;
     TAILQ_ENTRY(pci_device) link;
 };
 

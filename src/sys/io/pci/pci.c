@@ -148,6 +148,54 @@ pci_csi_match(struct pci_device *csa, struct pci_device *csb)
 }
 
 /*
+ * Use by pci_read_caplist() to compare a value against
+ * known capabilities
+ */
+static void
+pci_check_cap(struct pci_device *dev, uint32_t cap)
+{
+    uint8_t id;
+
+    if (dev == NULL) {
+        return;
+    }
+
+    id = cap & 0xFF;
+    switch (id) {
+    case 0x11:  /* MSI-X */
+        dev->msix = 1;
+        break;
+    case 0x05:
+        dev->msi = 1;
+        break;
+    }
+}
+
+/*
+ * Parse a capability list of a PCI device
+ *
+ * @dev: Device of capability list to parse
+ */
+static int
+pci_read_caplist(struct pci_device *dev)
+{
+    uint32_t cap;
+    uint8_t cap_ptr;
+
+    if (dev == NULL) {
+        return -EINVAL;
+    }
+
+    cap_ptr = pci_readl(dev,  PCIREG_CAPPTR) & 0xFF;
+    do {
+        cap = pci_readl(dev, cap_ptr);
+        pci_check_cap(dev, cap);
+        cap_ptr = (cap >> 8) & 0xFF;
+    } while (cap_ptr != 0);
+    return 0;
+}
+
+/*
  * Attempt to register a PCI device and bail
  * if it doesn't exist on the bus.
  */
@@ -156,11 +204,12 @@ pci_register_dev(struct pci_device *dev)
 {
     struct pci_device *devp;
     pcireg_t vend_dev;
-    uint32_t classrev;
+    uint32_t classrev, cmdstatus;
     uint8_t class, subclass;
     uint8_t prog_if;
     uint16_t device_id;
     uint16_t vendor_id;
+    uint16_t status;
 
     if (dev == NULL) {
         return;
@@ -177,6 +226,10 @@ pci_register_dev(struct pci_device *dev)
     subclass = PCIREG_SUBCLASS(classrev);
     prog_if = PCIREG_PROGIF(classrev);
 
+    /* Get the status */
+    cmdstatus = pci_readl(dev, PCIREG_CMDSTATUS);
+    status = PCIREG_STATUS(cmdstatus);
+
     /* Does this device exist? */
     if (vendor_id == 0xFFFF) {
         return;
@@ -187,6 +240,17 @@ pci_register_dev(struct pci_device *dev)
     dev->class = class;
     dev->subclass = subclass;
     dev->prog_if = prog_if;
+    dev->caplist = (status >> 4) & 1;
+    dev->msix = 0;
+    dev->msi = 0;
+
+    /*
+     * Determine the device capabilities by parsing the
+     * capability list if supported.
+     */
+    if (dev->caplist) {
+        pci_read_caplist(dev);
+    }
 
     /* Set up base address registers */
     dev->bar[0] = pci_readl(dev, PCIREG_BAR0);
