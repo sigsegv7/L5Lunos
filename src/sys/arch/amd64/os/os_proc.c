@@ -195,21 +195,19 @@ md_sched_switch(struct trapframe *tf)
     }
 
     /* Don't switch if no self */
-    if ((self = core->curproc) == NULL) {
-        md_proc_yield();
-    }
+    if ((self = core->curproc) != NULL) {
+        error = sched_enq(&core->scq, self);
+        if (error < 0) {
+            goto done;
+        }
 
-    error = sched_enq(&core->scq, self);
-    if (error < 0) {
-        goto done;
+        /*
+         * Save the current trapframe to our process control
+         * block as we'll want it later when we're back.
+         */
+        pcbp = &self->pcb;
+        memcpy(&pcbp->tf, tf, sizeof(*tf));
     }
-
-    /*
-     * Save the current trapframe to our process control
-     * block as we'll want it later when we're back.
-     */
-    pcbp = &self->pcb;
-    memcpy(&pcbp->tf, tf, sizeof(*tf));
 
     /*
      * Grab the next process. If we cannot find any, assume
