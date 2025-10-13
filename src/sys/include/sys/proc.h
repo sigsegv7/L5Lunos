@@ -94,6 +94,7 @@ struct proc {
     struct spinlock maplist_lock;
     sigtab_t sigtab;
     TAILQ_HEAD(, vm_range) maplist;
+    TAILQ_ENTRY(proc) lup_link;
     TAILQ_ENTRY(proc) link;
 };
 

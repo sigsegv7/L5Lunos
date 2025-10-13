@@ -218,7 +218,6 @@ proc_init(struct proc *procp, int flags)
         return error;
     }
 
-    TAILQ_INSERT_TAIL(&procq, procp, link);
     return 0;
 }
 
@@ -230,7 +229,7 @@ proc_lookup(pid_t pid)
 {
     struct proc *curproc;
 
-    TAILQ_FOREACH(curproc, &procq, link) {
+    TAILQ_FOREACH(curproc, &procq, lup_link) {
         if (curproc == NULL) {
             continue;
         }
@@ -280,7 +279,7 @@ proc_kill(struct proc *procp, int status)
 
     procp->flags |= PROC_EXITING;
     proc_clear_ranges(procp);
-    TAILQ_REMOVE(&procq, procp, link);
+    TAILQ_REMOVE(&procq, procp, lup_link);
     return md_proc_kill(procp, 0);
 }
 
@@ -340,6 +339,8 @@ proc_spawn(const char *path, struct penv_blk *envbp)
     proc->envblk = envbp;
     md_set_ip(proc, elf.entrypoint);
     sched_enq(&core->scq, proc);
+
+    TAILQ_INSERT_TAIL(&procq, proc, lup_link);
     return proc->pid;
 }
 
