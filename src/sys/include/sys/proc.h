@@ -90,6 +90,7 @@ struct proc {
     struct filedesc *fdtab[FD_MAX];
     struct penv_blk *envblk;
     struct ptrbox *envblk_box;
+    struct proc *parent;
     mac_level_t level;
     struct spinlock maplist_lock;
     sigtab_t sigtab;
@@ -99,6 +100,7 @@ struct proc {
 };
 
 #define PROC_EXITING BIT(0)     /* Process is exiting */
+#define PROC_SLEEPING BIT(1)    /* Process is sleeping */
 
 /*
  * Initialize a process into a basic minimal
@@ -204,6 +206,26 @@ int md_set_ip(struct proc *procp, uintptr_t ip);
 int proc_check_addr(struct proc *proc, uintptr_t addr, size_t len);
 
 /*
+ * Put a process to sleep
+ *
+ * @proc: Process to put to sleep
+ *
+ * Returns zero if the address is within the process bounds,
+ * otherwise a less than zero value on failure.
+ */
+int proc_sleep(struct proc *proc);
+
+/*
+ * Wake up a process
+ *
+ * @proc: Process to wake up
+ *
+ * Returns zero if the address is within the process bounds,
+ * otherwise a less than zero value on failure.
+ */
+int proc_wake(struct proc *proc);
+
+/*
  * Lookup a process using its PID
  *
  * @pid: PID of process to lookup
@@ -211,6 +233,12 @@ int proc_check_addr(struct proc *proc, uintptr_t addr, size_t len);
  * Returns NULL on failure
  */
 struct proc *proc_lookup(pid_t pid);
+
+/*
+ * Put the current process to sleep until woken
+ * up
+ */
+void md_proc_sleep(void);
 
 /*
  * Put the current process into a halt loop

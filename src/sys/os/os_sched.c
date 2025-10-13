@@ -111,9 +111,28 @@ sched_deq(struct sched_queue *q, struct proc **procp)
     }
 
     spinlock_acquire(&q->lock);
-    proc = TAILQ_FIRST(&q->q);
-    TAILQ_REMOVE(&q->q, proc, link);
+    if ((proc = TAILQ_FIRST(&q->q)) == NULL) {
+        spinlock_release(&q->lock);
+        return -EAGAIN;
+    }
 
+    /* Find a process that is not sleeping */
+    while (proc != NULL) {
+        if (ISSET(proc->flags, PROC_SLEEPING)) {
+            proc = TAILQ_NEXT(proc, link);
+            continue;
+        }
+
+        break;
+    }
+
+    /* Is there anything? */
+    if (proc == NULL) {
+        spinlock_release(&q->lock);
+        return -EAGAIN;
+    }
+
+    TAILQ_REMOVE(&q->q, proc, link);
     *procp = proc;
     --q->nproc;
     spinlock_release(&q->lock);

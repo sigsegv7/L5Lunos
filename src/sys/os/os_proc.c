@@ -169,6 +169,43 @@ proc_clear_ranges(struct proc *proc)
 }
 
 /*
+ * Put a process to sleep
+ */
+int
+proc_sleep(struct proc *proc)
+{
+    struct pcore *core = this_core();
+
+    if (proc == NULL || core == NULL) {
+        return -EINVAL;
+    }
+
+    proc->flags |= PROC_SLEEPING;
+    md_proc_sleep();
+    return 0;
+}
+
+/*
+ * Wake up a process
+ */
+int
+proc_wake(struct proc *proc)
+{
+    struct pcore *core = cpu_sched();
+
+    if (core == NULL || proc == NULL) {
+        return -1;
+    }
+
+    if (!ISSET(proc->flags, PROC_SLEEPING)) {
+        return -1;
+    }
+
+    proc->flags &= ~PROC_SLEEPING;
+    return 0;
+}
+
+/*
  * MI proc init code
  */
 int
@@ -273,8 +310,19 @@ proc_add_range(struct proc *procp, vaddr_t va, paddr_t pa, size_t len)
 int
 proc_kill(struct proc *procp, int status)
 {
+    struct proc *self = proc_self();
+
     if (procp == NULL) {
         return -EINVAL;
+    }
+
+    /*
+     * Try to wake up our parent if they are sleeping
+     * at all.
+     */
+    if (self->pid == procp->pid) {
+        if (self->parent != NULL)
+            proc_wake(self->parent);
     }
 
     procp->flags |= PROC_EXITING;
@@ -337,6 +385,7 @@ proc_spawn(const char *path, struct penv_blk *envbp)
     }
 
     proc->envblk = envbp;
+    proc->parent = proc_self();
     md_set_ip(proc, elf.entrypoint);
     sched_enq(&core->scq, proc);
 

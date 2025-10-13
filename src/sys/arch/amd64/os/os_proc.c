@@ -82,6 +82,14 @@ md_proc_kick(struct proc *procp)
     __builtin_unreachable();
 }
 
+void
+md_proc_sleep(void)
+{
+    /* Wait for the timer to go off */
+    lapic_timer_oneshot_us(4000);
+    __ASMV("sti; hlt; cli");
+}
+
 /*
  * MD proc init code
  */
