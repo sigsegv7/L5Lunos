@@ -32,6 +32,7 @@
 #include <sys/cpuvar.h>
 #include <machine/uart.h>
 #include <machine/boot.h>
+#include <machine/lapic.h>
 #include <machine/i8259.h>
 #include <machine/ioapic.h>
 #include <machine/tss.h>
@@ -85,6 +86,7 @@ platform_boot(void)
     }
 
     init_tss(core);
+    lapic_init();
     chipset_init();
     irq_init_pins();
 }

@@ -32,7 +32,6 @@
 #include <machine/msr.h>
 #include <machine/idt.h>
 #include <machine/trap.h>
-#include <machine/lapic.h>
 #include <machine/gdt.h>
 #include <machine/mdcpu.h>
 #include <machine/cpuid.h>
@@ -204,5 +203,4 @@ void
 cpu_init(struct pcore *pcore)
 {
     platform_boot();
-    lapic_init();
 }
