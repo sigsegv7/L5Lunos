@@ -27,6 +27,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <sys/wait.h>
 #include <sys/spawn.h>
 #include <sys/iotap.h>
 #include <stdio.h>
@@ -98,7 +99,7 @@ main(void)
     char *argv[2];
     char buf[128];
     char binpath[256];
-    int error;
+    int pid;
 
     argv[0] = binpath;
     argv[1] = NULL;
@@ -109,10 +110,11 @@ main(void)
         write(STDOUT_FILENO, "\n", 1);
 
         snprintf(binpath, sizeof(binpath), "/usr/bin/%s", buf);
-        if ((error = spawn(argv[0], argv)) < 0) {
+        if ((pid = spawn(argv[0], argv)) < 0) {
             printf("unknown command \"%s\"\n", buf);
         }
 
+        waitpid(pid, NULL, 0);
         buf[0] = '\0';
         memset(buf, 0, sizeof(buf));
     }
