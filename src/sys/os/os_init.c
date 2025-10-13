@@ -90,6 +90,8 @@ main(void)
         panic("could not load init\n");
     }
 
+
+    syslog_toggle(false);
     md_set_ip(&g_rootproc, elf.entrypoint);
     md_proc_kick(&g_rootproc);
     panic("end of kernel reached\n");
