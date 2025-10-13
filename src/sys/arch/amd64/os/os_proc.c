@@ -61,16 +61,18 @@ md_proc_kick(struct proc *procp)
     __ASMV(
         "sti\n"
         "mov %0, %%rax\n"
-        "push %1\n"
+        "mov %1, %%rbp\n"
         "push %2\n"
         "push %3\n"
-        "push %%rax\n"
         "push %4\n"
+        "push %%rax\n"
+        "push %5\n"
         "lfence\n"
         "swapgs\n"
         "iretq"
         :
         : "r" (tfp->cs),
+          "r" (tfp->rbp),
           "i" (USER_DS | 3),
           "r" (tfp->rsp),
           "m" (tfp->rflags),
