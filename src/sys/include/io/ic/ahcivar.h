@@ -180,6 +180,29 @@ struct ahci_fis_h2d {
     uint8_t rsvd1[4];
 };
 
+struct ata_identity {
+    uint16_t rsvd0      : 1;
+    uint16_t unused0    : 1;
+    uint16_t incomplete : 1;
+    uint16_t unused1    : 3;
+    uint16_t fixed_dev  : 1;
+    uint16_t removable  : 1;
+    uint16_t unused2    : 7;
+    uint16_t device_type : 1;
+    uint16_t ncylinders;
+    uint16_t specific_config;
+    uint16_t nheads;
+    uint16_t unused3[2];
+    uint16_t sectors_per_track;
+    uint16_t vendor[3];
+    char serial_number[20];
+    uint16_t unused4[2];
+    uint16_t unused5;
+    char firmware_rev[8];
+    char model_number[40];
+    char pad[256];
+};
+
 #define AHCI_TIMEOUT 500    /* In ms */
 
 /* AHCI size constants */
@@ -199,5 +222,8 @@ struct ahci_fis_h2d {
 #define ATA_CMD_WRITE_DMA   0x35
 
 #define AHCI_TIMEOUT 500
+
+#define MODEL_LEN 40    /* Model number length */
+#define SERIAL_LEN 20   /* Serial number length */
 
 #endif  /* !_IC_AHCIVAR_H_ */

@@ -47,6 +47,7 @@
 #include <os/module.h>
 #include <os/clkdev.h>
 #include <os/mmio.h>
+#include <string.h>
 
 #define pr_trace(fmt, ...) printf("ahci: " fmt, ##__VA_ARGS__)
 #if defined(AHCI_DEBUG)
@@ -104,6 +105,162 @@ ahci_poll32(volatile uint32_t *reg, uint32_t bits, bool pollset)
         }
     }
 
+    return 0;
+}
+
+/*
+ * Allocate a new command list for an HBA port
+ */
+static int
+ahci_alloc_cmdslot(struct ahci_hba *hba, struct ahci_port *port)
+{
+    volatile struct hba_port *io = port->io;
+    uint32_t slotlist;
+
+    slotlist = mmio_read32(&io->ci);
+    slotlist |= mmio_read32(&io->sact);
+
+    for (int i = 0; i < hba->nslots; ++i) {
+        if (!ISSET(slotlist, i)) {
+            return i;
+        }
+    }
+    return -EAGAIN;
+}
+
+/*
+ * Submit a command to a specific port
+ */
+static int
+ahci_submit_cmd(struct ahci_hba *hba, struct ahci_port *port, uint8_t slot)
+{
+    const uint32_t BUSY_BITS = (AHCI_PXTFD_BSY | AHCI_PXTFD_DRQ);
+    volatile struct hba_port *io = port->io;
+    uint32_t ci;
+    uint8_t attempts = 0;
+    int status = 0;
+
+    if (hba == NULL || port == NULL) {
+        return -1;
+    }
+
+    /*
+     * Wait until the port is not busy so that we can
+     * send any commands
+     */
+    if (ahci_poll32(&io->tfd, BUSY_BITS, false) < 0) {
+        pr_trace("cmd failed, port busy ((slot=%d)\n", slot);
+        return -EBUSY;
+    }
+
+    /* Submit and wait for it to be done */
+    ci = mmio_read32(&io->ci);
+    mmio_write32(&io->ci, ci | BIT(slot));
+    while ((attempts++) < 10) {
+        status = ahci_poll32(&io->ci, BIT(slot), false);
+        if (status == 0) {
+            break;
+        }
+    }
+
+    if (status != 0) {
+        return status;
+    }
+
+    return 0;
+}
+
+static int
+ahci_log_info(struct ata_identity *identity)
+{
+    char tmp;
+    char serial[SERIAL_LEN];
+    char model[MODEL_LEN];
+
+    if (identity == NULL) {
+        return -EINVAL;
+    }
+
+    memcpy(
+        serial,
+        identity->serial_number,
+        SERIAL_LEN
+    );
+    memcpy(
+        model,
+        identity->model_number,
+        sizeof(model)
+    );
+
+    serial[SERIAL_LEN - 1] = '\0';
+    model[MODEL_LEN - 1] = '\0';
+
+    /* Fixup endianess for serial number */
+    for (size_t i = 0; i < SERIAL_LEN; i += 2) {
+        tmp = serial[i];
+        serial[i] = serial[i + 1];
+        serial[i + 1] = tmp;
+    }
+
+    /* Fixup endianess for model number */
+    for (size_t i = 0; i < MODEL_LEN; i += 2) {
+        tmp = model[i];
+        model[i] = model[i + 1];
+        model[i + 1] = tmp;
+    }
+
+    pr_trace("detected %s\n", model);
+    pr_trace("serial number: %s\n", serial);
+    return 0;
+}
+
+/*
+ * Send an ATA identify command to a port
+ */
+static int
+ahci_identify(struct ahci_hba *hba, struct ahci_port *port)
+{
+    volatile struct hba_port *io = port->io;
+    struct ahci_cmd_hdr *cmdhdr;
+    struct ahci_cmdtab *cmdtbl;
+    struct ahci_fis_h2d *fis;
+    paddr_t buf, cmdbase;
+    int cmdslot, status;
+
+    buf = vm_alloc_frame(1);
+    if (buf == 0) {
+        pr_trace("identify: failed to allocate frame\n");
+        return -ENOMEM;
+    }
+
+    /* Get the command list entry for this slot */
+    cmdslot = ahci_alloc_cmdslot(hba, port);
+    cmdbase = port->cmdlist;
+    cmdbase += cmdslot * sizeof(*cmdhdr);
+
+    cmdhdr = PHYS_TO_VIRT(cmdbase);
+    cmdhdr->w = 0;
+    cmdhdr->cfl = sizeof(struct ahci_fis_h2d) / 4;
+    cmdhdr->prdtl = 1;
+
+    cmdtbl = PHYS_TO_VIRT(cmdhdr->ctba);
+    cmdtbl->prdt[0].dba = buf;
+    cmdtbl->prdt[0].dbc = 511;
+    cmdtbl->prdt[0].i = 0;
+
+    fis = (void *)&cmdtbl->cfis;
+    fis->command = ATA_CMD_IDENTIFY;
+    fis->c = 1;
+    fis->type = FIS_TYPE_H2D;
+
+    status = ahci_submit_cmd(hba, port, cmdslot);
+    if (status < 0) {
+        vm_free_frame(buf, 1);
+        return status;
+    }
+
+    ahci_log_info(PHYS_TO_VIRT(buf));
+    vm_free_frame(buf, 1);
     return 0;
 }
 
@@ -384,6 +541,7 @@ ahci_init_port(struct ahci_hba *hba, struct ahci_port *port)
     }
 
     TAILQ_INSERT_TAIL(&portlist, port, link);
+    ahci_identify(hba, port);
     return 0;
 }
 
