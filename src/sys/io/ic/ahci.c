@@ -56,6 +56,13 @@
 #define dtrace(...) __nothing
 #endif  /* AHCI_DEBUG */
 
+struct bufargs {
+    void *buf;
+    size_t nblocks;
+    off_t lba;
+    uint8_t write : 1;
+};
+
 /*
  * Represents the PCI advocation descriptor for this
  * device so we can advertise ourselves as its driver.
@@ -261,6 +268,88 @@ ahci_identify(struct ahci_hba *hba, struct ahci_port *port)
 
     ahci_log_info(PHYS_TO_VIRT(buf));
     vm_free_frame(buf, 1);
+    return 0;
+}
+/*
+ * Read or write a SATA drive
+ */
+static int
+ahci_rw(struct ahci_hba *hba, struct ahci_port *port, struct bufargs *bufd)
+{
+    volatile struct hba_port *io;
+    struct ahci_cmd_hdr *cmdhdr;
+    struct ahci_cmdtab *cmdtbl;
+    struct ahci_fis_h2d *fis;
+    paddr_t buf, cmdbase;
+    int cmdslot, status;
+    size_t npgs;
+
+    if (hba == NULL || port == NULL)
+        return -EINVAL;
+    if (bufd == NULL)
+        return -EINVAL;
+
+    if (bufd->buf == NULL)
+        return -EINVAL;
+    if (bufd->nblocks == 0)
+        return -EINVAL;
+
+    io = port->io;
+    npgs = ALIGN_UP((bufd->nblocks * 512), DEFAULT_PAGESIZE);
+    npgs /= DEFAULT_PAGESIZE;
+
+    buf = vm_alloc_frame(npgs);
+    if (buf == 0) {
+        pr_trace("identify: failed to allocate frame\n");
+        return -ENOMEM;
+    }
+
+    /* Get the command list entry for this slot */
+    cmdslot = ahci_alloc_cmdslot(hba, port);
+    cmdbase = port->cmdlist;
+    cmdbase += cmdslot * sizeof(*cmdhdr);
+
+    cmdhdr = PHYS_TO_VIRT(cmdbase);
+    cmdhdr->w = bufd->write;
+    cmdhdr->cfl = sizeof(struct ahci_fis_h2d) / 4;
+    cmdhdr->prdtl = 1;
+
+    cmdtbl = PHYS_TO_VIRT(cmdhdr->ctba);
+    cmdtbl->prdt[0].dba = buf;
+    cmdtbl->prdt[0].dbc = (bufd->nblocks << 9) - 1;
+    cmdtbl->prdt[0].i = 0;
+
+    fis = (void *)&cmdtbl->cfis;
+    fis->command = bufd->write ? ATA_CMD_WRITE_DMA : ATA_CMD_READ_DMA;
+    fis->c = 1;
+    fis->type = FIS_TYPE_H2D;
+    fis->device = (1 << 6); /* LBA */
+
+    /* Encode the LBA into the FIS */
+    fis->lba1 = (bufd->lba >> 8) & 0xFF;
+    fis->lba2 = (bufd->lba >> 16) & 0xFF;
+    fis->lba3 = (bufd->lba >> 24) & 0xFF;
+    fis->lba4 = (bufd->lba >> 32) & 0xFF;
+    fis->lba5 = (bufd->lba >> 40) & 0xFF;
+
+    /* Encode the block count into the FIS */
+    fis->countl = bufd->nblocks & 0xFF;
+    fis->counth = (bufd->nblocks >> 8) & 0xFF;
+
+    status = ahci_submit_cmd(hba, port, cmdslot);
+    if (status < 0) {
+        vm_free_frame(buf, npgs);
+        return status;
+    }
+
+    /* Now copy it to the real buffer */
+    memcpy(
+        bufd->buf,
+        PHYS_TO_VIRT(buf),
+        bufd->nblocks * 512
+    );
+
+    vm_free_frame(buf, npgs);
     return 0;
 }
 
