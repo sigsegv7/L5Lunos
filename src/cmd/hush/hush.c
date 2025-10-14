@@ -109,6 +109,10 @@ main(void)
         read_input(buf, sizeof(buf));
         write(STDOUT_FILENO, "\n", 1);
 
+        if (buf[0] == '\0') {
+            continue;
+        }
+
         snprintf(binpath, sizeof(binpath), "/usr/bin/%s", buf);
         if ((pid = spawn(argv[0], argv)) < 0) {
             printf("unknown command \"%s\"\n", buf);
