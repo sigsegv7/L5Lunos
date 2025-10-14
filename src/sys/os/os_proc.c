@@ -432,12 +432,11 @@ sys_getargv(struct syscall_args *scargs)
     struct penv_blk *envblk;
     char *arg;
 
-    if (argno >= envblk->argc) {
-        return -EINVAL;
-    }
-
     if ((envblk = self->envblk) == NULL) {
         return -EIO;
+    }
+    if (argno >= envblk->argc) {
+        return -EINVAL;
     }
 
     arg = envblk->argv[argno];
