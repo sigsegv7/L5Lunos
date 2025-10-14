@@ -27,24 +27,51 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STDARG_H
-#define _STDARG_H
-
+#include <sys/syscall.h>
 #include <sys/limits.h>
+#include <stdint.h>
+#include <stddef.h>
+#include <stdio.h>
 
-#ifndef __GNUC_VA_LIST
-#define __GNUC_VA_LIST
-typedef __builtin_va_list __gnuc_va_list;
-#endif      /* __GNUC_VA_LIST */
+extern int main(void);
 
-typedef __gnuc_va_list va_list;
+/* Command line argument variables */
+char __argv[ARG_LEN][NARG_MAX];
+int __argc = 0;
 
-#define va_start(ap, last)  __builtin_va_start((ap), last)
-#define va_end(ap)          __builtin_va_end((ap))
-#define va_arg(ap, type)    __builtin_va_arg((ap), type)
+static int
+getargv(unsigned int argno, char *buf, size_t len)
+{
+    if (buf == NULL || len == 0) {
+        return -1;
+    }
 
-/* L5 specific */
-extern char __argv[ARG_LEN][NARG_MAX];
-extern int __argc;
+    return syscall(
+        SYS_getargv,
+        argno,
+        (uintptr_t)buf,
+        len
+    );
+}
 
-#endif  /* !_STDARG_H */
+int
+__libc_init(void)
+{
+    int error;
+
+    for (int i = 0; i < NARG_MAX; ++i) {
+        error = getargv(
+            i,
+            __argv[i],
+            sizeof(__argv[i])
+        );
+
+        if (error < 0) {
+            break;
+        }
+
+        ++__argc;
+    }
+
+    return main();
+}

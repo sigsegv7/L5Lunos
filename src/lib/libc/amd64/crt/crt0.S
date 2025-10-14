@@ -30,7 +30,7 @@
     .text
     .globl _start
 _start:
-    call main
+    call __libc_init
     mov $0x01, %rax
     xor %rdi, %rdi
     int $0x80

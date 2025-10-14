@@ -29,6 +29,7 @@
 
 #include <sys/wait.h>
 #include <sys/spawn.h>
+#include <sys/limits.h>
 #include <sys/iotap.h>
 #include <stdio.h>
 #include <unistd.h>
