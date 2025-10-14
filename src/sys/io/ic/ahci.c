@@ -42,6 +42,7 @@
 #include <io/ic/ahciregs.h>
 #include <io/ic/ahcivar.h>
 #include <io/dma/alloc.h>
+#include <vm/physseg.h>
 #include <os/kalloc.h>
 #include <os/module.h>
 #include <os/clkdev.h>
@@ -332,7 +333,8 @@ ahci_init_port(struct ahci_hba *hba, struct ahci_port *port)
     volatile struct hba_port *regs;
     struct ahci_cmd_hdr *cmdlist;
     uint32_t cmd, lo, hi;
-    void *va;
+    size_t clen;
+    paddr_t pa;
     int error;
 
     if (hba == NULL || port == NULL) {
@@ -344,8 +346,12 @@ ahci_init_port(struct ahci_hba *hba, struct ahci_port *port)
         return error;
     }
 
-    va = dma_alloc_pg(1);
-    port->cmdlist = dma_get_pa(va);
+    clen = ALIGN_UP(hba->nslots * AHCI_CMDENTRY_SIZE, DEFAULT_PAGESIZE);
+    clen /= DEFAULT_PAGESIZE;
+    port->cmdlist = vm_alloc_frame(clen);
+    if (port->cmdlist == 0) {
+        return -ENOMEM;
+    }
 
     /* Program the command list in */
     lo = port->cmdlist & 0xFFFFFFFF;
@@ -356,20 +362,13 @@ ahci_init_port(struct ahci_hba *hba, struct ahci_port *port)
     /* Set up each command slot */
     cmdlist = dma_get_va(port->cmdlist);
     for (int i = 0; i < hba->nslots; ++i) {
-        va = dma_alloc_pg(1);
-        if (va == 0) {
-            cmdlist[i].prdtl = 0;
-            continue;
-        }
-
         /* Allocate H2D FIS area */
         cmdlist[i].prdtl = 1;
-        cmdlist[i].ctba = dma_get_pa(va);
+        cmdlist[i].ctba = vm_alloc_frame(1);
     }
 
     /* Allocate FIS recieve area */
-    va = dma_alloc_pg(1);
-    port->fis_rx = dma_get_pa(va);
+    port->fis_rx = vm_alloc_frame(1);
 
     /* Program FIS recieve area for port */
     lo = port->fis_rx & 0xFFFFFFFF;
