@@ -281,6 +281,7 @@ ahci_rw(struct ahci_hba *hba, struct ahci_port *port, struct bufargs *bufd)
     struct ahci_cmdtab *cmdtbl;
     struct ahci_fis_h2d *fis;
     paddr_t buf, cmdbase;
+    void *va;
     int cmdslot, status;
     size_t npgs;
 
@@ -302,6 +303,11 @@ ahci_rw(struct ahci_hba *hba, struct ahci_port *port, struct bufargs *bufd)
     if (buf == 0) {
         pr_trace("identify: failed to allocate frame\n");
         return -ENOMEM;
+    }
+
+    if (bufd->write) {
+        va = PHYS_TO_VIRT(buf);
+        memcpy(va, bufd->buf, bufd->nblocks * 512);
     }
 
     /* Get the command list entry for this slot */
@@ -342,12 +348,17 @@ ahci_rw(struct ahci_hba *hba, struct ahci_port *port, struct bufargs *bufd)
         return status;
     }
 
-    /* Now copy it to the real buffer */
-    memcpy(
-        bufd->buf,
-        PHYS_TO_VIRT(buf),
-        bufd->nblocks * 512
-    );
+    /*
+     * Now copy it to the real buffer if
+     * reading
+     */
+    if (!bufd->write) {
+        memcpy(
+            bufd->buf,
+            PHYS_TO_VIRT(buf),
+            bufd->nblocks * 512
+        );
+    }
 
     vm_free_frame(buf, npgs);
     return 0;
