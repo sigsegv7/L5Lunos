@@ -43,6 +43,7 @@
 #include <io/ic/ahcivar.h>
 #include <io/dma/alloc.h>
 #include <vm/physseg.h>
+#include <dms/dms.h>
 #include <os/kalloc.h>
 #include <os/module.h>
 #include <os/clkdev.h>
@@ -74,6 +75,9 @@ static struct pci_device dev;
 static struct clkdev *clkdev;
 static struct ahci_hba root_hba;
 static TAILQ_HEAD(, ahci_port) portlist;
+
+/* Disk management operations */
+static struct dms_ops dms_ops;
 
 /*
  * Poll register to have 'bits' set/unset.
@@ -177,12 +181,19 @@ ahci_submit_cmd(struct ahci_hba *hba, struct ahci_port *port, uint8_t slot)
     return 0;
 }
 
+
+/*
+ * Log information and register the disk
+ * to the DMS subsystem
+ */
 static int
-ahci_log_info(struct ata_identity *identity)
+ahci_register(struct ata_identity *identity, struct ahci_port *port)
 {
+    struct dms_disk *dp;
     char tmp;
     char serial[SERIAL_LEN];
     char model[MODEL_LEN];
+    int error;
 
     if (identity == NULL) {
         return -EINVAL;
@@ -218,6 +229,14 @@ ahci_log_info(struct ata_identity *identity)
 
     pr_trace("detected %s\n", model);
     pr_trace("serial number: %s\n", serial);
+
+    error = dms_register(model, &dms_ops, &dp);
+    if (error < 0) {
+        pr_trace("could not register drive!\n");
+        return error;
+    }
+
+    dp->data = (void *)port;
     return 0;
 }
 
@@ -266,7 +285,7 @@ ahci_identify(struct ahci_hba *hba, struct ahci_port *port)
         return status;
     }
 
-    ahci_log_info(PHYS_TO_VIRT(buf));
+    ahci_register(PHYS_TO_VIRT(buf), port);
     vm_free_frame(buf, 1);
     return 0;
 }
@@ -362,6 +381,45 @@ ahci_rw(struct ahci_hba *hba, struct ahci_port *port, struct bufargs *bufd)
 
     vm_free_frame(buf, npgs);
     return 0;
+}
+
+/*
+ * DMS write interface
+ */
+static ssize_t
+sata_write(struct dms_disk *dp, void *p, off_t off, size_t len)
+{
+    struct bufargs bd;
+    struct ahci_port *port;
+    size_t real_off, real_len;
+    int error;
+
+    if (dp == NULL || p == NULL) {
+        return -EINVAL;
+    }
+
+    if (len == 0) {
+        return -EINVAL;
+    }
+
+    real_off = ALIGN_DOWN(off, 512);
+    real_len = ALIGN_UP(len, 512);
+
+    bd.buf = p;
+    bd.nblocks = real_len / 512;
+    bd.lba = real_off / 512;
+    bd.write = 1;
+
+    if ((port = dp->data) == NULL) {
+        return -EIO;
+    }
+
+    error = ahci_rw((void *)port->parent, port, &bd);
+    if (error < 0) {
+        return error;
+    }
+
+    return real_len;
 }
 
 /*
@@ -808,6 +866,11 @@ ahci_attach(struct pci_adv *adv)
     root_hba.io = (void *)bs.va_base;
     return ahci_hba_init(&root_hba);
 }
+
+static struct dms_ops dms_ops = {
+    .write = sata_write,
+    .read = NULL
+};
 
 static struct pci_adv driver = {
     .lookup = PCI_CS_ID(0x1, 0x06),
