@@ -227,8 +227,9 @@ write(int fd, const void *buf, size_t count)
 {
     struct proc *self = proc_self();
     struct filedesc *fdp;
-    int error;
+    ssize_t retval;
     char kbuf[1024];
+    int error;
 
     if (self == NULL) {
         return -ESRCH;
@@ -267,7 +268,13 @@ write(int fd, const void *buf, size_t count)
         if (fdp->vp == NULL) {
             return -EIO;
         }
-        return vop_write(fdp->vp, kbuf, count);
+        retval = vop_write(fdp->vp, kbuf, fdp->off, count);
+        if (retval <= 0) {
+            return retval;
+        }
+
+        /* Move away from where we wrote */
+        fdp->off += count;
     }
 
     return count;
@@ -278,6 +285,7 @@ read(int fd, void *buf, size_t count)
 {
     struct proc *self = proc_self();
     struct filedesc *fdp;
+    ssize_t retval;
     int error;
 
     if (buf == NULL) {
@@ -304,7 +312,14 @@ read(int fd, void *buf, size_t count)
         return -EIO;
     }
 
-    return vop_read(fdp->vp, buf, count);
+    /* Read the file */
+    retval = vop_read(fdp->vp, buf, fdp->off, count);
+    if (retval <= 0) {
+        return retval;
+    }
+
+    fdp->off += count;
+    return retval;
 }
 
 /*

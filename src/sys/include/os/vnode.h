@@ -72,11 +72,13 @@ struct vop_lookup_args {
  *
  * @data: Buffer containing I/O data
  * @len: Length of buffer
+ * @off: Offset of operation
  * @vp: Current vnode
  */
 struct vop_rw_data {
     void *data;
     size_t len;
+    off_t off;
     struct vnode *vp;
 };
 
@@ -141,23 +143,25 @@ int vfs_vrel(struct vnode *vp, int flags);
  *
  * @vp: Vnode to write to
  * @data: Data to write
+ * @off: Offset to write at
  * @len: Length of bytes to write
  *
  * Returns the number of bytes written on success, otherwise
  * a less than zero value on failure.
  */
-ssize_t vop_write(struct vnode *vp, char *data, size_t len);
+ssize_t vop_write(struct vnode *vp, char *data, off_t off, size_t len);
 
 /*
  * Wrapper for the read write callback
  *
  * @vp: Vnode to read from
  * @data: Read data written here
+ * @off: Offset to read at
  * @len: Length of bytes to read
  *
  * Returns the number of bytes read on success, otherwise
  * a less than zero value on failure.
  */
-ssize_t vop_read(struct vnode *vp, char *data, size_t len);
+ssize_t vop_read(struct vnode *vp, char *data, off_t off, size_t len);
 
 #endif  /* !_OS_VNODE_H_ */

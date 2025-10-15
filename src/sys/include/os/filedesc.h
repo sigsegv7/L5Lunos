@@ -39,11 +39,13 @@ struct proc;
  * Represents a file descriptor
  *
  * @fdno: File descriptor index
+ * @off: Current file offset
  * @vp: Vnode this fd is linked with
  * @mode: File attributes
  */
 struct filedesc {
     int fdno;
+    off_t off;
     struct vnode *vp;
     mode_t mode;
 };

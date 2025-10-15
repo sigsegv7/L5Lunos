@@ -145,7 +145,7 @@ vfs_cmp_cnt(const char *path)
 }
 
 ssize_t
-vop_write(struct vnode *vp, char *data, size_t len)
+vop_write(struct vnode *vp, char *data, off_t off, size_t len)
 {
     struct vop_rw_data rwdata;
     struct vop *vops;
@@ -170,11 +170,12 @@ vop_write(struct vnode *vp, char *data, size_t len)
     rwdata.data = data;
     rwdata.len = len;
     rwdata.vp = vp;
+    rwdata.off = off;
     return vops->write(&rwdata);
 }
 
 ssize_t
-vop_read(struct vnode *vp, char *data, size_t len)
+vop_read(struct vnode *vp, char *data, off_t off, size_t len)
 {
     struct vop_rw_data rwdata;
     struct vop *vops;
@@ -199,5 +200,6 @@ vop_read(struct vnode *vp, char *data, size_t len)
     rwdata.data = data;
     rwdata.len = len;
     rwdata.vp = vp;
+    rwdata.off = off;
     return vops->read(&rwdata);
 }
