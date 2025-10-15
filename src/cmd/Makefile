@@ -14,6 +14,8 @@ all:
 		LIBC_DIR=$(shell pwd)/../$(LIBC_DIR)
 	cd fetch/; make LDSCRIPT=$(LDSCRIPT) CC=$(CC) AS=$(AS) LD=$(LD) SYSROOT=$(SYSROOT) \
 		LIBC_DIR=$(shell pwd)/../$(LIBC_DIR)
+	cd lsdisk/; make LDSCRIPT=$(LDSCRIPT) CC=$(CC) AS=$(AS) LD=$(LD) SYSROOT=$(SYSROOT) \
+		LIBC_DIR=$(shell pwd)/../$(LIBC_DIR)
 
 .PHONY: clean
 clean:
@@ -21,3 +23,4 @@ clean:
 	cd hush/; make clean
 	cd reboot/; make clean
 	cd fetch/; make clean
+	cd lsdisk/; make clean
