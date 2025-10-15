@@ -30,6 +30,7 @@
 #ifndef _DMS_DMS_H_
 #define _DMS_DMS_H_
 
+#include <sys/syscall.h>
 #include <sys/queue.h>
 #include <sys/cdefs.h>
 #include <sys/types.h>
@@ -138,5 +139,10 @@ int dms_register(const char *name, struct dms_ops *ops, struct dms_disk **res);
  * NULL on failure or when not found
  */
 struct dms_disk *dms_get(disk_id_t disk_id);
+
+/*
+ * Perform I/O on a disk
+ */
+scret_t sys_dmsio(struct syscall_args *scargs);
 
 #endif  /* !_DMS_DMS_H_ */

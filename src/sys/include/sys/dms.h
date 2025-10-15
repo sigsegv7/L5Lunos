@@ -27,58 +27,34 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _UNIX_SYSCALL_H_
-#define _UNIX_SYSCALL_H_ 1
+#ifndef _SYS_DMS_H_
+#define _SYS_DMS_H_ 1
 
-#include <sys/proc.h>
-#include <sys/param.h>
-#include <sys/mount.h>
-#include <sys/syscall.h>
-#include <os/iotap.h>
-#include <os/reboot.h>
-#include <dms/dms.h>
+#include <sys/types.h>
+#if !defined(_KERNEL)
+#include <stdint.h>
+#include <stddef.h>
+#endif  /* !_KERNEL */
 
-/*
- * Exit the current process - exit(2) syscall
- */
-scret_t sys_exit(struct syscall_args *scargs);
+#define DMS_OPC_READ    0x00    /* Read from drive */
+#define DMS_OPC_WRITE   0x01    /* Write to drive */
 
 /*
- * Write to a file descriptor - write(2) syscall
+ * Represents data that can be sent between the
+ * DMS framework and certain user applications
+ *
+ * @id: ID of disk to operate on
+ * @opcode: Operation code
+ * @buf: Data buffer (direction depends on opcode)
+ * @offset: Offset to perform operation at (depends on opcode)
+ * @len: Length of buffer
  */
-scret_t sys_write(struct syscall_args *scargs);
-
-/*
- * Cross a resource border - L5 mandatory
- */
-scret_t sys_cross(struct syscall_args *scargs);
-
-/*
- * Query a syscall border - L5 mandatory
- */
-scret_t sys_query(struct syscall_args *scargs);
-
-/*
- * Open a file
- */
-scret_t sys_open(struct syscall_args *scargs);
-
-#ifdef _NEED_UNIX_SCTAB
-scret_t(*g_unix_sctab[])(struct syscall_args *) = {
-    [SYS_none]   = NULL,
-    [SYS_exit]   = sys_exit,
-    [SYS_write]  = sys_write,
-    [SYS_cross]  = sys_cross,
-    [SYS_query]  = sys_query,
-    [SYS_spawn]  = sys_spawn,
-    [SYS_mount]  = sys_mount,
-    [SYS_open]   = sys_open,
-    [SYS_muxtap] = sys_muxtap,
-    [SYS_getargv] = sys_getargv,
-    [SYS_reboot]  = sys_reboot,
-    [SYS_waitpid] = sys_waitpid,
-    [SYS_dmsio] = sys_dmsio
+struct dms_frame {
+    uint16_t id;
+    uint8_t opcode;
+    void *buf;
+    off_t offset;
+    size_t len;
 };
 
-#endif  /* !_NEED_UNIX_SCTAB */
-#endif  /* !_UNIX_SYSCALL_H_ */
+#endif  /* !_SYS_DMS_H_ */

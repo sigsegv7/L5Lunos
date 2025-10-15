@@ -55,6 +55,7 @@
 #define SYS_getargv     0x0A    /* get process argv */
 #define SYS_reboot      0x0B    /* reboot the system */
 #define SYS_waitpid     0x0C    /* wait for child to exit */
+#define SYS_dmsio       0x0D    /* DMS I/O */
 
 typedef __ssize_t scret_t;
 typedef __ssize_t scarg_t;

@@ -27,58 +27,80 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _UNIX_SYSCALL_H_
-#define _UNIX_SYSCALL_H_ 1
-
-#include <sys/proc.h>
-#include <sys/param.h>
-#include <sys/mount.h>
 #include <sys/syscall.h>
-#include <os/iotap.h>
-#include <os/reboot.h>
+#include <sys/types.h>
+#include <sys/errno.h>
+#include <sys/dms.h>
+#include <os/systm.h>
+#include <os/kalloc.h>
 #include <dms/dms.h>
 
-/*
- * Exit the current process - exit(2) syscall
- */
-scret_t sys_exit(struct syscall_args *scargs);
+static ssize_t
+dms_io(struct dms_frame *dfp)
+{
+    struct dms_disk *dp;
+    size_t len;
+    ssize_t retval = -ENXIO;
+    int error;
+    void *kbuf;
+
+    if (dfp == NULL) {
+        return -EINVAL;
+    }
+
+    if ((len = dfp->len) == 0) {
+        return -EINVAL;
+    }
+
+    if ((dp = dms_get(dfp->id)) == NULL) {
+        return -ENODEV;
+    }
+
+    if ((kbuf = kalloc(dfp->len)) == NULL) {
+        return -ENOMEM;
+    }
+
+    switch (dfp->opcode) {
+    case DMS_OPC_READ:
+        retval = dms_read(dp, kbuf, dfp->offset, dfp->len);
+        if (retval < 0) {
+            break;
+        }
+        error = copyout(kbuf, dfp->buf, dfp->len);
+        if (error < 0) {
+            retval = error;
+            break;
+        }
+        break;
+    case DMS_OPC_WRITE:
+        error = copyin(dfp->buf, kbuf, dfp->len);
+        if (error < 0) {
+            retval = error;
+            break;
+        }
+
+        retval = dms_write(dp, kbuf, dfp->offset, dfp->len);
+        break;
+    }
+
+    kfree(kbuf);
+    return retval;
+}
 
 /*
- * Write to a file descriptor - write(2) syscall
+ * ARG0: DMS frame pointer
  */
-scret_t sys_write(struct syscall_args *scargs);
+scret_t
+sys_dmsio(struct syscall_args *scargs)
+{
+    struct dms_frame *u_dfp = SCARG(scargs, struct dms_frame *, 0);
+    struct dms_frame df;
+    int error;
 
-/*
- * Cross a resource border - L5 mandatory
- */
-scret_t sys_cross(struct syscall_args *scargs);
+    error = copyin(u_dfp, &df, sizeof(df));
+    if (error < 0) {
+        return error;
+    }
 
-/*
- * Query a syscall border - L5 mandatory
- */
-scret_t sys_query(struct syscall_args *scargs);
-
-/*
- * Open a file
- */
-scret_t sys_open(struct syscall_args *scargs);
-
-#ifdef _NEED_UNIX_SCTAB
-scret_t(*g_unix_sctab[])(struct syscall_args *) = {
-    [SYS_none]   = NULL,
-    [SYS_exit]   = sys_exit,
-    [SYS_write]  = sys_write,
-    [SYS_cross]  = sys_cross,
-    [SYS_query]  = sys_query,
-    [SYS_spawn]  = sys_spawn,
-    [SYS_mount]  = sys_mount,
-    [SYS_open]   = sys_open,
-    [SYS_muxtap] = sys_muxtap,
-    [SYS_getargv] = sys_getargv,
-    [SYS_reboot]  = sys_reboot,
-    [SYS_waitpid] = sys_waitpid,
-    [SYS_dmsio] = sys_dmsio
-};
-
-#endif  /* !_NEED_UNIX_SCTAB */
-#endif  /* !_UNIX_SYSCALL_H_ */
+    return dms_io(&df);
+}
