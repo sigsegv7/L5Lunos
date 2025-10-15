@@ -124,5 +124,5 @@ namei(struct nameidata *ndp)
         i = 0;
         printf("namei: n %s\n", namebuf);
     }
-    return 0;
+    return -ENOENT;
 }
