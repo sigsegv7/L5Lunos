@@ -36,8 +36,28 @@
 #include <stddef.h>
 #endif  /* !_KERNEL */
 
+#define DISKNAME_MAX 128    /* Disk name maxlen */
+
 #define DMS_OPC_READ    0x00    /* Read from drive */
 #define DMS_OPC_WRITE   0x01    /* Write to drive */
+#define DMS_OPC_QUERY   0x02    /* Query a drive */
+
+/* ID of the disk */
+typedef uint16_t disk_id_t;
+
+/*
+ * Represents disk information that can be requested
+ * from a device with a query
+ *
+ * @name: Name of disk
+ * @bsize: Block size
+ * @id: ID of disk
+ */
+struct dms_diskinfo {
+    char name[DISKNAME_MAX];
+    uint16_t bsize;
+    disk_id_t id;
+};
 
 /*
  * Represents data that can be sent between the

@@ -34,11 +34,13 @@
 #include <os/systm.h>
 #include <os/kalloc.h>
 #include <dms/dms.h>
+#include <string.h>
 
 static ssize_t
 dms_io(struct dms_frame *dfp)
 {
     struct dms_disk *dp;
+    struct dms_diskinfo info;
     size_t len;
     ssize_t retval = -ENXIO;
     int error;
@@ -80,6 +82,14 @@ dms_io(struct dms_frame *dfp)
         }
 
         retval = dms_write(dp, kbuf, dfp->offset, dfp->len);
+        break;
+    case DMS_OPC_QUERY:
+        memcpy(info.name, dp->name, sizeof(info.name));
+        info.bsize = dp->bsize;
+        info.id = dp->id;
+        if (dfp->len > sizeof(info))
+            dfp->len = sizeof(info);
+        retval = copyout(&info, dfp->buf, dfp->len);
         break;
     }
 

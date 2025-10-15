@@ -34,6 +34,7 @@
 #include <sys/queue.h>
 #include <sys/cdefs.h>
 #include <sys/types.h>
+#include <sys/dms.h>
 
 /*
  * Maximum attached disks, from kconf
@@ -48,12 +49,6 @@ __static_assert(
     DMS_MAX_DISKS > 0,
     "maxiumum disks cannot be zro!"
 );
-
-/* Parameters */
-#define DISKNAME_MAX 128    /* Disk name maxlen */
-
-/* ID of the disk */
-typedef uint16_t disk_id_t;
 
 /* Forward declarations */
 struct dms_disk;
