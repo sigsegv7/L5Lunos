@@ -258,7 +258,11 @@ initrd_read(struct vop_rw_data *data)
     len = MIN(data->len, np->size);
 
     for (int i = 0; i < len; ++i) {
-        dest[i] = src[i];
+        if ((i + data->off) >= np->size) {
+            /* End of file */
+            return 0;
+        }
+        dest[i] = src[data->off + i];
     }
 
     return len;
