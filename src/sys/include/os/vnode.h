@@ -87,6 +87,7 @@ struct vop_rw_data {
 struct vop {
     int(*lookup)(struct vop_lookup_args *args);
     ssize_t(*write)(struct vop_rw_data *data);
+    ssize_t(*read)(struct vop_rw_data *data);
 };
 
 /*
@@ -146,5 +147,17 @@ int vfs_vrel(struct vnode *vp, int flags);
  * a less than zero value on failure.
  */
 ssize_t vop_write(struct vnode *vp, char *data, size_t len);
+
+/*
+ * Wrapper for the read write callback
+ *
+ * @vp: Vnode to read from
+ * @data: Read data written here
+ * @len: Length of bytes to read
+ *
+ * Returns the number of bytes read on success, otherwise
+ * a less than zero value on failure.
+ */
+ssize_t vop_read(struct vnode *vp, char *data, size_t len);
 
 #endif  /* !_OS_VNODE_H_ */

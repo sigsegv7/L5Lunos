@@ -172,3 +172,32 @@ vop_write(struct vnode *vp, char *data, size_t len)
     rwdata.vp = vp;
     return vops->write(&rwdata);
 }
+
+ssize_t
+vop_read(struct vnode *vp, char *data, size_t len)
+{
+    struct vop_rw_data rwdata;
+    struct vop *vops;
+
+    if (vp == NULL || data == NULL) {
+        return -EINVAL;
+    }
+
+    if (len == 0) {
+        return -EINVAL;
+    }
+
+    /* Grab the virtual operations */
+    if ((vops = vp->vops) == NULL) {
+        return -EIO;
+    }
+
+    if (vops->read == NULL) {
+        return -ENOTSUP;
+    }
+
+    rwdata.data = data;
+    rwdata.len = len;
+    rwdata.vp = vp;
+    return vops->read(&rwdata);
+}
