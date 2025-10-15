@@ -7,7 +7,7 @@ CFLAGS = -L$(LIBC_DIR) -lc $(INTERNAL_CFLAGS) \
 		 -I../../lib/libwidget/include/
 OBJECTS = $(CFILES:%.c=%.o)
 
-$(SYSROOT)/usr/bin/login: $(OBJECTS)
+$(SYSROOT)/usr/sbin/login: $(OBJECTS)
 	$(LD) $(OBJECTS) -o $@ $(CFLAGS)
 
 %.o: %.c
