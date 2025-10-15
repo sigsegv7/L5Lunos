@@ -204,6 +204,7 @@ initrd_lookup(struct vop_lookup_args *args)
     }
 
     vp->data = kalloc(sizeof(np));
+    vp->vops = &omar_vops;
     memcpy(vp->data, &np, sizeof(np));
     *args->vpp = vp;
     return error;
