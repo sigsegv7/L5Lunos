@@ -203,3 +203,24 @@ vop_read(struct vnode *vp, char *data, off_t off, size_t len)
     rwdata.off = off;
     return vops->read(&rwdata);
 }
+
+int
+vop_reclaim(struct vnode *vp, int flags)
+{
+    struct vop *vops;
+
+    if (vp == NULL) {
+        return -EINVAL;
+    }
+
+    /* Grab the virtual operations */
+    if ((vops = vp->vops) == NULL) {
+        return -EIO;
+    }
+
+    if (vops->reclaim == NULL) {
+        return -ENOTSUP;
+    }
+
+    return vops->reclaim(vp, flags);
+}

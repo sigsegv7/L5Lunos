@@ -88,6 +88,7 @@ struct vop_rw_data {
  */
 struct vop {
     int(*lookup)(struct vop_lookup_args *args);
+    int(*reclaim)(struct vnode *vp, int flags);
     ssize_t(*write)(struct vop_rw_data *data);
     ssize_t(*read)(struct vop_rw_data *data);
 };
@@ -163,5 +164,16 @@ ssize_t vop_write(struct vnode *vp, char *data, off_t off, size_t len);
  * a less than zero value on failure.
  */
 ssize_t vop_read(struct vnode *vp, char *data, off_t off, size_t len);
+
+/*
+ * Reclaim the resources tied to a specific vnode
+ *
+ * @vp: Vnode to reclaim
+ * @flags: Optional flags
+ *
+ * Returns zero on success, otherwise a less than zero value
+ * on failure.
+ */
+int vop_reclaim(struct vnode *vp, int flags);
 
 #endif  /* !_OS_VNODE_H_ */
