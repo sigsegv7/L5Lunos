@@ -27,41 +27,19 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _SYS_DMS_H_
-#define _SYS_DMS_H_ 1
+#include <sys/syscall.h>
+#include <sys/dms.h>
+#include <errno.h>
 
-#include <sys/types.h>
-#if !defined(_KERNEL)
-#include <stdint.h>
-#include <stddef.h>
-#endif  /* !_KERNEL */
+ssize_t
+dms_mux(struct dms_frame *dfp)
+{
+    if (dfp == NULL) {
+        return -EINVAL;
+    }
 
-#define DMS_OPC_READ    0x00    /* Read from drive */
-#define DMS_OPC_WRITE   0x01    /* Write to drive */
-
-/*
- * Represents data that can be sent between the
- * DMS framework and certain user applications
- *
- * @id: ID of disk to operate on
- * @opcode: Operation code
- * @buf: Data buffer (direction depends on opcode)
- * @offset: Offset to perform operation at (depends on opcode)
- * @len: Length of buffer
- */
-struct dms_frame {
-    uint16_t id;
-    uint8_t opcode;
-    void *buf;
-    off_t offset;
-    size_t len;
-};
-
-/*
- * Perform I/O on a specific disk
- *
- * @dfp: DMS frame
- */
-ssize_t dms_mux(struct dms_frame *dfp);
-
-#endif  /* !_SYS_DMS_H_ */
+    return syscall(
+        SYS_dmsio,
+        (uintptr_t)dfp
+    );
+}
