@@ -101,6 +101,10 @@ struct proc {
 
 #define PROC_EXITING BIT(0)     /* Process is exiting */
 #define PROC_SLEEPING BIT(1)    /* Process is sleeping */
+#define PROC_KTD BIT(2)         /* Process is kernel thread */
+
+/* Flags for PROC_SPAWN */
+#define SPAWN_KTD BIT(0)        /* Spawn kernel thread */
 
 /*
  * Initialize a process into a basic minimal
@@ -134,6 +138,14 @@ struct proc *proc_self(void);
  * zero value upon error.
  */
 int proc_add_range(struct proc *procp, vaddr_t va, paddr_t pa, size_t len);
+
+/*
+ * Spawn a kernel thread
+ *
+ * @procp_res: Result is written here
+ * @fn: Function where kernel thread should end up
+ */
+int proc_ktd(struct proc **procp_res, void(*fn)(void *));
 
 /*
  * Kill a process with a specific status code

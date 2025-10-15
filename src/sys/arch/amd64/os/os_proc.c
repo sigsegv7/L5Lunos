@@ -112,8 +112,14 @@ md_proc_init(struct proc *procp, int flags)
         return error;
     }
 
-    ds = USER_DS | 3;
-    cs = USER_CS | 3;
+    if (ISSET(flags, SPAWN_KTD)) {
+        ds = KERNEL_DS;
+        cs = KERNEL_CS;
+        procp->flags |= PROC_KTD;
+    } else {
+        ds = USER_DS | 3;
+        cs = USER_CS | 3;
+    }
 
     /*
      * Set up the mapping specifier, we'll use zero

@@ -393,6 +393,36 @@ proc_spawn(const char *path, struct penv_blk *envbp)
     return proc->pid;
 }
 
+int
+proc_ktd(struct proc **procp_res, void(*fn)(void *))
+{
+    struct proc *proc;
+    struct pcore *core;
+
+    if (procp_res == NULL || fn == NULL) {
+        return -EINVAL;
+    }
+
+    proc = kalloc(sizeof(*proc));
+    if (proc == NULL) {
+        return -ENOMEM;
+    }
+
+    core = cpu_sched();
+    if (core == NULL) {
+        kfree(proc);
+        return -EIO;
+    }
+
+    proc_init(proc, SPAWN_KTD);
+    md_set_ip(proc, (uintptr_t)fn);
+    sched_enq(&core->scq, proc);
+
+    *procp_res = proc;
+    TAILQ_INSERT_TAIL(&procq, proc, lup_link);
+    return 0;
+}
+
 /*
  * ARG0: Pathname to spawn
  * ARG1: Process environment block
