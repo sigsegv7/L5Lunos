@@ -138,3 +138,14 @@ sys_read(struct syscall_args *scargs)
     kfree(kbuf);
     return (error == 0) ? retval : error;
 }
+
+/*
+ * ARG0: FD
+ */
+scret_t
+sys_close(struct syscall_args *scargs)
+{
+    int fd = SCARG(scargs, int, 0);
+
+    return fd_close(fd);
+}

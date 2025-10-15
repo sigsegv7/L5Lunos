@@ -84,6 +84,16 @@ int fdtab_init(struct proc *procp);
 int fd_open(const char *path, mode_t mode);
 
 /*
+ * Close a file
+ *
+ * @fd: File descriptor to close
+ *
+ * Returns zero on success, otherwise a less than
+ * zero value on failure
+ */
+int fd_close(int fd);
+
+/*
  * Write to a file descriptor
  *
  * @fd: File descriptor to write to

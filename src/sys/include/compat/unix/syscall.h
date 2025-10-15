@@ -68,6 +68,11 @@ scret_t sys_open(struct syscall_args *scargs);
  */
 scret_t sys_read(struct syscall_args *scargs);
 
+/*
+ * Close a file
+ */
+scret_t sys_close(struct syscall_args *scargs);
+
 #ifdef _NEED_UNIX_SCTAB
 scret_t(*g_unix_sctab[])(struct syscall_args *) = {
     [SYS_none]   = NULL,
@@ -83,7 +88,8 @@ scret_t(*g_unix_sctab[])(struct syscall_args *) = {
     [SYS_reboot]  = sys_reboot,
     [SYS_waitpid] = sys_waitpid,
     [SYS_dmsio] = sys_dmsio,
-    [SYS_read] = sys_read
+    [SYS_read] = sys_read,
+    [SYS_close] = sys_close
 };
 
 #endif  /* !_NEED_UNIX_SCTAB */

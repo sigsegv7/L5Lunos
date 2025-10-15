@@ -197,6 +197,32 @@ fd_open(const char *path, mode_t mode)
     return fd->fdno;
 }
 
+int
+fd_close(int fd)
+{
+    struct filedesc *fdp;
+    struct proc *proc = proc_self();
+    struct vnode *vp;
+
+    if (fd < 0) {
+        return -EBADF;
+    }
+
+    if (proc == NULL) {
+        return -EIO;
+    }
+
+    if ((fdp = fd_get(proc, fd)) == NULL) {
+        return -EIO;
+    }
+
+    vp = fdp->vp;
+    proc->fdtab[fdp->fdno] = NULL;
+
+    kfree(fdp);
+    return vop_reclaim(vp, 0);
+}
+
 /*
  * Initialize file descriptor table
  */
