@@ -233,6 +233,37 @@ initrd_mount(struct fs_info *fip, struct mount_args *margs)
     return 0;
 }
 
+static ssize_t
+initrd_read(struct vop_rw_data *data)
+{
+    struct vnode *vp;
+    struct initrd_node *np;
+    char *src, *dest;
+    size_t len;
+
+    if (data->data == NULL) {
+        return -EIO;
+    }
+
+    if ((vp = data->vp) == NULL) {
+        return -EIO;
+    }
+
+    if ((np = vp->data) == NULL) {
+        return -EIO;
+    }
+
+    src = np->data;
+    dest = data->data;
+    len = MIN(data->len, np->size);
+
+    for (int i = 0; i < len; ++i) {
+        dest[i] = src[i];
+    }
+
+    return len;
+}
+
 /*
  * Open an entry within the OMAR initrd
  * image.
@@ -264,7 +295,8 @@ initrd_open(const char *path, char **res)
 }
 
 static struct vop omar_vops = {
-    .lookup = initrd_lookup
+    .lookup = initrd_lookup,
+    .read = initrd_read
 };
 
 struct vfsops g_omar_vfsops = {
