@@ -60,6 +60,7 @@ struct ahci_hba {
  * @cmdlist: Command list base
  * @fis_rx: FIS recieve area
  * @portno: Port number
+ * @bsize: Block size (in bytes)
  */
 struct ahci_port {
     volatile struct ahci_hba *parent;
@@ -67,6 +68,7 @@ struct ahci_port {
     dma_addr_t cmdlist;
     dma_addr_t fis_rx;
     uint32_t portno;
+    uint16_t bsize;
     TAILQ_ENTRY(ahci_port) link;
 };
 

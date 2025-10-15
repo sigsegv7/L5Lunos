@@ -302,7 +302,7 @@ ahci_rw(struct ahci_hba *hba, struct ahci_port *port, struct bufargs *bufd)
     paddr_t buf, cmdbase;
     void *va;
     int cmdslot, status;
-    size_t npgs;
+    size_t npgs, bsize;
 
     if (hba == NULL || port == NULL)
         return -EINVAL;
@@ -315,7 +315,9 @@ ahci_rw(struct ahci_hba *hba, struct ahci_port *port, struct bufargs *bufd)
         return -EINVAL;
 
     io = port->io;
-    npgs = ALIGN_UP((bufd->nblocks * 512), DEFAULT_PAGESIZE);
+    bsize = port->bsize;
+
+    npgs = ALIGN_UP((bufd->nblocks * bsize), DEFAULT_PAGESIZE);
     npgs /= DEFAULT_PAGESIZE;
 
     buf = vm_alloc_frame(npgs);
@@ -326,7 +328,7 @@ ahci_rw(struct ahci_hba *hba, struct ahci_port *port, struct bufargs *bufd)
 
     if (bufd->write) {
         va = PHYS_TO_VIRT(buf);
-        memcpy(va, bufd->buf, bufd->nblocks * 512);
+        memcpy(va, bufd->buf, bufd->nblocks * bsize);
     }
 
     /* Get the command list entry for this slot */
@@ -375,7 +377,7 @@ ahci_rw(struct ahci_hba *hba, struct ahci_port *port, struct bufargs *bufd)
         memcpy(
             bufd->buf,
             PHYS_TO_VIRT(buf),
-            bufd->nblocks * 512
+            bufd->nblocks * bsize
         );
     }
 
@@ -392,6 +394,7 @@ sata_write(struct dms_disk *dp, void *p, off_t off, size_t len)
     struct bufargs bd;
     struct ahci_port *port;
     size_t real_off, real_len;
+    size_t bsize;
     int error;
 
     if (dp == NULL || p == NULL) {
@@ -402,17 +405,18 @@ sata_write(struct dms_disk *dp, void *p, off_t off, size_t len)
         return -EINVAL;
     }
 
-    real_off = ALIGN_DOWN(off, 512);
-    real_len = ALIGN_UP(len, 512);
-
-    bd.buf = p;
-    bd.nblocks = real_len / 512;
-    bd.lba = real_off / 512;
-    bd.write = 1;
-
     if ((port = dp->data) == NULL) {
         return -EIO;
     }
+
+    bsize = port->bsize;
+    real_off = ALIGN_DOWN(off, bsize);
+    real_len = ALIGN_UP(len, bsize);
+
+    bd.buf = p;
+    bd.nblocks = real_len / bsize;
+    bd.lba = real_off / bsize;
+    bd.write = 1;
 
     error = ahci_rw((void *)port->parent, port, &bd);
     if (error < 0) {
@@ -645,6 +649,7 @@ ahci_reset_port(struct ahci_port *port)
 static int
 ahci_init_port(struct ahci_hba *hba, struct ahci_port *port)
 {
+    const uint16_t BSIZE = 512;
     volatile struct hba_port *regs;
     struct ahci_cmd_hdr *cmdlist;
     uint32_t cmd, lo, hi;
@@ -660,6 +665,8 @@ ahci_init_port(struct ahci_hba *hba, struct ahci_port *port)
     if ((error = ahci_reset_port(port)) < 0) {
         return error;
     }
+
+    port->bsize = BSIZE;
 
     clen = ALIGN_UP(hba->nslots * AHCI_CMDENTRY_SIZE, DEFAULT_PAGESIZE);
     clen /= DEFAULT_PAGESIZE;
