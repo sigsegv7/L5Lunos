@@ -46,6 +46,7 @@ root:
 	mkdir -p sys/target/header/
 	rsync -av sys/include/arch/$(TARGET)/ sys/target/header/machine/
 	rsync -av sys/np/sample/*.np $(SYSROOT)/boot/np/
+	rsync -avr data/ucred/ root/ucred
 
 .PHONY: sysroot
 image:
