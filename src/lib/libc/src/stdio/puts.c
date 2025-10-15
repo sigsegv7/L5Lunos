@@ -46,3 +46,10 @@ puts(const char *s)
     write(STDOUT_FILENO, &ch_lf, 1);
     return slen + 1;
 }
+
+int
+putchar(int c)
+{
+    write(STDOUT_FILENO, &c, 1);
+    return c;
+}

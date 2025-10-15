@@ -53,6 +53,13 @@ int vsnprintf(char *s, size_t size, const char *fmt, va_list ap);
 int snprintf(char *s, size_t size, const char *fmt, ...);
 
 /*
+ * Write a character to stdout
+ *
+ * @c: Character to write
+ */
+int putchar(int c);
+
+/*
  * Print a formatted string
  */
 int printf(const char *__restrict fmt, ...);
