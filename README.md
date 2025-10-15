@@ -56,6 +56,13 @@ tools/tools/build-toolchain.sh # Build the cross compilation toolchain
 make
 ```
 
+# Default login
+
+```
+Username: sv
+Password: svuser
+```
+
 ## License
 
 This project is licensed under the BSD 3 clause
