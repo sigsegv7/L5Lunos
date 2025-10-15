@@ -218,9 +218,6 @@ fdtab_init(struct proc *procp)
     return 0;
 }
 
-/*
- * XXX: STUB
- */
 ssize_t
 write(int fd, const void *buf, size_t count)
 {
