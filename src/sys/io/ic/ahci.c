@@ -387,10 +387,10 @@ ahci_rw(struct ahci_hba *hba, struct ahci_port *port, struct bufargs *bufd)
 }
 
 /*
- * DMS write interface
+ * DMS read/write interface
  */
 static ssize_t
-sata_write(struct dms_disk *dp, void *p, off_t off, size_t len)
+sata_rw(struct dms_disk *dp, void *p, off_t off, size_t len, bool rw)
 {
     struct bufargs bd;
     struct ahci_port *port;
@@ -417,7 +417,7 @@ sata_write(struct dms_disk *dp, void *p, off_t off, size_t len)
     bd.buf = p;
     bd.nblocks = real_len / bsize;
     bd.lba = real_off / bsize;
-    bd.write = 1;
+    bd.write = rw;
 
     error = ahci_rw((void *)port->parent, port, &bd);
     if (error < 0) {
@@ -425,6 +425,18 @@ sata_write(struct dms_disk *dp, void *p, off_t off, size_t len)
     }
 
     return real_len;
+}
+
+static ssize_t
+sata_write(struct dms_disk *dp, void *p, off_t off, size_t len)
+{
+    return sata_rw(dp, p, off, len, true);
+}
+
+static ssize_t
+sata_read(struct dms_disk *dp, void *p, off_t off, size_t len)
+{
+    return sata_rw(dp, p, off, len, false);
 }
 
 /*
@@ -877,7 +889,7 @@ ahci_attach(struct pci_adv *adv)
 
 static struct dms_ops dms_ops = {
     .write = sata_write,
-    .read = NULL
+    .read = sata_read
 };
 
 static struct pci_adv driver = {
