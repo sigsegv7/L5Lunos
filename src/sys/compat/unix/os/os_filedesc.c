@@ -33,6 +33,7 @@
 #include <sys/mount.h>
 #include <sys/errno.h>
 #include <sys/types.h>
+#include <os/kalloc.h>
 #include <os/systm.h>
 #include <os/filedesc.h>
 #include <compat/unix/syscall.h>
@@ -104,4 +105,36 @@ sys_mount(struct syscall_args *scargs)
     args.target = target;
     args.fstype = fstype;
     return kmount(&args, u_mountflags);
+}
+
+/*
+ * ARG0: fd
+ * ARG1: buf[]
+ * ARG2: count
+ */
+scret_t
+sys_read(struct syscall_args *scargs)
+{
+    int fd = SCARG(scargs, int, 0);
+    char *u_buf = SCARG(scargs, char *, 1);
+    size_t count = SCARG(scargs, size_t, 2);
+    char *kbuf;
+    ssize_t retval;
+    int error;
+
+    /* Do we have enough memory to fulfill this */
+    kbuf = kalloc(count);
+    if (kbuf == NULL) {
+        return -ENOMEM;
+    }
+
+    retval = read(fd, kbuf, count);
+    if (retval < 0) {
+        kfree(kbuf);
+        return retval;
+    }
+
+    error = copyout(kbuf, u_buf, count);
+    kfree(kbuf);
+    return (error == 0) ? retval : error;
 }

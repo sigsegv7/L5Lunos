@@ -56,6 +56,7 @@
 #define SYS_reboot      0x0B    /* reboot the system */
 #define SYS_waitpid     0x0C    /* wait for child to exit */
 #define SYS_dmsio       0x0D    /* DMS I/O */
+#define SYS_read        0x0E    /* read a file descriptor */
 
 typedef __ssize_t scret_t;
 typedef __ssize_t scarg_t;

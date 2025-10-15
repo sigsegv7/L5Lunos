@@ -93,4 +93,16 @@ int fd_open(const char *path, mode_t mode);
  */
 ssize_t write(int fd, const void *buf, size_t count);
 
+/*
+ * Read a file descriptor
+ *
+ * @fd: File descriptor to read from
+ * @buf: Buffer to read into
+ * @count: Number of bytes to read
+ *
+ * Returns the number of bytes read on success, otherwise a less
+ * than zero value on error.
+ */
+ssize_t read(int fd, void *buf, size_t count);
+
 #endif  /* !_OS_FILEDESC_H_ */

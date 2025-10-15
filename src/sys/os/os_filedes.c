@@ -273,6 +273,40 @@ write(int fd, const void *buf, size_t count)
     return count;
 }
 
+ssize_t
+read(int fd, void *buf, size_t count)
+{
+    struct proc *self = proc_self();
+    struct filedesc *fdp;
+    int error;
+
+    if (buf == NULL) {
+        return -EINVAL;
+    }
+
+    /* Must be valid */
+    error = proc_check_addr(self, (uintptr_t)buf, count);
+    if (error < 0) {
+        return error;
+    }
+
+    /* We need the actual descriptor */
+    if ((fdp = fd_get(self, fd)) == NULL) {
+        return -EBADF;
+    }
+
+    /* Can we read from it? */
+    if (fdp->mode == O_WRONLY) {
+        return -EPERM;
+    }
+
+    if (fdp->vp == NULL) {
+        return -EIO;
+    }
+
+    return vop_read(fdp->vp, buf, count);
+}
+
 /*
  * ARG0: Path
  * ARG1: Mode
