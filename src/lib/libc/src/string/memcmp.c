@@ -27,79 +27,19 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STRING_H
-#define _STRING_H 1
+#include <string.h>
 
-#include <stddef.h>
-#include <stdint.h>
+int
+memcmp(const void *s1, const void *s2, size_t n)
+{
+    if (n != 0) {
+        const unsigned char *p1 = s1, *p2 = s2;
 
-/*
- * Get the length of a string
- *
- * @s: String to get length of
- */
-size_t strlen(const char *s);
-
-/*
- * Compare a string against another
- *
- * @s1: First string to compare
- * @s2: Second string to compare
- *
- * Returns zero if strings are equal
- */
-int strcmp(const char *s1, const char *s2);
-
-/*
- * Get the length of a string with a maximum
- * length
- *
- * @s: String to check length of
- * @maxlen: Max length of string to check
- */
-size_t strnlen(const char *s, size_t maxlen);
-
-/*
- * Copy variable amount of bytes from 'src' to 'dest'
- *
- * @dest: Copy destination
- * @src: Copy source
- * @n: Number of bytes to copy
- *
- * Returns 'dest' on success
- */
-void *memcpy(void *dest, const void *src, size_t n);
-
-/*
- * Fill 'n' bytes of memory with 'c'
- *
- * @s: Memory to fill
- * @c: Byte to fill memory with
- * @n: Number of bytes to fill
- *
- * Returns a pointer to 's'
- */
-void *memset(void *s, int c, size_t n);
-
-/*
- * Convert an integer base to string form
- *
- * @value: Value to convert to string
- * @buf: Buffer to use
- * @base: Radix to use
- *
- * Returns 'buf' on success, otherwise a value of
- * NULL on failure.
- */
-char *itoa(int64_t value, char *buf, int base);
-
-/*
- * Compare two byte streams
- *
- * @s1: Stream one
- * @s2: Stream two
- * @n: Max bytes to compare
- */
-int memcmp(const void *s1, const void *s2, size_t n);
-
-#endif  /* _STRING_H */
+        do {
+            if (*p1++ != *p2++) {
+                return (*--p1 - *--p2);
+            }
+        } while (--n != 0);
+    }
+    return 0;
+}
