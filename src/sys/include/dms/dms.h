@@ -74,14 +74,19 @@ struct dms_ops {
  *
  * @name: Name of this device
  * @ops: Operations that can be performed
- * @data: Driver specific data
+ * @data: Driver specific data  [set by driver]
+ * @bsize: Disk block size      [set by driver]
  * @id: ID of the disk
  * @link: Internal queue link
+ *
+ * XXX: The `data' and `bsize' fields must be set by
+ *      the driver
  */
 struct dms_disk {
     char name[DISKNAME_MAX];
     struct dms_ops *ops;
     void *data;
+    uint16_t bsize;
     disk_id_t id;
     TAILQ_ENTRY(dms_disk) link;
 };

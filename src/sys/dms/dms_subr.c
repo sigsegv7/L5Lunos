@@ -30,6 +30,7 @@
 #include <sys/types.h>
 #include <sys/errno.h>
 #include <sys/queue.h>
+#include <sys/param.h>
 #include <os/kalloc.h>
 #include <dms/dms.h>
 #include <string.h>
@@ -100,6 +101,9 @@ dms_get(disk_id_t disk_id)
 ssize_t
 dms_write(struct dms_disk *dp, void *p, off_t off, size_t len)
 {
+    void *buf;
+    size_t real_len;
+    int error;
     struct dms_ops *ops;
 
     if (dp == NULL || p == NULL) {
@@ -114,13 +118,25 @@ dms_write(struct dms_disk *dp, void *p, off_t off, size_t len)
         return -ENOTSUP;
     }
 
-    return ops->write(dp, p, off, len);
+    real_len = ALIGN_UP(len, dp->bsize);
+    if ((buf = kalloc(real_len)) == NULL) {
+        return -ENOMEM;
+    }
+
+    memset(buf, 0, real_len);
+    memcpy(buf, p, len);
+    error = ops->write(dp, buf, off, real_len);
+    kfree(buf);
+    return error;
 }
 
 ssize_t
 dms_read(struct dms_disk *dp, void *p, off_t off, size_t len)
 {
+    void *buf;
     struct dms_ops *ops;
+    size_t real_len;
+    int error;
 
     if (dp == NULL || p == NULL) {
         return -EINVAL;
@@ -134,5 +150,20 @@ dms_read(struct dms_disk *dp, void *p, off_t off, size_t len)
         return -ENOTSUP;
     }
 
-    return ops->read(dp, p, off, len);
+    /* Allocate a real sized buffer */
+    real_len = ALIGN_UP(len, dp->bsize);
+    if ((buf = kalloc(real_len)) == NULL) {
+        return -ENOMEM;
+    }
+
+    memset(buf, 0, real_len);
+    error =  ops->read(dp, buf, off, real_len);
+    if (error < 0) {
+        kfree(buf);
+        return error;
+    }
+
+    memcpy(p, buf, len);
+    kfree(buf);
+    return 0;
 }

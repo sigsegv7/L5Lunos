@@ -236,6 +236,7 @@ ahci_register(struct ata_identity *identity, struct ahci_port *port)
         return error;
     }
 
+    dp->bsize = port->bsize;
     dp->data = (void *)port;
     return 0;
 }
