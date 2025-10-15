@@ -163,6 +163,10 @@ vop_write(struct vnode *vp, char *data, size_t len)
         return -EIO;
     }
 
+    if (vops->write == NULL) {
+        return -ENOTSUP;
+    }
+
     rwdata.data = data;
     rwdata.len = len;
     rwdata.vp = vp;
