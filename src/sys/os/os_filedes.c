@@ -114,6 +114,10 @@ fd_get(struct proc *procp, int fd)
             continue;
         }
 
+        if (fdp->fdno != fd) {
+            continue;
+        }
+
         break;
     }
 
