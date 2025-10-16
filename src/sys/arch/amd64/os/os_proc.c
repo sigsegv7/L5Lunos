@@ -167,11 +167,6 @@ md_proc_idle(void)
      */
     for (;;) {
         lapic_timer_oneshot_us(9000);
-        error = sched_deq(&core->scq, &proc);
-        if (error == 0) {
-            core->curproc = proc;
-            md_proc_kick(proc);
-        }
         __ASMV("sti; hlt");
     }
 }
