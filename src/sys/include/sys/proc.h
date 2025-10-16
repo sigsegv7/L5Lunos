@@ -256,7 +256,7 @@ void md_proc_sleep(void);
  * Put the current process into a halt loop
  * until the next one runs.
  */
-__dead void md_proc_yield(void);
+__dead void md_proc_idle(void);
 
 /*
  * Kick a process into a user context

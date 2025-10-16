@@ -152,7 +152,7 @@ md_proc_init(struct proc *procp, int flags)
  * Process idle loop
  */
 __dead void
-md_proc_yield(void)
+md_proc_idle(void)
 {
     struct proc *proc;
     struct pcore *core = this_core();
@@ -294,7 +294,7 @@ md_proc_kill(struct proc *procp, int flags)
     /* If this is us, spin time */
     if (self->pid == procp->pid) {
         core->curproc = NULL;
-        md_proc_yield();
+        md_proc_idle();
     }
 
     return 0;

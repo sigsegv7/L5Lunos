@@ -78,7 +78,7 @@ ap_entry(struct limine_smp_info *)
     atomic_inc_64(&ncores_up);
     spinlock_release(&lock);
 
-    md_proc_yield();
+    md_proc_idle();
     __builtin_unreachable();
     for (;;);
 }

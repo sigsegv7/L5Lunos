@@ -46,5 +46,5 @@ sys_exit(struct syscall_args *scargs)
 
     status = SCARG(scargs, int, 0);
     proc_kill(core->curproc, status);
-    md_proc_yield();    /* unreachable */
+    md_proc_idle();    /* unreachable */
 }
