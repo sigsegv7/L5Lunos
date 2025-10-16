@@ -56,10 +56,19 @@ static volatile struct limine_smp_request g_smp_req = {
     .revision = 0
 };
 
+static void
+cpu_idle(void *)
+{
+    for (;;) {
+        __ASMV("pause");
+    }
+}
+
 __dead static void
 ap_entry(struct limine_smp_info *)
 {
     struct pcore *pcore;
+    struct proc *curidle;
 
     spinlock_acquire(&lock);
     pcore = kalloc(sizeof(*pcore));
@@ -76,6 +85,7 @@ ap_entry(struct limine_smp_info *)
 
     corelist[ncores_up - 1] = pcore;
     atomic_inc_64(&ncores_up);
+    proc_ktd(&curidle, cpu_idle);
     spinlock_release(&lock);
 
     md_proc_idle();
@@ -106,6 +116,7 @@ bsp_ap_startup(void)
     struct limine_smp_response *resp = g_smp_req.response;
     struct limine_smp_info **cpus;
     struct mdcore *mdcore;
+    struct proc *curidle;
     uint32_t ncores, tmp;
 
     /* Sanity check */
@@ -139,6 +150,7 @@ bsp_ap_startup(void)
     printf("mp: bringing APs online...\n");
     mdcore = &g_bsp.md;
 
+    proc_ktd(&curidle, cpu_idle);
     for (int i = 0; i < ncores; ++i) {
         if (mdcore->apic_id == cpus[i]->lapic_id) {
             continue;

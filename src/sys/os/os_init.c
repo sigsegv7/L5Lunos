@@ -73,11 +73,11 @@ main(void)
     vm_init();
 
     cpu_init(&g_bsp);
-    bsp_ap_startup();
     vfs_init();
     ns_init();
 
     sched_init();
+    bsp_ap_startup();
 
     /* Initialize generic modules */
     __MODULES_INIT(MODTYPE_GENERIC);
