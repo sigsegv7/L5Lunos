@@ -130,6 +130,9 @@ iotap_mux(const char *name, struct iotap_msg *msg)
     ops = desc.ops;
     switch (msg->opcode) {
     case IOTAP_OPC_READ:
+        if (ops->read == NULL) {
+            return -ENOTSUP;
+        }
         return ops->read(&desc, msg->buf, msg->len);
     }
 
