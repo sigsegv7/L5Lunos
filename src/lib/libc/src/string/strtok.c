@@ -27,87 +27,56 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _STRING_H
-#define _STRING_H 1
+#include <string.h>
 
-#include <stddef.h>
-#include <stdint.h>
+static char *
+__strtok(char *s, const char *delim, char **last)
+{
+    const char *spanp;
+    char *tok;
+    int c, sc;
 
-/*
- * Get the length of a string
- *
- * @s: String to get length of
- */
-size_t strlen(const char *s);
+    if (s == NULL && (s = *last) == NULL) {
+        return NULL;
+    }
 
-/*
- * Compare a string against another
- *
- * @s1: First string to compare
- * @s2: Second string to compare
- *
- * Returns zero if strings are equal
- */
-int strcmp(const char *s1, const char *s2);
+cont:
+    c = *s++;
+    for (spanp = delim; (sc = *spanp++) != 0;) {
+        if (c == sc)
+            goto cont;
+    }
 
-/*
- * Tokenize a string
- *
- * @s: Strign to tokenize
- * @delim: Delimeter
- */
-char *strtok(char *s, const char *delim);
+    if (c == 0) {
+        *last = NULL;
+        return NULL;
+    }
 
-/*
- * Get the length of a string with a maximum
- * length
- *
- * @s: String to check length of
- * @maxlen: Max length of string to check
- */
-size_t strnlen(const char *s, size_t maxlen);
+    tok = s - 1;
 
-/*
- * Copy variable amount of bytes from 'src' to 'dest'
- *
- * @dest: Copy destination
- * @src: Copy source
- * @n: Number of bytes to copy
- *
- * Returns 'dest' on success
- */
-void *memcpy(void *dest, const void *src, size_t n);
+    /* Scan tokens */
+    for (;;) {
+        c = *s++;
+        spanp = delim;
+        do {
+            if ((sc = *spanp++) == c) {
+                if (c == 0)
+                    s = NULL;
+                else
+                    s[-1] = '\0';
+                *last = s;
+                return (tok);
+            }
+        } while (sc != 0);
+    }
 
-/*
- * Fill 'n' bytes of memory with 'c'
- *
- * @s: Memory to fill
- * @c: Byte to fill memory with
- * @n: Number of bytes to fill
- *
- * Returns a pointer to 's'
- */
-void *memset(void *s, int c, size_t n);
+    __builtin_unreachable();
+}
 
-/*
- * Convert an integer base to string form
- *
- * @value: Value to convert to string
- * @buf: Buffer to use
- * @base: Radix to use
- *
- * Returns 'buf' on success, otherwise a value of
- * NULL on failure.
- */
-char *itoa(int64_t value, char *buf, int base);
+char *
+strtok(char *s, const char *delim)
+{
+    static char *last;
 
-/*
- * Compare two byte streams
- *
- * @s1: Stream one
- * @s2: Stream two
- * @n: Max bytes to compare
- */
-int memcmp(const void *s1, const void *s2, size_t n);
-
-#endif  /* _STRING_H */
+    return __strtok(s, delim, &last);
+}
