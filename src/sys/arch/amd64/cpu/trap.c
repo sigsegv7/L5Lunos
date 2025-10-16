@@ -39,6 +39,7 @@
 #include <sys/syslog.h>
 #include <sys/syscall.h>
 #include <machine/trap.h>
+#include <string.h>
 
 /*
  * Trap type to type string conversion table
@@ -154,6 +155,7 @@ trap_syscall(struct trapframe *tf)
     struct syscall_domain *scdp;
     struct syscall_win *scwp;
     struct proc *self;
+    struct md_pcb *pcbp;
     struct syscall_args scargs = {
         .arg[0] = tf->rdi,
         .arg[1] = tf->rsi,
@@ -178,6 +180,9 @@ trap_syscall(struct trapframe *tf)
         printf("trap_syscall: no sctab (platch=%x)\n", scdp->platch);
         return;
     }
+
+    pcbp = &self->pcb;
+    memcpy(&pcbp->tf, tf, sizeof(pcbp->tf));
 
     if (tf->rax < scwp->nimpl && tf->rax > 0) {
         tf->rax = scwp->sctab[tf->rax](&scargs);
