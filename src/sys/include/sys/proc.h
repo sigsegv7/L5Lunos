@@ -222,8 +222,7 @@ int proc_check_addr(struct proc *proc, uintptr_t addr, size_t len);
  *
  * @proc: Process to put to sleep
  *
- * Returns zero if the address is within the process bounds,
- * otherwise a less than zero value on failure.
+ * Returns zero on success
  */
 int proc_sleep(struct proc *proc);
 
