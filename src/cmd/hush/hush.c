@@ -94,16 +94,46 @@ read_input(char *buf, size_t maxlen)
     } while (c != '\n');
 }
 
+static int
+parse_args(char *input, char *argv[], int max_args)
+{
+    int argc = 0;
+
+    while (*input != '\0') {
+        /* Skip leading spaces */
+        while (*input == ' ')
+            input++;
+
+        if (*input == '\0')
+            break;
+        if (argc < max_args)
+            argv[argc++] = input;
+
+        /* Keep going until space or NUL */
+        while (*input != '\0' && *input != ' ') {
+            input++;
+        }
+
+        /* end */
+        if (*input != '\0') {
+            *input = '\0';
+            input++;
+        }
+    }
+
+    return argc;
+}
+
 int
 main(void)
 {
-    char *argv[2];
+    char *argv[16];
     char buf[128];
     char binpath[256];
-    int pid;
+    int pid, argc;
 
+    memset(argv, 0, sizeof(argv));
     argv[0] = binpath;
-    argv[1] = NULL;
 
     for (;;) {
         write(STDOUT_FILENO, PROMPT, sizeof(PROMPT) - 1);
@@ -114,8 +144,10 @@ main(void)
             continue;
         }
 
-        snprintf(binpath, sizeof(binpath), "/usr/bin/%s", buf);
-        if ((pid = spawn(argv[0], argv)) < 0) {
+        argc = parse_args(buf, argv, sizeof(argv));
+        snprintf(binpath, sizeof(binpath), "/usr/bin/%s", argv[0]);
+
+        if ((pid = spawn(binpath, argv)) < 0) {
             printf("unknown command \"%s\"\n", buf);
         }
 
