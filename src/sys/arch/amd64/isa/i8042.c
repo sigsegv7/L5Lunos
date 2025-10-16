@@ -40,6 +40,12 @@
 #include <machine/pio.h>
 #include <stdbool.h>
 
+#if defined(__I8042_POLL)
+#define I8042_POLL __I8042_POLL
+#else
+#define I8042_POLL 0
+#endif  /* !I8042_POLL */
+
 #define RING_NENT 16
 
 /*
@@ -58,6 +64,7 @@ struct keybuf {
 /* I/O tap forward declarations */
 static struct iotap_ops tap_port0_ops;
 static struct iotap_desc tap_port0;
+static struct proc *kbd_poll_td;
 
 /* Key states */
 static bool shift_key = false;
@@ -350,6 +357,20 @@ i8042_irq(struct intr_hand *hp)
     return 1;
 }
 
+static void
+i8042_poll(void *p)
+{
+    char c;
+    uint8_t scancode;
+
+    for (;;) {
+        scancode = i8042_read();
+        if (i8042_getc(scancode, &c) == 0) {
+            keybuf_enter(&buf, c);
+        }
+    }
+}
+
 /*
  * Initialize i8042 interrupts (IRQ 1)
  */
@@ -399,8 +420,18 @@ i8042_init(struct module *modp)
     i8042_write(true, I8042_DISABLE_PORT1);
     i8042_read();
 
-    /* Initialize interrupts and taps */
-    i8042_init_intr();
+    /*
+     * If we are configured to do interrupts, enable
+     * them. Otherwise, start a kernel thread and
+     * poll.
+     */
+    if (!I8042_POLL) {
+        i8042_init_intr();
+    } else {
+        proc_ktd(&kbd_poll_td, i8042_poll);
+    }
+
+    /* Enable I/O taps */
     i8042_init_tap();
 
     /* Enable the keyboard */

@@ -2,3 +2,7 @@
 // as a method. Some firmware (e.g., on some laptops)
 // may not handle these well and hang.
 option I8042_REBOOT yes
+
+// Controls if the i8042 should be polled
+// rather than dependent on interrupts
+option I8042_POLL no
