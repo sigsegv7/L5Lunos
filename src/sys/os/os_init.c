@@ -77,10 +77,11 @@ main(void)
     vfs_init();
     ns_init();
 
+    sched_init();
+
     /* Initialize generic modules */
     __MODULES_INIT(MODTYPE_GENERIC);
 
-    sched_init();
     core = this_core();
     proc_init(&g_rootproc, 0);
     core->curproc = &g_rootproc;
