@@ -164,5 +164,6 @@ namei(struct nameidata *ndp)
         }
     }
 
-    return -ENOENT;
+    *ndp->vp_res = vp;
+    return 0;
 }
