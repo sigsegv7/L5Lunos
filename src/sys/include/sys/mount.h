@@ -65,7 +65,7 @@ struct mount;
 
 /* Filesystem vfsops */
 extern struct vfsops g_omar_vfsops;
-extern struct vfsops g_devfs_vfops;
+extern struct vfsops g_devfs_vfsops;
 
 /*
  * Represents a mountpoint

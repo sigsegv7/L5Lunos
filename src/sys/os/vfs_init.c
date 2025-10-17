@@ -39,7 +39,7 @@
  */
 static struct fs_info fstab[] = {
     { MOUNT_INITRD, &g_omar_vfsops, 0 },
-    { MOUNT_DEVFS, &g_devfs_vfops, 0 }
+    { MOUNT_DEVFS, &g_devfs_vfsops, 0 },
 };
 
 /*

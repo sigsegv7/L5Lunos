@@ -160,7 +160,7 @@ static struct vop devfs_vops = {
     .lookup = devfs_lookup
 };
 
-struct vfsops g_devfs_vfops = {
+struct vfsops g_devfs_vfsops = {
     .init = devfs_init,
     .mount = devfs_mount
 };
