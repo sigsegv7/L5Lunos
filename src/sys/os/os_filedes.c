@@ -359,6 +359,44 @@ read(int fd, void *buf, size_t count)
     return retval;
 }
 
+off_t
+lseek(int fd, off_t offset, int whence)
+{
+    struct filedesc *fdp;
+    struct proc *self = proc_self();
+    struct vattr attr;
+    int error;
+
+    if (fd < 0) {
+        return -EBADF;
+    }
+
+    fdp = fd_get(self, fd);
+    if (fdp == NULL) {
+        return -EBADF;
+    }
+
+    /* Could not get vnode attributes */
+    error = vop_getattr(fdp->vp, &attr);
+    if (error < 0) {
+        return 0;
+    }
+
+    switch (whence) {
+    case SEEK_SET:
+        fdp->off = offset;
+        break;
+    case SEEK_CUR:
+        fdp->off += offset;
+        break;
+    case SEEK_END:
+        fdp->off = attr.size;
+        break;
+    }
+
+    return fdp->off;
+}
+
 /*
  * ARG0: Path
  * ARG1: Mode

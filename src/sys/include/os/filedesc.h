@@ -30,6 +30,7 @@
 #ifndef _OS_FILEDESC_H_
 #define _OS_FILEDESC_H_ 1
 
+#include <sys/seek.h>
 #include <sys/types.h>
 #include <os/vnode.h>
 
@@ -116,5 +117,14 @@ ssize_t write(int fd, const void *buf, size_t count);
  * than zero value on error.
  */
 ssize_t read(int fd, void *buf, size_t count);
+
+/*
+ * Reposition the file offset of a file
+ *
+ * @fd: File descriptor to reposition
+ * @offset: Offset to move `fd' to
+ * @whence: How it should be repositioned
+ */
+off_t lseek(int fd, off_t offset, int whence);
 
 #endif  /* !_OS_FILEDESC_H_ */
