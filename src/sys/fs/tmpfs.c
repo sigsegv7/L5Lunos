@@ -47,6 +47,7 @@ struct tmpfs_node {
     char name[TMPFS_NAMEMAX];
     char *data;
     size_t len;
+    size_t real_len;
     int ref;
     TAILQ_ENTRY(tmpfs_node) link;
 };
@@ -93,6 +94,7 @@ tmpfs_new(const char *name, struct tmpfs_node **np_res)
         return -ENOMEM;
     }
 
+    np->real_len = 0;
     np->len = TMPFS_INIT_SIZE;
     np->ref = 1;
     memset(np->data, 0, TMPFS_INIT_SIZE);
@@ -276,6 +278,7 @@ tmpfs_write(struct vop_rw_data *data)
         }
     }
 
+    np->real_len += len;
     node_len = np->len;
     dest = np->data + data->off;
     memcpy(dest, data->data, len);
@@ -304,7 +307,7 @@ tmpfs_read(struct vop_rw_data *data)
 
     /* Return EOF if the offset is too far */
     len = data->len;
-    if (data->off >= np->len) {
+    if (data->off >= np->real_len) {
         return 0;   /* EOF */
     }
 
