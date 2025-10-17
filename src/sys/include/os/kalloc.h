@@ -48,6 +48,14 @@
 void *kalloc(size_t sz);
 
 /*
+ * Reallocates memory pool created by `dynalloc()'
+ *
+ * @old_ptr: Pointer to old pool.
+ * @newsize: Size of new pool.
+ */
+void *krealloc(void *old_ptr, size_t newsize);
+
+/*
  * Free a chunk of memory given to by
  * `ptr'
  *

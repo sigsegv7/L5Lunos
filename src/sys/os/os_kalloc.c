@@ -64,6 +64,17 @@ kalloc(size_t sz)
     return tmp;
 }
 
+void *
+krealloc(void *old_ptr, size_t newsize)
+{
+    void *tmp;
+
+    spinlock_acquire(&lock);
+    tmp = tlsf_realloc(tlsf_ctx, old_ptr, newsize);
+    spinlock_release(&lock);
+    return tmp;
+}
+
 /*
  * Memory deallocation
  */
