@@ -416,3 +416,18 @@ sys_open(struct syscall_args *scargs)
 
     return fd_open(pathbuf, mode);
 }
+
+/*
+ * ARG0: Fd
+ * ARG1: Offset
+ * ARG2: Whence
+ */
+scret_t
+sys_lseek(struct syscall_args *scargs)
+{
+    int fd = SCARG(scargs, int, 0);
+    off_t off = SCARG(scargs, off_t, 1);
+    int whence = SCARG(scargs, int, 2);
+
+    return lseek(fd, off, whence);
+}

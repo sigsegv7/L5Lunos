@@ -73,6 +73,11 @@ scret_t sys_read(struct syscall_args *scargs);
  */
 scret_t sys_close(struct syscall_args *scargs);
 
+/*
+ * Seek a file descriptor
+ */
+scret_t sys_lseek(struct syscall_args *scargs);
+
 #ifdef _NEED_UNIX_SCTAB
 scret_t(*g_unix_sctab[])(struct syscall_args *) = {
     [SYS_none]   = NULL,
@@ -89,7 +94,8 @@ scret_t(*g_unix_sctab[])(struct syscall_args *) = {
     [SYS_waitpid] = sys_waitpid,
     [SYS_dmsio] = sys_dmsio,
     [SYS_read] = sys_read,
-    [SYS_close] = sys_close
+    [SYS_close] = sys_close,
+    [SYS_lseek] = sys_lseek
 };
 
 #endif  /* !_NEED_UNIX_SCTAB */

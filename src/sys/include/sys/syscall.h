@@ -58,6 +58,7 @@
 #define SYS_dmsio       0x0D    /* DMS I/O */
 #define SYS_read        0x0E    /* read a file descriptor */
 #define SYS_close       0x0F    /* close a file */
+#define SYS_lseek       0x10    /* seek to end of file */
 
 typedef __ssize_t scret_t;
 typedef __ssize_t scarg_t;
