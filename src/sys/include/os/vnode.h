@@ -94,10 +94,20 @@ struct vop_create_args {
 };
 
 /*
+ * Represents attributes of a vnode
+ *
+ * @size: File size in bytes
+ */
+struct vattr {
+    size_t size;
+};
+
+/*
  * Represents operations that can be performed on
  * a specific vnode. These are implemented as callbacks
  */
 struct vop {
+    int(*getattr)(struct vnode *vp, struct vattr *res);
     int(*lookup)(struct vop_lookup_args *args);
     int(*reclaim)(struct vnode *vp, int flags);
     int(*create)(struct vop_create_args *args);
@@ -199,5 +209,16 @@ int vop_reclaim(struct vnode *vp, int flags);
  * value on failure.
  */
 int vop_create(struct vnode *vp, struct nameidata *ndp);
+
+/*
+ * Get the attributes of a file
+ *
+ * @vp: Vnode of file to get attributes of
+ * @res: Result of file to get attr of
+ *
+ * Returns zero on success, otherwise a less than
+ * zero value on failure
+ */
+int vop_getattr(struct vnode *vp, struct vattr *res);
 
 #endif  /* !_OS_VNODE_H_ */

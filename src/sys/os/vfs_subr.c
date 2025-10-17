@@ -246,3 +246,23 @@ vop_create(struct vnode *vp, struct nameidata *ndp)
     args.ndp = ndp;
     return vops->create(&args);
 }
+
+int
+vop_getattr(struct vnode *vp, struct vattr *res)
+{
+    struct vop *vops;
+
+    if (vp == NULL || res == NULL) {
+        return -EINVAL;
+    }
+
+    if ((vops = vp->vops) == NULL) {
+        return -EIO;
+    }
+
+    if (vops->getattr == NULL) {
+        return -EIO;
+    }
+
+    return vops->getattr(vp, res);
+}
