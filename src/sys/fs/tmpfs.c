@@ -326,6 +326,23 @@ tmpfs_read(struct vop_rw_data *data)
 }
 
 static int
+tmpfs_getattr(struct vnode *vp, struct vattr *res)
+{
+    struct tmpfs_node *np;
+
+    if (vp == NULL || res == NULL) {
+        return -EINVAL;
+    }
+
+    if ((np = vp->data) == NULL) {
+        return -EIO;
+    }
+
+    res->size = np->real_len;
+    return 0;
+}
+
+static int
 tmpfs_reclaim(struct vnode *vp, int flags)
 {
     return 0;
@@ -336,7 +353,8 @@ static struct vop tmpfs_vops = {
     .create = tmpfs_create,
     .reclaim = tmpfs_reclaim,
     .write = tmpfs_write,
-    .read = tmpfs_read
+    .read = tmpfs_read,
+    .getattr = tmpfs_getattr
 };
 
 struct vfsops g_tmpfs_vfsops = {
