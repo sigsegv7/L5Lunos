@@ -282,6 +282,46 @@ tmpfs_write(struct vop_rw_data *data)
     return len;
 }
 
+static ssize_t
+tmpfs_read(struct vop_rw_data *data)
+{
+    struct vnode *vp;
+    struct tmpfs_node *np;
+    size_t len;
+    char *dest, *src;
+
+    if (data == NULL) {
+        return -1;
+    }
+
+    if ((vp = data->vp) == NULL) {
+        return -EIO;
+    }
+
+    if ((np = vp->data) == NULL) {
+        return -EIO;
+    }
+
+    /* Return EOF if the offset is too far */
+    len = data->len;
+    if (data->off >= np->len) {
+        return 0;   /* EOF */
+    }
+
+    /* Is there any data to read? */
+    if ((len + data->off) > np->len) {
+        len = np->len;
+    }
+    if (len == 0) {
+        return 0;
+    }
+
+    dest = data->data;
+    src = np->data + data->off;
+    memcpy(dest, src, len);
+    return len;
+}
+
 static int
 tmpfs_reclaim(struct vnode *vp, int flags)
 {
@@ -292,7 +332,8 @@ static struct vop tmpfs_vops = {
     .lookup = tmpfs_lookup,
     .create = tmpfs_create,
     .reclaim = tmpfs_reclaim,
-    .write = tmpfs_write
+    .write = tmpfs_write,
+    .read = tmpfs_read
 };
 
 struct vfsops g_tmpfs_vfsops = {
