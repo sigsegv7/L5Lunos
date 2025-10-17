@@ -32,6 +32,8 @@
 
 #include <os/vnode.h>
 
+#define NAMEI_CREATE BIT(0)     /* Create as we go */
+
 /*
  * Represents namei data that can be used for
  * looking up files

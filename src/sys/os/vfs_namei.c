@@ -46,10 +46,13 @@ namei(struct nameidata *ndp)
     struct vnode *vp;
     struct vop *vops;
     struct vop_lookup_args lookup;
+    struct vop_create_args create;
+    struct nameidata nd_create;
     struct fs_info *fip;
     char namebuf[NAME_MAX];
+    size_t root_len;
     const char *p, *pcur;
-    size_t len, i = 0;
+    size_t i = 0;
     int error;
 
     if (ndp == NULL) {
@@ -61,23 +64,35 @@ namei(struct nameidata *ndp)
         return -EINVAL;
     }
 
-    error = mount_lookup("/", &mp);
+    /* Get rid of leading slashes */
+    pcur = p;
+    while (*pcur == '/') {
+        ++pcur;
+    }
+
+    /* Wait until we get the '/' */
+    while (*pcur != '/' && *pcur != '\0') {
+        ++pcur;
+    }
+
+    /* Copy the root path e.g., /tmp */
+    root_len = (size_t)(pcur - p);
+    memcpy(namebuf, p, root_len);
+    error = mount_lookup(namebuf, &mp);
+
     if (error < 0) {
-        printf("namei: failed to get rootfs\n");
+        error = mount_lookup("/", &mp);
+    }
+    if (error < 0) {
+        printf("namei: could not get mount %s\n", namebuf);
         return error;
     }
 
-    vp = mp->vp;
     fip = mp->fs;
-
-    if ((vops = vp->vops) == NULL) {
-        printf("namei: failed to get vops\n");
+    if ((vp = mp->vp) == NULL) {
         return -EIO;
     }
-
-    /* We need vops->lookup() */
-    if (vops->lookup == NULL) {
-        printf("namei: vops does not have lookup op\n");
+    if ((vops = vp->vops) == NULL) {
         return -EIO;
     }
 
@@ -101,10 +116,7 @@ namei(struct nameidata *ndp)
         }
     }
 
-    printf("namei: f: %s\n", ndp->path);
-    printf("namei: d: /\n", ndp->path);
 
-    pcur = p;
     while (*pcur != '\0') {
         /* Get out of the slashes */
         while (*pcur == '/')
@@ -123,7 +135,34 @@ namei(struct nameidata *ndp)
         }
 
         i = 0;
-        printf("namei: n %s\n", namebuf);
+
+        /* Get the vops */
+        vp = mp->vp;
+        if ((vops = vp->vops) == NULL) {
+            return -EIO;
+        }
+
+        /* Create as we go? */
+        if (ISSET(ndp->flags, NAMEI_CREATE)) {
+            if (vops->create == NULL)
+                return -EIO;
+
+            nd_create.path = namebuf;
+            create.ndp = &nd_create;
+            error = vops->create(&create);
+            if (error < 0)
+                return error;
+        }
+
+        /* Do the lookup */
+        lookup.dirvp = vp;
+        lookup.vpp = &vp;
+        lookup.name = namebuf;
+        error = vops->lookup(&lookup);
+        if (error < 0) {
+            return -ENOENT;
+        }
     }
+
     return -ENOENT;
 }
