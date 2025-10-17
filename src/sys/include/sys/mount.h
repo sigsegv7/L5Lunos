@@ -42,6 +42,7 @@
  */
 #define MOUNT_INITRD "initrd"   /* Initial ramdisk */
 #define MOUNT_DEVFS  "devfs"    /* Device filesystem */
+#define MOUNT_TMPFS  "tmpfs"    /* Temporary filesystem */
 
 /*
  * The mount system call
@@ -66,6 +67,7 @@ struct mount;
 /* Filesystem vfsops */
 extern struct vfsops g_omar_vfsops;
 extern struct vfsops g_devfs_vfsops;
+extern struct vfsops g_tmpfs_vfsops;
 
 /*
  * Represents a mountpoint
@@ -132,7 +134,6 @@ struct fs_info {
  * Filesystem attributes mask
  */
 #define FS_ATTR_IMAGE BIT(0)    /* Is an image kind e.g., OSMORA OMAR */
-
 
 /*
  * VFS operations vector
