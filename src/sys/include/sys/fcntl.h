@@ -43,6 +43,7 @@
 #define O_RDONLY    0x00
 #define O_RDWR      BIT(1)
 #define O_WRONLY    BIT(2)
+#define O_CREAT     BIT(3)
 
 /* File access mode flags */
 #define O_ACCMODE (O_RDWR | O_WRONLY)

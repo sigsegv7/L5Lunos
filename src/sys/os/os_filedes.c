@@ -160,8 +160,10 @@ fd_open(const char *path, mode_t mode)
 {
     struct filedesc *fd;
     struct nameidata nd;
+    struct vop_create_args creat_args;
     struct proc *self = proc_self();
     struct vnode *vp;
+    uint32_t namei_flags = 0;
     int error;
 
     /* We need the current proc */
@@ -180,12 +182,21 @@ fd_open(const char *path, mode_t mode)
     }
 
     /*
+     * If we are creating a new file, we'll need to
+     * get the parent vnode so that we can use the
+     * create vop.
+     */
+    if (ISSET(mode, O_CREAT)) {
+        namei_flags |= NAMEI_CREATE;
+    }
+
+    /*
      * Now we try to do the lookup, we'll need
      * the vnode for file references to be
      * useful
      */
     nd.path = path;
-    nd.flags = 0;
+    nd.flags = namei_flags;
     nd.vp_res = &vp;
     error = namei(&nd);
     if (error < 0) {
