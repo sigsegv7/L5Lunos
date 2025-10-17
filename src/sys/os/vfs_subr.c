@@ -224,3 +224,25 @@ vop_reclaim(struct vnode *vp, int flags)
 
     return vops->reclaim(vp, flags);
 }
+
+int
+vop_create(struct vnode *vp, struct nameidata *ndp)
+{
+    struct vop *vops;
+    struct vop_create_args args;
+
+    if (vp == NULL || ndp == NULL) {
+        return -EINVAL;
+    }
+
+    if ((vops = vp->vops) == NULL) {
+        return -EIO;
+    }
+
+    if (vops->create == NULL) {
+        return -EIO;
+    }
+
+    args.ndp = ndp;
+    return vops->create(&args);
+}

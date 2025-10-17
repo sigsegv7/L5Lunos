@@ -32,6 +32,7 @@
 
 #include <sys/types.h>
 #include <sys/atomic.h>
+#include <sys/namei.h>
 
 /* Forward declarations */
 struct vnode;
@@ -83,12 +84,23 @@ struct vop_rw_data {
 };
 
 /*
+ * Arguments to create an entry within a
+ * filesystem
+ *
+ * @ndp: Path component to create
+ */
+struct vop_create_args {
+    struct nameidata *ndp;
+};
+
+/*
  * Represents operations that can be performed on
  * a specific vnode. These are implemented as callbacks
  */
 struct vop {
     int(*lookup)(struct vop_lookup_args *args);
     int(*reclaim)(struct vnode *vp, int flags);
+    int(*create)(struct vop_create_args *args);
     ssize_t(*write)(struct vop_rw_data *data);
     ssize_t(*read)(struct vop_rw_data *data);
 };
@@ -175,5 +187,17 @@ ssize_t vop_read(struct vnode *vp, char *data, off_t off, size_t len);
  * on failure.
  */
 int vop_reclaim(struct vnode *vp, int flags);
+
+/*
+ * Create a node within a specific filesystem or
+ * directory
+ *
+ * @vp: Vnode of parent directory
+ * @ndp: Namei descriptor of path component
+ *
+ * Returns zero on success, otherwise a less than zero
+ * value on failure.
+ */
+int vop_create(struct vnode *vp, struct nameidata *ndp);
 
 #endif  /* !_OS_VNODE_H_ */
