@@ -232,6 +232,56 @@ tmpfs_mount(struct fs_info *fip, struct mount_args *margs)
     return 0;
 }
 
+/*
+ * Write to the filesystem
+ */
+static ssize_t
+tmpfs_write(struct vop_rw_data *data)
+{
+    struct vnode *vp;
+    struct tmpfs_node *np;
+    char *dest;
+    void *p;
+    size_t node_len, len;
+    size_t overflow_window;
+
+    if (data == NULL) {
+        return -EINVAL;
+    }
+
+    if ((vp = data->vp) == NULL) {
+        return -EIO;
+    }
+
+    /* We need the vnode for lengths */
+    if ((np = vp->data) == NULL) {
+        return -EIO;
+    }
+
+    /*
+     * Check if there is going to be any overflows
+     * and if so, get the overflow window and expand
+     * the buffer by it.
+     */
+    len = data->len;
+    if ((len + data->off) > np->len) {
+        overflow_window = (len + data->off) - np->len;
+        np->len += overflow_window + 1;
+
+        p = np->data;
+        np->data = krealloc(np->data, np->len);
+        if (np->data == NULL) {
+            np->data = p;
+            return -ENOMEM;
+        }
+    }
+
+    node_len = np->len;
+    dest = np->data + data->off;
+    memcpy(dest, data->data, len);
+    return len;
+}
+
 static int
 tmpfs_reclaim(struct vnode *vp, int flags)
 {
@@ -241,7 +291,8 @@ tmpfs_reclaim(struct vnode *vp, int flags)
 static struct vop tmpfs_vops = {
     .lookup = tmpfs_lookup,
     .create = tmpfs_create,
-    .reclaim = tmpfs_reclaim
+    .reclaim = tmpfs_reclaim,
+    .write = tmpfs_write
 };
 
 struct vfsops g_tmpfs_vfsops = {
