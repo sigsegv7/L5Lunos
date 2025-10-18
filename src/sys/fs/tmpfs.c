@@ -49,6 +49,7 @@ struct tmpfs_node {
     size_t len;
     size_t real_len;
     int ref;
+    vtype_t vtype;  /* vnode vtype mapping */
     TAILQ_ENTRY(tmpfs_node) link;
 };
 
@@ -62,13 +63,14 @@ static struct vop tmpfs_vops;
  * Create a new tmpfs node
  *
  * @name: Name of node to create
+ * @type: Type of vnode file should be associated with
  * @np_res: Result pointer is written here
  *
  * Returns zero on success, otherwise a less than
  * zero value on failure
  */
 static int
-tmpfs_new(const char *name, struct tmpfs_node **np_res)
+tmpfs_new(const char *name, vtype_t type, struct tmpfs_node **np_res)
 {
     struct tmpfs_node *np;
     size_t name_len;
@@ -97,6 +99,7 @@ tmpfs_new(const char *name, struct tmpfs_node **np_res)
     np->real_len = 0;
     np->len = TMPFS_INIT_SIZE;
     np->ref = 1;
+    np->vtype = type;
     memset(np->data, 0, TMPFS_INIT_SIZE);
     memcpy(np->name, name, name_len);
 
@@ -162,7 +165,7 @@ tmpfs_lookup(struct vop_lookup_args *args)
         return error;
     }
 
-    error = vfs_valloc(&vp, VTYPE_FILE, 0);
+    error = vfs_valloc(&vp, np->vtype, 0);
     if (error < 0) {
         return error;
     }
@@ -197,7 +200,15 @@ tmpfs_create(struct vop_create_args *args)
         return -EEXIST;
     }
 
-    return tmpfs_new(ndp->path, NULL);
+    /* Only accept the types we support */
+    switch (args->vtype) {
+    case VTYPE_FILE:
+        break;
+    default:
+        return -ENOTSUP;
+    }
+
+    return tmpfs_new(ndp->path, args->vtype, NULL);
 }
 
 /*
