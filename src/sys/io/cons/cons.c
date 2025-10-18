@@ -37,6 +37,8 @@
 #include <stdbool.h>
 #include <string.h>
 
+#define TAB_WIDTH (FONT_WIDTH * 4)
+
 /* kconf background color config */
 #if defined(__CONS_BG)
 #define DEFAULT_BG __CONS_BG
@@ -180,6 +182,21 @@ cons_backspace(struct cons_scr *scr)
     cons_draw_cursor(scr, false);
 }
 
+static void
+cons_tab(struct cons_scr *scr)
+{
+    cons_draw_cursor(scr, true);
+    scr->text_x += TAB_WIDTH;
+    scr->cursor_x += TAB_WIDTH;
+
+    /* Wrap to next line if needed */
+    if (scr->cursor_x >= scr->max_col) {
+        cons_newline(scr);
+    }
+
+    cons_draw_cursor(scr, false);
+}
+
 /*
  * Fill a screen with a desired background
  * color
@@ -223,6 +240,9 @@ cons_handle_spec(struct cons_scr *scr, int c)
         return c;
     case ASCII_BS:
         cons_backspace(scr);
+        return c;
+    case ASCII_HT:
+        cons_tab(scr);
         return c;
     }
 
