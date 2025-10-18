@@ -28,13 +28,29 @@
  */
 
 #include <sys/spawn.h>
+#include <sys/mount.h>
 #include <stddef.h>
+#include <stdio.h>
 
 void
 main(void)
 {
     char login_path[] = "/usr/sbin/login";
     char *argv_dmmy[] = { "/usr/sbin/login", NULL };
+    int error;
+
+    /* Mount tmpfs */
+    error = mount(
+        NULL,
+        "/tmp",
+        MOUNT_TMPFS,
+        0,
+        NULL
+    );
+
+    if (error < 0) {
+        printf("init: failed to mount tmpfs\n");
+    }
 
     spawn(login_path, argv_dmmy);
     for (;;);
