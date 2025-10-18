@@ -52,6 +52,18 @@ struct filedesc {
 };
 
 /*
+ * Allocate a file descriptor from a specific process's
+ * file descriptor table
+ *
+ * @procp: Process to allocate fd from
+ * @fd_res: Result pointer is written here
+ *
+ * Returns zero on success, otherwise a less than
+ * zero value upon failure
+ */
+int fd_alloc(struct proc *procp, struct filedesc **fd_res);
+
+/*
  * Duplicate a file descriptor
  *
  * @procp: Process to duplicate from
@@ -61,6 +73,18 @@ struct filedesc {
  * a value of NULL on failure
  */
 struct filedesc *fd_dup(struct proc *procp, int fd);
+
+/*
+ * Look up a file descriptor that belongs to a specific
+ * process by using its fd number
+ *
+ * @procp: Process to look up
+ * @fd: File descriptor number
+ *
+ * Returns the file descriptor pointer on success,
+ * otherwise a less than zero value on failure
+ */
+struct filedesc *fd_get(struct proc *procp, int fd);
 
 /*
  * Initialize a process file descriptor table

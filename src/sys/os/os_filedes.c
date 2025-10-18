@@ -44,16 +44,9 @@
 #define STDOUT_FILENO 1
 
 /*
- * Allocate a file descriptor from a specific process's
- * file descriptor table
- *
- * @procp: Process to allocate fd from
- * @fd_res: Result pointer is written here
- *
- * Returns zero on success, otherwise a less than
- * zero value upon failure
+ * Allocate a file descriptor
  */
-static int
+int
 fd_alloc(struct proc *procp, struct filedesc **fd_res)
 {
     struct filedesc *fd;
@@ -91,16 +84,9 @@ fd_alloc(struct proc *procp, struct filedesc **fd_res)
 }
 
 /*
- * Look up a file descriptor that belongs to a specific
- * process by using its fd number
- *
- * @procp: Process to look up
- * @fd: File descriptor number
- *
- * Returns the file descriptor pointer on success,
- * otherwise a less than zero value on failure
+ * Get a file descriptor
  */
-static struct filedesc *
+struct filedesc *
 fd_get(struct proc *procp, int fd)
 {
     struct filedesc *fdp;
