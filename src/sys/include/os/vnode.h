@@ -44,12 +44,14 @@ struct vop;
  * @VTYPE_NONE: Vnode is yet to be assigned a type
  * @VTYPE_FILE: Vnode references a file
  * @VTYPE_DIR:  Vnode references a directory
+ * @VTYPE_SOCK: Vnode references a socket
  * @__N_VTYPE:  Number of valid nodes on the system
  */
 typedef enum {
     VTYPE_NONE,
     VTYPE_FILE,
     VTYPE_DIR,
+    VTYPE_SOCK,
     __N_VTYPE
 } vtype_t;
 

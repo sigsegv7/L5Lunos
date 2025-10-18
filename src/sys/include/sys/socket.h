@@ -27,79 +27,57 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _UNIX_SYSCALL_H_
-#define _UNIX_SYSCALL_H_ 1
+#ifndef _SYS_SOCKET_H_
+#define _SYS_SOCKET_H_ 1
 
-#include <sys/proc.h>
-#include <sys/socket.h>
-#include <sys/param.h>
-#include <sys/mount.h>
+#include <sys/types.h>
 #include <sys/syscall.h>
-#include <os/iotap.h>
-#include <os/reboot.h>
-#include <dms/dms.h>
+
+/* Address family defines */
+#define AF_UNIX     0x00        /* Local comms / IPC */
+#define AF_LOCAL    AF_UNIX     /* AF_UNIX alias */
+
+/* Socket type defines */
+#define SOCK_STREAM  0x00
+#define SOCK_DGRAM   0x01
 
 /*
- * Exit the current process - exit(2) syscall
+ * Get a socket as a file descriptor
+ *
+ * @domain: Socket domain (AF_*)
+ * @type: Socket type SOCK_*
+ *
+ * Returns file descriptor on success, otherwise
+ * a less than zero value on failure
  */
-scret_t sys_exit(struct syscall_args *scargs);
+int socket(int domain, int type, int protocol);
 
 /*
- * Write to a file descriptor - write(2) syscall
+ * @socket: Socket to listen on
+ * @backlog: Max connections
  */
-scret_t sys_write(struct syscall_args *scargs);
+int listen(int socket, int backlog);
+
+#if defined(_KERNEL)
 
 /*
- * Cross a resource border - L5 mandatory
+ * Kernel representation of a socket
+ *
+ * @backlog: Maximum connections (< 0 means socket not active)
  */
-scret_t sys_cross(struct syscall_args *scargs);
-
-/*
- * Query a syscall border - L5 mandatory
- */
-scret_t sys_query(struct syscall_args *scargs);
-
-/*
- * Open a file
- */
-scret_t sys_open(struct syscall_args *scargs);
-
-/*
- * Read a file
- */
-scret_t sys_read(struct syscall_args *scargs);
-
-/*
- * Close a file
- */
-scret_t sys_close(struct syscall_args *scargs);
-
-/*
- * Seek a file descriptor
- */
-scret_t sys_lseek(struct syscall_args *scargs);
-
-#ifdef _NEED_UNIX_SCTAB
-scret_t(*g_unix_sctab[])(struct syscall_args *) = {
-    [SYS_none]   = NULL,
-    [SYS_exit]   = sys_exit,
-    [SYS_write]  = sys_write,
-    [SYS_cross]  = sys_cross,
-    [SYS_query]  = sys_query,
-    [SYS_spawn]  = sys_spawn,
-    [SYS_mount]  = sys_mount,
-    [SYS_open]   = sys_open,
-    [SYS_muxtap] = sys_muxtap,
-    [SYS_getargv] = sys_getargv,
-    [SYS_reboot]  = sys_reboot,
-    [SYS_waitpid] = sys_waitpid,
-    [SYS_dmsio] = sys_dmsio,
-    [SYS_read] = sys_read,
-    [SYS_close] = sys_close,
-    [SYS_lseek] = sys_lseek,
-    [SYS_socket] = sys_socket,
-    [SYS_listen] = sys_listen
+struct ksocket {
+    int backlog;
 };
 
-#endif  /* !_NEED_UNIX_SCTAB */
-#endif  /* !_UNIX_SYSCALL_H_ */
+/*
+ * Socket syscall
+ */
+scret_t sys_socket(struct syscall_args *scargs);
+
+/*
+ * Listen syscall
+ */
+scret_t sys_listen(struct syscall_args *scargs);
+
+#endif  /* _KERNEL */
+#endif  /* !_SYS_SOCKET_H_ */

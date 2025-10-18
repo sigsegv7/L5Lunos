@@ -203,6 +203,7 @@ tmpfs_create(struct vop_create_args *args)
     /* Only accept the types we support */
     switch (args->vtype) {
     case VTYPE_FILE:
+    case VTYPE_SOCK:
         break;
     default:
         return -ENOTSUP;
