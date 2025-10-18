@@ -665,6 +665,7 @@ ahci_init_port(struct ahci_hba *hba, struct ahci_port *port)
     const uint16_t BSIZE = 512;
     volatile struct hba_port *regs;
     struct ahci_cmd_hdr *cmdlist;
+    struct ahci_port *port_cpy;
     uint32_t cmd, lo, hi;
     size_t clen;
     paddr_t pa;
@@ -718,8 +719,14 @@ ahci_init_port(struct ahci_hba *hba, struct ahci_port *port)
         return error;
     }
 
-    TAILQ_INSERT_TAIL(&portlist, port, link);
-    ahci_identify(hba, port);
+    port_cpy = kalloc(sizeof(*port_cpy));
+    if (port_cpy == NULL) {
+        return -ENOMEM;
+    }
+
+    memcpy(port_cpy, port, sizeof(*port_cpy));
+    TAILQ_INSERT_TAIL(&portlist, port_cpy, link);
+    ahci_identify(hba, port_cpy);
     return 0;
 }
 
@@ -730,7 +737,7 @@ static int
 ahci_init_ports(struct ahci_hba *hba)
 {
     volatile struct hba_memspace *io = hba->io;
-    struct ahci_port *port;
+    struct ahci_port port;
     uint32_t pi, nbits;
     int error;
 
@@ -743,20 +750,13 @@ ahci_init_ports(struct ahci_hba *hba)
 
         /* Allocate a new port descriptor */
         dtrace("port %d implemented\n", i);
-        port = kalloc(sizeof(*port));
-        if (port == NULL) {
-            dtrace("failed to allocate port\n");
-            continue;
-        }
-
-        port->io = &io->ports[i];
-        port->portno = i;
-        port->parent = hba;
+        port.io = &io->ports[i];
+        port.portno = i;
+        port.parent = hba;
 
         /* Initialize the port */
-        error = ahci_init_port(hba, port);
+        error = ahci_init_port(hba, &port);
         if (error < 0) {
-            ahci_port_detach(port);
             dtrace("port init failed (error=%d)\n", error);
             continue;
         }
