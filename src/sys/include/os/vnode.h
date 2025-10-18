@@ -88,9 +88,11 @@ struct vop_rw_data {
  * filesystem
  *
  * @ndp: Path component to create
+ * @vtype: Vnode type
  */
 struct vop_create_args {
     struct nameidata *ndp;
+    vtype_t vtype;
 };
 
 /*

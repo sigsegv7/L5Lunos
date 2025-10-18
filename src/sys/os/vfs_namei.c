@@ -149,6 +149,7 @@ namei(struct nameidata *ndp)
 
             nd_create.path = namebuf;
             create.ndp = &nd_create;
+            create.vtype = VTYPE_FILE;
             error = vops->create(&create);
             if (error < 0)
                 return error;
