@@ -206,11 +206,12 @@ int vop_reclaim(struct vnode *vp, int flags);
  *
  * @vp: Vnode of parent directory
  * @ndp: Namei descriptor of path component
+ * @type: Vnode type to create with
  *
  * Returns zero on success, otherwise a less than zero
  * value on failure.
  */
-int vop_create(struct vnode *vp, struct nameidata *ndp);
+int vop_create(struct vnode *vp, struct nameidata *ndp, vtype_t type);
 
 /*
  * Get the attributes of a file

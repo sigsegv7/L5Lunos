@@ -226,7 +226,7 @@ vop_reclaim(struct vnode *vp, int flags)
 }
 
 int
-vop_create(struct vnode *vp, struct nameidata *ndp)
+vop_create(struct vnode *vp, struct nameidata *ndp, vtype_t type)
 {
     struct vop *vops;
     struct vop_create_args args;
@@ -244,6 +244,7 @@ vop_create(struct vnode *vp, struct nameidata *ndp)
     }
 
     args.ndp = ndp;
+    args.vtype = type;
     return vops->create(&args);
 }
 
