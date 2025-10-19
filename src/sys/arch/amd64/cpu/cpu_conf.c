@@ -44,7 +44,9 @@
 
 extern void syscall_isr(void);
 extern void core_halt_isr(void);
+
 void core_halt_handler(void);
+int simd_init(void);
 
 void
 core_halt_handler(void)
@@ -193,6 +195,7 @@ cpu_conf(struct pcore *pcore)
     pcore->self = pcore;
     wrmsr(IA32_GS_BASE, (uintptr_t)pcore);
 
+    simd_init();
     init_vectors();
     idt_load();
     cpu_identify(mdcore);
