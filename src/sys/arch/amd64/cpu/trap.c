@@ -34,6 +34,7 @@
 
 #include <sys/param.h>
 #include <sys/cdefs.h>
+#include <sys/errno.h>
 #include <sys/panic.h>
 #include <sys/cpuvar.h>
 #include <sys/syslog.h>
@@ -148,6 +149,26 @@ trapframe_dump(struct trapframe *tf)
         tf->rbp, tf->rsp, tf->rip);
 }
 
+/*
+ * Handle user faults
+ */
+static void
+handle_ufault(void)
+{
+    struct proc *self = proc_self();
+
+    if (__unlikely(self == NULL)) {
+        panic("could not get self on fault\n");
+    }
+
+    syslog_toggle(true);
+    printf("** hardware violation **\n");
+    syslog_toggle(false);
+
+    proc_kill(self, -EFAULT);
+    __builtin_unreachable();
+}
+
 void
 trap_syscall(struct trapframe *tf)
 {
@@ -194,7 +215,8 @@ trap_handler(struct trapframe *tf)
 {
     trapframe_dump(tf);
     if (ISSET(tf->cs, 3)) {
-        panic("fatal user trap\n");
+        handle_ufault();
+        __builtin_unreachable();
     }
 
     panic("fatal trap\n");
