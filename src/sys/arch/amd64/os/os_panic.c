@@ -37,12 +37,16 @@ __dead
 void panic(const char *fmt, ...)
 {
     static va_list ap;
+    struct pcore *core = this_core();
+    uint32_t core_id;
 
     cpu_halt_others();
     va_start(ap, fmt);
 
-    printf("lunos panic: ");
+    core_id = (core == NULL) ? 0xFF : core->id;
+    printf("lunos panic[cpu %d]: ", core_id);
     vprintf(fmt, &ap);
+
     for (;;) {
         md_intoff();
         md_halt();
