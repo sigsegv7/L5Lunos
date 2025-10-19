@@ -30,6 +30,7 @@
 #ifndef _SYS_PROC_H_
 #define _SYS_PROC_H_
 
+#include <sys/ucred.h>
 #include <sys/types.h>
 #include <sys/syscall.h>
 #include <sys/cdefs.h>
@@ -91,6 +92,7 @@ struct proc {
     struct penv_blk *envblk;
     struct ptrbox *envblk_box;
     struct proc *parent;
+    struct ucred cred;
     mac_level_t level;
     struct spinlock maplist_lock;
     sigtab_t sigtab;

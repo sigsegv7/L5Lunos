@@ -27,81 +27,35 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _UNIX_SYSCALL_H_
-#define _UNIX_SYSCALL_H_ 1
+#ifndef _OS_UCRED_H_
+#define _OS_UCRED_H_ 1
 
-#include <sys/proc.h>
-#include <sys/socket.h>
-#include <sys/param.h>
-#include <sys/mount.h>
 #include <sys/syscall.h>
-#include <os/ucred.h>
-#include <os/iotap.h>
-#include <os/reboot.h>
-#include <dms/dms.h>
+#include <sys/types.h>
+#include <sys/ucred.h>
+#include <sys/proc.h>
 
 /*
- * Exit the current process - exit(2) syscall
+ * Initialize user credientials
+ *
+ * @proc: Current process
+ * @cred: credientials to initialize
+ *
+ * XXX: 'proc' being NULL drops the creds to root
+ *
+ * Returns zero on success, otherwise a less
+ * than zero value on failure.
  */
-scret_t sys_exit(struct syscall_args *scargs);
+int ucred_init(struct proc *proc, struct ucred *cred);
 
 /*
- * Write to a file descriptor - write(2) syscall
+ * Set effective user ID
  */
-scret_t sys_write(struct syscall_args *scargs);
+int seteuid(uid_t euid);
 
 /*
- * Cross a resource border - L5 mandatory
+ * Set EUID system call
  */
-scret_t sys_cross(struct syscall_args *scargs);
+scret_t sys_seteuid(struct syscall_args *scargs);
 
-/*
- * Query a syscall border - L5 mandatory
- */
-scret_t sys_query(struct syscall_args *scargs);
-
-/*
- * Open a file
- */
-scret_t sys_open(struct syscall_args *scargs);
-
-/*
- * Read a file
- */
-scret_t sys_read(struct syscall_args *scargs);
-
-/*
- * Close a file
- */
-scret_t sys_close(struct syscall_args *scargs);
-
-/*
- * Seek a file descriptor
- */
-scret_t sys_lseek(struct syscall_args *scargs);
-
-#ifdef _NEED_UNIX_SCTAB
-scret_t(*g_unix_sctab[])(struct syscall_args *) = {
-    [SYS_none]   = NULL,
-    [SYS_exit]   = sys_exit,
-    [SYS_write]  = sys_write,
-    [SYS_cross]  = sys_cross,
-    [SYS_query]  = sys_query,
-    [SYS_spawn]  = sys_spawn,
-    [SYS_mount]  = sys_mount,
-    [SYS_open]   = sys_open,
-    [SYS_muxtap] = sys_muxtap,
-    [SYS_getargv] = sys_getargv,
-    [SYS_reboot]  = sys_reboot,
-    [SYS_waitpid] = sys_waitpid,
-    [SYS_dmsio] = sys_dmsio,
-    [SYS_read] = sys_read,
-    [SYS_close] = sys_close,
-    [SYS_lseek] = sys_lseek,
-    [SYS_socket] = sys_socket,
-    [SYS_listen] = sys_listen,
-    [SYS_seteuid] = sys_seteuid
-};
-
-#endif  /* !_NEED_UNIX_SCTAB */
-#endif  /* !_UNIX_SYSCALL_H_ */
+#endif  /* !_OS_UCRED_H_ */

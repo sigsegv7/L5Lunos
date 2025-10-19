@@ -40,6 +40,7 @@
 #include <os/systm.h>
 #include <vm/vm.h>
 #include <vm/physseg.h>
+#include <os/ucred.h>
 #include <os/elfload.h>
 #include <os/signal.h>
 #include <os/kalloc.h>
@@ -386,9 +387,14 @@ proc_spawn(const char *path, struct penv_blk *envbp)
 
     proc->envblk = envbp;
     proc->parent = proc_self();
+    error = ucred_init(proc->parent, &proc->cred);
+    if (error < 0) {
+        kfree(proc);
+        return error;
+    }
+
     md_set_ip(proc, elf.entrypoint);
     sched_enq(&core->scq, proc);
-
     TAILQ_INSERT_TAIL(&procq, proc, lup_link);
     return proc->pid;
 }
