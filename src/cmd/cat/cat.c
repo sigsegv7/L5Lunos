@@ -36,7 +36,7 @@ static void
 cat(const char *path)
 {
     char buf[128];
-    size_t len;
+    ssize_t len;
     int fd;
 
     fd = open(path, O_RDONLY);
