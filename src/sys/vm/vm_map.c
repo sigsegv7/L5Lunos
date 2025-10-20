@@ -133,7 +133,7 @@ vm_map(struct vm_vas *vas, struct mmu_map *spec, size_t len, int prot)
     }
 
     /* Place a guard page at the end */
-    spec->va = spec_cpy.va + len;
-    __vm_map(vas, spec, DEFAULT_PAGESIZE, 0);
+    spec_cpy.va = spec_cpy.va + len;
+    __vm_map(vas, &spec_cpy, DEFAULT_PAGESIZE, 0);
     return 0;
 }
