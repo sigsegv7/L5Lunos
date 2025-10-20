@@ -52,6 +52,18 @@ main(void)
         printf("init: failed to mount tmpfs\n");
     }
 
+    error = mount(
+        NULL,
+        "/dev",
+        MOUNT_DEVFS,
+        0,
+        NULL
+    );
+
+    if (error < 0) {
+        printf("init: failed to mount devfs\n");
+    }
+
     spawn(login_path, argv_dmmy);
     for (;;);
 }
