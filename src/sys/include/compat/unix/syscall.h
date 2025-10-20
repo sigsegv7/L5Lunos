@@ -39,6 +39,7 @@
 #include <os/iotap.h>
 #include <os/reboot.h>
 #include <dms/dms.h>
+#include <vm/map.h>
 
 /*
  * Exit the current process - exit(2) syscall
@@ -100,7 +101,8 @@ scret_t(*g_unix_sctab[])(struct syscall_args *) = {
     [SYS_lseek] = sys_lseek,
     [SYS_socket] = sys_socket,
     [SYS_listen] = sys_listen,
-    [SYS_seteuid] = sys_seteuid
+    [SYS_seteuid] = sys_seteuid,
+    [SYS_mmap] = sys_mmap
 };
 
 #endif  /* !_NEED_UNIX_SCTAB */

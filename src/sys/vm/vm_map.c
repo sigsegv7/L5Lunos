@@ -30,11 +30,15 @@
 #include <sys/types.h>
 #include <sys/param.h>
 #include <sys/errno.h>
+#include <sys/param.h>
 #include <sys/syslog.h>
 #include <vm/physseg.h>
 #include <vm/mmu.h>
 #include <vm/map.h>
 #include <vm/vm.h>
+
+#define MMAP_START 0x6F3C8E0C0000
+#define MMAP_END   0x6F3C90000000
 
 /*
  * Create a virtual to physical memory
@@ -136,4 +140,57 @@ vm_map(struct vm_vas *vas, struct mmu_map *spec, size_t len, int prot)
     spec_cpy.va = spec_cpy.va + len;
     __vm_map(vas, &spec_cpy, DEFAULT_PAGESIZE, 0);
     return 0;
+}
+
+void *
+mmap(void *addr, size_t len, int prot, int flags, int fildes, off_t off)
+{
+    struct mmu_map spec;
+    struct vm_vas vas;
+    paddr_t pa;
+    int error;
+
+    /* TODO: Support address allocation  */
+    if (len == 0 || addr == NULL) {
+        return NULL;
+    }
+
+    spec.va = (uintptr_t)addr;
+    spec.pa = 0;
+    error = mmu_this_vas(&vas);
+    if (error < 0) {
+        return NULL;
+    }
+
+    /* Create the mapping */
+    error = vm_map(&vas, &spec, len, prot);
+    if (error < 0) {
+        return NULL;
+    }
+
+    return (void *)spec.va;
+}
+
+/*
+ * ARG0: Address
+ * ARG1: Length
+ * ARG2: Protection flags
+ * ARG3: Flags
+ * ARG4: Fildes
+ * ARG5: Offset
+ */
+scret_t
+sys_mmap(struct syscall_args *scargs)
+{
+    void *address = SCARG(scargs, void *, 0);
+    size_t length = SCARG(scargs, size_t, 1);
+    int prot = SCARG(scargs, int, 2);
+
+    prot |= PROT_USER;
+    if (address != NULL) {
+        address = PTR_OFFSET(address, MMAP_START);
+    }
+
+    /* XXX: Should use rest of the args */
+    return (uintptr_t)mmap(address, length, prot, 0, 0, 0);
 }

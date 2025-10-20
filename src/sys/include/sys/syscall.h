@@ -62,6 +62,7 @@
 #define SYS_socket      0x11    /* get a socket fd */
 #define SYS_listen      0x12    /* listen on a socket */
 #define SYS_seteuid     0x13    /* set effective UID */
+#define SYS_mmap        0x14    /* map a virtual address */
 
 typedef __ssize_t scret_t;
 typedef __ssize_t scarg_t;

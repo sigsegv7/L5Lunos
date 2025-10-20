@@ -31,6 +31,7 @@
 #define _VM_MAP_H_  1
 
 #include <sys/types.h>
+#include <sys/syscall.h>
 #include <sys/mman.h>
 #include <machine/vas.h>    /* standard */
 #include <vm/mmu.h>
@@ -51,5 +52,10 @@
  * on failure.
  */
 int vm_map(struct vm_vas *vas, struct mmu_map *spec, size_t len, int prot);
+
+/*
+ * POSIX mmap syscall
+ */
+scret_t sys_mmap(struct syscall_args *scargs);
 
 #endif  /* !_VM_MAP_H_ */
