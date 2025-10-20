@@ -30,7 +30,11 @@
 #ifndef _SYS_MMAN_H_
 #define _SYS_MMAN_H_ 1
 
+#include <sys/types.h>
 #include <sys/param.h>
+#if !defined(_KERNEL)
+#include <stddef.h>
+#endif  /* !_KERNEL */
 
 #define PROT_READ   BIT(0)
 #define PROT_WRITE  BIT(1)
