@@ -45,6 +45,7 @@ struct vop;
  * @VTYPE_FILE: Vnode references a file
  * @VTYPE_DIR:  Vnode references a directory
  * @VTYPE_SOCK: Vnode references a socket
+ * @VTYPE_CDEV: Vnode references a character device
  * @__N_VTYPE:  Number of valid nodes on the system
  */
 typedef enum {
@@ -52,6 +53,7 @@ typedef enum {
     VTYPE_FILE,
     VTYPE_DIR,
     VTYPE_SOCK,
+    VTYPE_CDEV,
     __N_VTYPE
 } vtype_t;
 

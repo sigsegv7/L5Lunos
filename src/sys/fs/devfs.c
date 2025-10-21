@@ -72,7 +72,7 @@ devfs_lookup(struct vop_lookup_args *args)
         }
 
         /* Found it! Create a vnode */
-        error = vfs_valloc(&vp, VTYPE_FILE, 0);
+        error = vfs_valloc(&vp, VTYPE_CDEV, 0);
         if (error < 0) {
             return error;
         }
