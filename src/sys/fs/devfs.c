@@ -78,6 +78,7 @@ devfs_lookup(struct vop_lookup_args *args)
         }
 
         vp->data = dnp;
+        vp->vops = &devfs_vops;
         *args->vpp = vp;
         return 0;
     }
@@ -116,10 +117,58 @@ devfs_register(const char *name, dev_type_t type, void *devsw, int flags)
         break;
     }
 
+    dnp->dev = devsw;
     devname_len = strlen(name);
     memcpy(dnp->name, name, devname_len);
     TAILQ_INSERT_TAIL(&nodelist, dnp, link);
     return 0;
+}
+
+/*
+ * Read a character device
+ */
+static int
+devfs_cdev_read(struct devfs_node *dnp, struct dev_iobuf *iobuf, int flags)
+{
+    struct cdevsw *cdev;
+
+    if (dnp == NULL || iobuf == NULL) {
+        return -EINVAL;
+    }
+
+    if ((cdev = dnp->cdev) == NULL) {
+        return -EIO;
+    }
+
+    return cdev->read(dnp, iobuf, flags);
+}
+
+/*
+ * VFS read callback for devfs
+ */
+static ssize_t
+devfs_read(struct vop_rw_data *args)
+{
+    struct vnode *vp;
+    struct devfs_node *dnp;
+    struct dev_iobuf iobuf;
+
+    if ((vp = args->vp) == NULL) {
+        return -EIO;
+    }
+
+    if ((dnp = vp->data) == NULL) {
+        return -EIO;
+    }
+
+    iobuf.buf = args->data;
+    iobuf.count = args->len;
+    iobuf.off = args->off;
+    if (dnp->type == DEVFS_CDEV) {
+        return devfs_cdev_read(dnp, &iobuf, 0);
+    }
+
+    return -EIO;
 }
 
 /*
@@ -157,7 +206,8 @@ devfs_mount(struct fs_info *fip, struct mount_args *margs)
 }
 
 static struct vop devfs_vops = {
-    .lookup = devfs_lookup
+    .lookup = devfs_lookup,
+    .read = devfs_read
 };
 
 struct vfsops g_devfs_vfsops = {

@@ -45,6 +45,7 @@ struct devfs_node;
 struct dev_iobuf {
     void *buf;
     size_t count;
+    off_t off;
 };
 
 /*
