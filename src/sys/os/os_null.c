@@ -41,7 +41,7 @@ static ssize_t
 null_read(struct devfs_node *dnp, struct dev_iobuf *io, int flags)
 {
     /* We give you a whole lot of nothing! */
-    return io->count;
+    return 0;
 }
 
 /*
