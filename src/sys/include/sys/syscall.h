@@ -63,6 +63,7 @@
 #define SYS_listen      0x12    /* listen on a socket */
 #define SYS_seteuid     0x13    /* set effective UID */
 #define SYS_mmap        0x14    /* map a virtual address */
+#define SYS_usleep      0x15    /* Sleep for n microseconds */
 
 typedef __ssize_t scret_t;
 typedef __ssize_t scarg_t;

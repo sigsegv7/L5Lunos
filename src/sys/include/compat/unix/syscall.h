@@ -37,6 +37,7 @@
 #include <sys/syscall.h>
 #include <os/ucred.h>
 #include <os/iotap.h>
+#include <os/sleep.h>
 #include <os/reboot.h>
 #include <dms/dms.h>
 #include <vm/map.h>
@@ -102,7 +103,8 @@ scret_t(*g_unix_sctab[])(struct syscall_args *) = {
     [SYS_socket] = sys_socket,
     [SYS_listen] = sys_listen,
     [SYS_seteuid] = sys_seteuid,
-    [SYS_mmap] = sys_mmap
+    [SYS_mmap] = sys_mmap,
+    [SYS_usleep] = sys_usleep
 };
 
 #endif  /* !_NEED_UNIX_SCTAB */
