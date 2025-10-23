@@ -27,69 +27,16 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _UNISTD_H
-#define _UNISTD_H 1
-
-#include <sys/seek.h>
+#include <sys/syscall.h>
+#include <sys/types.h>
 #include <time.h>
-#include <stddef.h>
+#include <unistd.h>
 
-/* Standard stream file numbers */
-#define STDIN_FILENO    0
-#define STDOUT_FILENO   1
-#define STDERR_FILENO   2
-
-/*
- * POSIX open system call
- *
- * @path: Path to open
- * @flags: O_ flags
- *
- * Returns the file descriptor on success
- */
-int open(const char *path, int flags);
-
-/*
- * Close a file using its file descriptor
- *
- * @fd: File descriptor to close
- *
- * Returns zero on success
- */
-int close(int fd);
-
-/*
- * POSIX write system call
- *
- * @fd: File descriptor to write at
- * @buf: Buffer to write
- * @count: Number of bytes within the buffer to write
- */
-ssize_t write(int fd, const void *buf, size_t count);
-
-/*
- * POSIX read system call
- *
- * @fd: File descriptor to read
- * @buf: Buffer to read into
- * @count: Number of bytes to read
- */
-ssize_t read(int fd, void *buf, size_t count);
-
-/*
- * Reposition the file offset of a file
- *
- * @fd: File descriptor to reposition
- * @offset: Offset to move `fd' to
- * @whence: How it should be repositioned
- */
-off_t lseek(int fd, off_t offset, int whence);
-
-/*
- * Sleep for `usec` microseconds
- *
- * @usec: Number of microseconds to sleep
- */
-int usleep(useconds_t usec);
-
-#endif  /* _UNISTD_H */
+int
+usleep(useconds_t usec)
+{
+    return syscall(
+        SYS_usleep,
+        usec
+    );
+}
