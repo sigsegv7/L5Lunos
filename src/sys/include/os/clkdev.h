@@ -51,6 +51,7 @@
 struct clkdev {
     const char *name;
     int(*msleep)(size_t ms);
+    int(*usleep)(size_t usec);
     size_t(*get_time_usec)(void);
     uint16_t attr;
 };

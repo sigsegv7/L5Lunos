@@ -121,6 +121,12 @@ hpet_msleep(size_t ms)
     return hpet_sleep(ms, 1000000000000);
 }
 
+static int
+hpet_usleep(size_t us)
+{
+    return hpet_sleep(us, 1000000000);
+}
+
 /*
  * Get time since init in usec
  */
@@ -184,6 +190,7 @@ hpet_init(void)
     clkdev.name = "IA-PC HPET";
     clkdev.attr = CLKDEV_MSLEEP | CLKDEV_GET_USEC;
     clkdev.msleep = hpet_msleep;
+    clkdev.usleep = hpet_usleep;
     clkdev.get_time_usec = hpet_time_usec;
     if (clkdev_register(&clkdev) < 0) {
         printf("hpet_init: could not register clock device\n");
